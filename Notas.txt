@@ -1,0 +1,13 @@
+-------------------------
+Si se ha repunteado la siguiente tabla, será necesario actualizar el puntero en BPRE.ld
+offset		tabla		puntero
+0x08254784	gbasestats	84 47 25 08
+
+-------------------------
+En BPRE.ld cambiar los offset  de los siguientes secursos, según convenga:
+
+gEvIvTILE = 0x08f8fc00;
+gEvIvRAW = 0x08f8fa00;
+gEvIvPAL = 0x08f8ffe0;
+
+-------------------------
