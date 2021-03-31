@@ -14,15 +14,16 @@ Características:
 + Huele a limón.
 + base: pokémon fire red.
 
+
 ***Notas:***
 
--Usar en un script `callasm` seguido por el offset+1 donde insertaron el código.
+- Usar en un script `callasm` seguido por el offset+1 donde insertaron el código.
 
--En el archivo `linker.ld`, así como en `main.s` cambiar `0x08F90000` por un offset con suficiente espacio libre.
+- En el archivo `linker.ld`, así como en `main.s` cambiar `0x08F90000` por un offset con suficiente espacio libre.
 
--Si se ha repunteado la tabla `gbasestats`, será necesario actualizar el puntero `0x08254784` en `BPRE.ld`
+- Si se ha repunteado la tabla `gbasestats`, será necesario actualizar el puntero `0x08254784` en `BPRE.ld`
 
--En `BPRE.ld` cambiar los offset  de los siguientes secursos, según convenga:
-  +gEvIvTILE = 0x08f8fc00;
-  +gEvIvRAW = 0x08f8fa00;
-  +gEvIvPAL = 0x08f8ffe0;
+- En `BPRE.ld` cambiar los offset  de los siguientes secursos, según convenga:
+  + gEvIvTILE = 0x08f8fc00;
+  + gEvIvRAW = 0x08f8fa00;
+  + gEvIvPAL = 0x08f8ffe0;
