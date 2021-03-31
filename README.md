@@ -24,6 +24,6 @@ Características:
 - Si se ha repunteado la tabla `gbasestats`, será necesario actualizar el puntero `0x08254784` en `BPRE.ld`
 
 - En `BPRE.ld` cambiar los offset  de los siguientes secursos, según convenga:
-  + gEvIvTILE = 0x08f8fc00;
-  + gEvIvRAW = 0x08f8fa00;
-  + gEvIvPAL = 0x08f8ffe0;
+  + `gEvIvTILE = 0x08f8fc00;`
+  + `gEvIvRAW = 0x08f8fa00;`
+  + `gEvIvPAL = 0x08f8ffe0;`
