@@ -5,8 +5,8 @@ Los archivos dentro de la carpeta src\include\ fueron tomado de pokefirered.
  
 Características:
 -
-+ Eliges dónde está ubicado el fondo, modificando el offset el archivo `BPRE.ld`
-+ Se puede cambiar la ubicación del sprite del pokémon, así como sus textos.
++ Puedes cambiar el fondo reemplazando el que viene por defecto, la inyección la insertará automáticamente.
++ Se puede cambiar las coordenadas del sprite del pokémon, así como sus textos.
 + El color de la estadística de IVs cambia de acuerdo a la naturaleza.
 + Muestra estadísticas base de acuerdo a la especie.
 + Censura la estadística de los huevos, en cambio, dice aprox. cúantos pasos te falta para la eclosión.
@@ -17,13 +17,17 @@ Características:
 
 ***Notas:***
 
+- DevkitARM y ARMIPS son necesarios (versiones más recientes).
+
+- Para compilar es necesario tener preproc.exe y gbagfx.exe dentro alguna ruta de la variable PATH
+
+- Abrir el archivo Makefile, buscar y cambiar ff0000 de la siguiente línea por un offset alineado con suficiente espacio libre (más de 0x2000 bytes):
+        `export INSERT_INTO := 0x08ff0000`
+
 - Usar en un script `callasm` seguido por el offset+1 donde insertaron el código.
 
-- En el archivo `linker.ld`, así como en `main.s` cambiar `0x08F90000` por un offset con suficiente espacio libre.
+- Compilan ejecutando make con su terminal, y una rom llamada "rom.gba" con la inyección aparecerá en una carpeta llamada build.
 
-- Si se ha repunteado la tabla `gbasestats`, será necesario actualizar el puntero `0x08254784` en `BPRE.ld`
+- Archivos dentro de la carpeta include fueron tomados de pokefirered.
 
-- En `BPRE.ld` cambiar los offset  de los siguientes secursos, según convenga:
-  + `gEvIvTILE = 0x08f8fc00;`
-  + `gEvIvRAW = 0x08f8fa00;`
-  + `gEvIvPAL = 0x08f8ffe0;`
+- El archivo incbin.h es tomado del siguiente repositorio: https://github.com/graphitemaster/incbin
