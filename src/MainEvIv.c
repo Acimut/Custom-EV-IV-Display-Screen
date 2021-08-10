@@ -11,7 +11,8 @@ extern void CB2_ShowEvIv(void);
 */
 void MainEvIv(void)
 {
-    QuestLog_CutRecording();
+    SetVBlankCallback(NULL);
+    //QuestLog_CutRecording();
     SetMainCallback2(CB2_ShowEvIv);
     ScriptContext2_Enable();
 }

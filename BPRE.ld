@@ -2,23 +2,28 @@ __aeabi_idiv = 0x081e3b68|1;
 __aeabi_idivmod = 0x081e3b68|1;
 __aeabi_uidiv = 0x081e3b68|1;
 __aeabi_uidivmod = 0x081e3b68|1;
+__udivsi3 = 0x081e460c|1;
+__umodsi3 = 0x081e4684|1;
 memcpy = 0x081e5e78|1;
 memset = 0x081e5ed8|1;
 strcmp = 0x081e5f2c|1;
 strcpy = 0x081e5f88|1;
 memmove = 0x081e8e60|1;
-
-gEvIvTILE = 0x08f8fc00;
-gEvIvRAW = 0x08f8fa00;
-gEvIvPAL = 0x08f8ffe0;
+CpuSet = 0x081E3B64|1;
 
 gEvIv = 0x0203ab48;
+
+DestroySpriteAndFreeResources = 0x08007804|1;
+stdpal_get = 0x08150408|1;
+gUnknown_8471DEC = 0x08471DEC;
+gPlttBufferUnfaded = 0x020371f8;
+gPlttBufferFaded = 0x020375f8;
 
 PlaySE = 0x080722cc|1;
 GetNature = 0x08042e9c|1;
 gPlayerPartyCount = 0x02024029;
 gPlayerParty = 0x02024284;
-gBaseStats = 0x08254784;
+gBaseStatsPtr = 0x080001BC;
 GetMonData = 0x0803fbe8|1;
 GetSpeciesName = 0x08040fd0|1;
 GetMonNickname = 0x081202e0|1;
@@ -87,7 +92,9 @@ gStringVar3 = 0x02021d04;
 gStringVar4 = 0x02021d18;
 
 PlayCry7 = 0x08071f24|1;
+IsCryPlaying = 0x08072214|1;
 CreateMonSprite_PicBox = 0x08083970|1;
+CreateMonSprite_FieldMove = 0x080839d4|1;
 FreeResourcesAndDestroySprite = 0x08083a5c|1;
 SpriteCallbackDummy = 0x0800760c|1;
 gSprites = 0x0202063c;

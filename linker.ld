@@ -1,6 +1,6 @@
 OUTPUT_ARCH(arm)
 MEMORY {
-        rom     : ORIGIN = 0x08F90000, LENGTH = 16M
+        rom     : ORIGIN = 0x08000000, LENGTH = 32M
 }
 
 SECTIONS {

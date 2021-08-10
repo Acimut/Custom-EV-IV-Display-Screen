@@ -15,9 +15,7 @@ extern struct Sprite gSprites[65];
 extern struct Pokemon gPlayerParty[PARTY_SIZE];
 extern u8 gPlayerPartyCount;
 extern const struct BaseStats gBaseStats[];
-extern const u32 gEvIvTILE[];
-extern const u32 gEvIvRAW[];
-extern const u16 gEvIvPAL[];
+
 extern u8 GetNature(struct Pokemon *mon);
 extern u32 GetMonData(struct Pokemon *mon, s32 field, u8* data);
 extern u8 *GetMonNickname(struct Pokemon *mon, u8 *dest);
@@ -30,6 +28,13 @@ extern u8 gStringVar2[20];
 extern u8 gStringVar3[20];
 extern u8 gStringVar4[1000];
 extern void PlaySE(u16 songNum);
+
+extern void CpuSet(const void *src, void *dest, u32 control);
+extern u16 gPlttBufferUnfaded[PLTT_BUFFER_SIZE];
+extern u16 gPlttBufferFaded[PLTT_BUFFER_SIZE];
+
+extern const u16 gUnknown_8471DEC[];
+extern u16 *stdpal_get(u8 id);
 extern u16 AddTextPrinterParameterized(u8 windowId, u8 fontId, const u8 *str, u8 x, u8 y, u8 speed, void (*callback)(struct TextPrinterTemplate *, u16));
 
 extern void SetMainCallback2(MainCallback callback);
@@ -58,6 +63,7 @@ extern struct PaletteFadeControl gPaletteFade;
 extern void PlayFanfareByFanfareNum(u8 fanfareNum);
 //extern struct Task gTasks[]; //ya en task.h
 //extern struct Main gMain;//ya en main.h
+//extern const struct BaseStats gBaseStats[]; gBaseStats = 0x08254784;
 
 extern void ResetBgsAndClearDma3BusyFlags(bool32 enableWindowTileAutoAlloc);
 extern void InitBgsFromTemplates(u8 bgMode, const struct BgTemplate *templates, u8 numTemplates);
@@ -87,21 +93,11 @@ extern void FreeAllWindowBuffers(void);
 extern void CB2_ReturnToFieldFromDiploma(void);
 
 extern void PlayCry7(u16 species, u8 mode); // exclusive to FR/LG
+extern bool8 IsCryPlaying(void);
 extern u8 CreateMonSprite_PicBox(u16 species, s16 x, s16 y, u8 subpriority);
+extern u8 CreateMonSprite_FieldMove(u16 species, u32 otId, u32 personality, s16 x, s16 y, u8 subpriority);
 extern void FreeResourcesAndDestroySprite(struct Sprite * sprite, u8 spriteId);
 extern void SpriteCallbackDummy(struct Sprite *sprite);
 extern u8 CreateSprite(const struct SpriteTemplate *template, s16 x, s16 y, u8 subpriority);
-extern u8 FindTaskIdByFunc(TaskFunc func);
-
-struct EvIv
-{
-    u8 state;
-    u8 gfxStep;
-    u8 callbackStep;
-    u8 actualMon;
-    u16 totalAtributos[3];
-    u16 eclosion;
-    u16 tilemapBuffer[0x400];
-};
-
-extern struct EvIv *gEvIv;
+extern void DestroySpriteAndFreeResources(struct Sprite *sprite);
+//extern u8 FindTaskIdByFunc(TaskFunc func);
