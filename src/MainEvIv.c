@@ -11,6 +11,7 @@ extern void CB2_ShowEvIv(void);
 */
 void MainEvIv(void)
 {
+    PlaySE(SE_CARD3);
     SetVBlankCallback(NULL);
     //QuestLog_CutRecording();
     SetMainCallback2(CB2_ShowEvIv);

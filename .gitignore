@@ -6,6 +6,7 @@ build/*
 *.dmp
 *.bak
 *.lnk
+*.rar
 *.sa1
 *.sg1
 *.ss1
