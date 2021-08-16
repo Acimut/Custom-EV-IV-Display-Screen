@@ -10,15 +10,11 @@ memset = 0x081e5ed8|1;
 strcmp = 0x081e5f2c|1;
 strcpy = 0x081e5f88|1;
 memmove = 0x081e8e60|1;
-CpuSet = 0x081E3B64|1;
 
-gEvIv = 0x0203ab48;
+gEvIv = 0x0203FFF0;
 
 DestroySpriteAndFreeResources = 0x08007804|1;
 stdpal_get = 0x08150408|1;
-gUnknown_8471DEC = 0x08471DEC;
-gPlttBufferUnfaded = 0x020371f8;
-gPlttBufferFaded = 0x020375f8;
 
 PlaySE = 0x080722cc|1;
 GetNature = 0x08042e9c|1;
@@ -52,7 +48,6 @@ SetGpuReg = 0x08000a38|1;
 CopyBgTilemapBufferToVram = 0x080020bc|1;
 BeginNormalPaletteFade = 0x08070588|1;
 gPaletteFade = 0x02037ab8;
-PlayFanfareByFanfareNum = 0x08071bc4|1;
 gTasks = 0x03005090;
 gMain = 0x030030f0;
 
@@ -86,7 +81,6 @@ CB2_ReturnToFieldFromDiploma = 0x080568fc|1;
 ConvertIntToDecimalStringN = 0x08008e78|1;
 StringAppend = 0x08008da4|1;
 StringCopy = 0x08008d84|1;
-AddTextPrinterParameterized = 0x08002c48|1;
 gStringVar1 = 0x02021cd0;
 gStringVar2 = 0x02021cf0;
 gStringVar3 = 0x02021d04;
@@ -94,10 +88,7 @@ gStringVar4 = 0x02021d18;
 
 PlayCry7 = 0x08071f24|1;
 IsCryPlaying = 0x08072214|1;
-CreateMonSprite_PicBox = 0x08083970|1;
 CreateMonSprite_FieldMove = 0x080839d4|1;
 FreeResourcesAndDestroySprite = 0x08083a5c|1;
 SpriteCallbackDummy = 0x0800760c|1;
 gSprites = 0x0202063c;
-CreateSprite = 0x08006f8c|1;
-FindTaskIdByFunc = 0x08077688|1;

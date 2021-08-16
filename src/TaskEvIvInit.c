@@ -2,8 +2,9 @@
 #include "Textos.h"
 #include "Graphics.h"
 
-#define SPRITE_SALTO    1   //1 = activado, 0 = desactivado, activa el salto de sprite del pokémon
-//#define SPRITE_DERECHA  0   //1 = activado, 0 = desactivado, muestra el sprite del pokémon mirando a la derecha (aplica al salto) (no implementado aún)
+#define SPRITE_SALTO             1   //1 = ACTIVADO, 0 = DESACTIVADO, activa la animación de salto del sprite del pokémon.
+#define SPRITE_DIRECCION_SALTO   1   //1 = DE DERECHA A IZQUIERDA, 0 = EN EL CENTRO -1 = DE IZQUIERDA A DERECHA, dirección a donde salta el pokémon.
+#define SPRITE_DIRECCION_VISTA   0   //1 = A LA DERECHA, 0 = A LA IZQUIERDA, dirección a la que mira el sprite del pokémon.
 
 #define PICMON_X    18          //coordenada x del sprite pokémon, se mide en tiles (x8 pixeles) en el BG0
 #define PICMON_Y     5          //coordenada y del sprite pokémon, se mide en tiles (x8 pixeles) en el BG0
@@ -367,13 +368,15 @@ static void ShowPokemonPic2(u16 species, u32 otId, u32 personality, u8 x, u8 y)
     spriteId = CreateMonSprite_FieldMove(species, otId, personality, 8 * x + 40, 8 * y + 40, FALSE);
     gSpriteTaskId = CreateTask(Task_ScriptShowMonPic, 80);
 
+    gSprites[spriteId].hFlip = SPRITE_DIRECCION_VISTA;
+
     //Esta línea ajusta el sprite del pokémon 2 píxeles a la izquierda,
     //mejora la posición del sprite en el background por defecto.
     gSprites[spriteId].pos1.x -= 2;
 
 #if SPRITE_SALTO == 1
     gSprites[spriteId].pos1.y -= 32;
-    gSprites[spriteId].pos1.x += 48;
+    gSprites[spriteId].pos1.x += 48 * SPRITE_DIRECCION_SALTO;
 #endif
 
     gTasks[gSpriteTaskId].data[0] = 0;
@@ -403,53 +406,53 @@ static void Task_ScriptShowMonPic(u8 taskId)
 
 #if SPRITE_SALTO == 1
         if (task->data[3] < 10)
-            gSprites[task->data[2]].pos1.x -= 1;
+            gSprites[task->data[2]].pos1.x -= 1 * SPRITE_DIRECCION_SALTO;
         else if (task->data[3] < 18)
         {
             gSprites[task->data[2]].pos1.y += 1;
-            gSprites[task->data[2]].pos1.x -= 1;
+            gSprites[task->data[2]].pos1.x -= 1 * SPRITE_DIRECCION_SALTO;
         }
         else if (task->data[3] < 24)
         {
             gSprites[task->data[2]].pos1.y += 2;
-            gSprites[task->data[2]].pos1.x -= 1;
+            gSprites[task->data[2]].pos1.x -= 1 * SPRITE_DIRECCION_SALTO;
         }
         else if (task->data[3] < 28)
         {
             gSprites[task->data[2]].pos1.y += 3;
-            gSprites[task->data[2]].pos1.x -= 1;
+            gSprites[task->data[2]].pos1.x -= 1 * SPRITE_DIRECCION_SALTO;
         }
         else if (task->data[3] < 30)
         {
             gSprites[task->data[2]].pos1.y -= 3;
-            gSprites[task->data[2]].pos1.x -= 1;
+            gSprites[task->data[2]].pos1.x -= 1 * SPRITE_DIRECCION_SALTO;
         }
         else if (task->data[3] < 32)
         {
             gSprites[task->data[2]].pos1.y -= 2;
-            gSprites[task->data[2]].pos1.x -= 1;
+            gSprites[task->data[2]].pos1.x -= 1 * SPRITE_DIRECCION_SALTO;
         }
         else if (task->data[3] < 36)
         {
             gSprites[task->data[2]].pos1.y -= 1;
-            gSprites[task->data[2]].pos1.x -= 1;
+            gSprites[task->data[2]].pos1.x -= 1 * SPRITE_DIRECCION_SALTO;
         }
         else if (task->data[3] < 40)
-            gSprites[task->data[2]].pos1.x -= 1;
+            gSprites[task->data[2]].pos1.x -= 1 * SPRITE_DIRECCION_SALTO;
         else if (task->data[3] < 44)
         {
             gSprites[task->data[2]].pos1.y += 1;
-            gSprites[task->data[2]].pos1.x -= 1;
+            gSprites[task->data[2]].pos1.x -= 1 * SPRITE_DIRECCION_SALTO;
         }
         else if (task->data[3] < 46)
         {
             gSprites[task->data[2]].pos1.y += 2;
-            gSprites[task->data[2]].pos1.x -= 1;
+            gSprites[task->data[2]].pos1.x -= 1 * SPRITE_DIRECCION_SALTO;
         }
         else if (task->data[3] < 48)
         {
             gSprites[task->data[2]].pos1.y += 3;
-            gSprites[task->data[2]].pos1.x -= 1;
+            gSprites[task->data[2]].pos1.x -= 1 * SPRITE_DIRECCION_SALTO;
         }
 #endif
 
@@ -688,7 +691,7 @@ static void ImprimirVentana2(u16 species, u8 isEgg, u8 friendship)
         AddNumInto_gStringVar4(gTotalStatsEV);
         StringAppend(gStringVar4, gText_Espacios1);
         AddNumInto_gStringVar4(gTotalStatsIV);
-        AddTextPrinterParameterized3(2, 0x2, 0xE, 0x4, gColorTextoNegro, 0, gStringVar4);//test
+        AddTextPrinterParameterized3(2, 0x2, 0xE, 0x4, gColorTextoNegro, 0, gStringVar4);
 
         //agrega 'Tu {EspeciePokémon} es x % feliz.'
         StringCopy(gStringVar4, gText_Tu);
@@ -698,7 +701,7 @@ static void ImprimirVentana2(u16 species, u8 isEgg, u8 friendship)
         temp = (friendship * 100) / 0xFF;
         AddNumInto_gStringVar4(temp);
         StringAppend(gStringVar4, gText_Feliz);
-        AddTextPrinterParameterized3(2, 0x2, 0xE, 0x12, gColorTextoNegro, 0, gStringVar4);//test
+        AddTextPrinterParameterized3(2, 0x2, 0xE, 0x12, gColorTextoNegro, 0, gStringVar4);
         
     }else
     {

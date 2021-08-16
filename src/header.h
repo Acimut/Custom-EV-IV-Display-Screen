@@ -29,13 +29,7 @@ extern u8 gStringVar3[20];
 extern u8 gStringVar4[1000];
 extern void PlaySE(u16 songNum);
 
-extern void CpuSet(const void *src, void *dest, u32 control);
-extern u16 gPlttBufferUnfaded[PLTT_BUFFER_SIZE];
-extern u16 gPlttBufferFaded[PLTT_BUFFER_SIZE];
-
-extern const u16 gUnknown_8471DEC[];
 extern u16 *stdpal_get(u8 id);
-extern u16 AddTextPrinterParameterized(u8 windowId, u8 fontId, const u8 *str, u8 x, u8 y, u8 speed, void (*callback)(struct TextPrinterTemplate *, u16));
 
 extern void SetMainCallback2(MainCallback callback);
 extern void QuestLog_CutRecording(void);
@@ -60,7 +54,6 @@ extern void SetGpuReg(u8 regOffset, u16 value);
 extern void CopyBgTilemapBufferToVram(u8 bg);
 extern bool8 BeginNormalPaletteFade(u32 selectedPalettes, s8 delay, u8 startY, u8 targetY, u16 blendColor);
 extern struct PaletteFadeControl gPaletteFade;
-extern void PlayFanfareByFanfareNum(u8 fanfareNum);
 //extern struct Task gTasks[]; //ya en task.h
 //extern struct Main gMain;//ya en main.h
 //extern const struct BaseStats gBaseStats[]; gBaseStats = 0x08254784;
@@ -94,10 +87,7 @@ extern void CB2_ReturnToFieldFromDiploma(void);
 
 extern void PlayCry7(u16 species, u8 mode); // exclusive to FR/LG
 extern bool8 IsCryPlaying(void);
-extern u8 CreateMonSprite_PicBox(u16 species, s16 x, s16 y, u8 subpriority);
 extern u8 CreateMonSprite_FieldMove(u16 species, u32 otId, u32 personality, s16 x, s16 y, u8 subpriority);
 extern void FreeResourcesAndDestroySprite(struct Sprite * sprite, u8 spriteId);
 extern void SpriteCallbackDummy(struct Sprite *sprite);
-extern u8 CreateSprite(const struct SpriteTemplate *template, s16 x, s16 y, u8 subpriority);
 extern void DestroySpriteAndFreeResources(struct Sprite *sprite);
-//extern u8 FindTaskIdByFunc(TaskFunc func);
