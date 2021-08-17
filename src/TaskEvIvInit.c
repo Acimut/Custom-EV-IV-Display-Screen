@@ -6,8 +6,8 @@
 #define SPRITE_DIRECCION_SALTO   1   //1 = DE DERECHA A IZQUIERDA, 0 = EN EL CENTRO -1 = DE IZQUIERDA A DERECHA, dirección a donde salta el pokémon.
 #define SPRITE_DIRECCION_VISTA   0   //1 = A LA DERECHA, 0 = A LA IZQUIERDA, dirección a la que mira el sprite del pokémon.
 
-#define PICMON_X    18          //coordenada x del sprite pokémon, se mide en tiles (x8 pixeles) en el BG0
-#define PICMON_Y     5          //coordenada y del sprite pokémon, se mide en tiles (x8 pixeles) en el BG0
+#define PICMON_X    18          //coordenada x del sprite pokémon, se mide en tiles de x8 pixeles
+#define PICMON_Y     5          //coordenada y del sprite pokémon, se mide en tiles de x8 pixeles
 
 static void Task_EvIvInit(u8);
 static u8 EvIvLoadGfx(void);
@@ -44,22 +44,22 @@ static const struct BgTemplate plantilaBG[] = {
     }
 };
 
-//window 0 = nombre del pokémon
+//ventana 0 = nombre del pokémon
 #define VENTANA0_ANCHO  29
 #define VENTANA0_ALTO    2
 
-//window 1 = estadísticas
+//ventana 1 = estadísticas
 #define VENTANA1_ANCHO  17
 #define VENTANA1_ALTO   11
 #define VENTANA1_BASEBLOCK  (VENTANA0_ANCHO * VENTANA0_ALTO)    //(width * height) + baseBlock del WindowTemplate anterior
 
-//window 2 = texto en la barra inferior
+//ventana 2 = texto en la barra inferior
 #define VENTANA2_ANCHO  29
 #define VENTANA2_ALTO    5
 #define VENTANA2_BASEBLOCK VENTANA1_ANCHO * VENTANA1_ALTO + VENTANA1_BASEBLOCK  //(width * height) + baseBlock del WindowTemplate anterior
 
 static const struct WindowTemplate plantilla_de_ventanas[] = {
-    {
+    {//ventana 0 = nombre del pokémon
         .bg = 0,
         .tilemapLeft = 1,
         .tilemapTop = 2,
@@ -67,7 +67,7 @@ static const struct WindowTemplate plantilla_de_ventanas[] = {
         .height = VENTANA0_ALTO,
         .paletteNum = 15,
         .baseBlock = 0x000
-    },{
+    },{//ventana 1 = estadísticas
         .bg = 0,
         .tilemapLeft = 2,
         .tilemapTop = 4,
@@ -75,7 +75,7 @@ static const struct WindowTemplate plantilla_de_ventanas[] = {
         .height = VENTANA1_ALTO,
         .paletteNum = 15,
         .baseBlock = VENTANA1_BASEBLOCK
-    },{
+    },{//ventana 2 = texto en la barra inferior
         .bg = 0,
         .tilemapLeft = 1,
         .tilemapTop = 15,
@@ -471,7 +471,7 @@ static void Task_ScriptShowMonPic(u8 taskId)
  * Parámetro 'u8 color' en AddTextPrinterParameterized3 que
  * define el color que tendrá el texto a imprimir, usando los
  * colores de la paleta de la ventana de la siguiente manera:
- * static const ALIGNED(4) u8 COLOR[3] = {FONDO, FUENTE, SOMBRA};
+ * static const u8 COLOR[3] = {FONDO, FUENTE, SOMBRA};
  * -----Colores PAL14 y PAL15-----
  * 0=transparente
  * 1=blanco         2=negro         3=gris
@@ -513,9 +513,9 @@ static const u8 gColorAzul[]    = {0xFC, 0x04,  TEXT_COLOR_BLUE,        TEXT_COL
 static const u8 gColorRojo[]    = {0xFC, 0x04,  TEXT_COLOR_RED,         TEXT_COLOR_TRANSPARENT, TEXT_COLOR_LIGHT_GREY, EOS};
 
 static void ImprimirVentana0(struct Pokemon *mon);
-static void Agregar_Stat_En_gStringVar4(u8 nature, u8 stat);
 static void ImprimirVentana1(u8 nature, u8 isEgg);
 static void ImprimirVentana2(u16 species, u8 isEgg, u8 friendship);
+static void Agregar_Stat_En_gStringVar4(u8 nature, u8 stat);
 
 static void EvIvPrintText(struct Pokemon *mon)
 {
