@@ -1,10 +1,11 @@
 #ifndef GUARD_GLOBAL_H
 #define GUARD_GLOBAL_H
 
-//#include "config.h"//Pokefirered: Define la versión, revisión e idioma del juego, así como el sistema de medidas.
+//#include "config.h"
 #include "gba/gba.h"
 #include <string.h>
 #include "constants/global.h"
+#include "constants/species.h"
 
 // Prevent cross-jump optimization.
 #define BLOCK_CROSS_JUMP asm("");
