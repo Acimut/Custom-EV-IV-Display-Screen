@@ -88,7 +88,12 @@ gStringVar4 = 0x02021d18;
 
 PlayCry7 = 0x08071f24|1;
 IsCryPlaying = 0x08072214|1;
-CreateMonSprite_FieldMove = 0x080839d4|1;
+CreateMonSprite_FieldMove = 0x080839d4|1;/*static u8*/
 FreeResourcesAndDestroySprite = 0x08083a5c|1;
 SpriteCallbackDummy = 0x0800760c|1;
 gSprites = 0x0202063c;
+
+GetMonSpritePalStructFromOtIdPersonality = 0x08044180|1;
+IndexOfSpritePaletteTag = 0x080089e8|1;
+PreservePaletteInWeather = 0x0807b084|1;
+CreateMonPicSprite_HandleDeoxys = 0x0810c1cc|1;

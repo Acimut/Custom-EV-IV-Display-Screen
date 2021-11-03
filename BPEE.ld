@@ -14,7 +14,7 @@ strcpy = 0x082e94e4|1;
 gEvIv = 0x0203FFF0;
 
 DestroySpriteAndFreeResources = 0x08007620|1;
-GetTextWindowPalette = 0x08098c18|1;/*cambio*/
+GetTextWindowPalette = 0x08098c18|1;
 
 PlaySE = 0x080a37a4|1;
 GetNature = 0x0806d070|1;
@@ -76,7 +76,7 @@ TransferPlttBuffer = 0x080a19c0|1;
 
 DestroyTask = 0x080a909c|1;
 FreeAllWindowBuffers = 0x08003604|1;
-CB2_ReturnToFieldFadeFromBlack = 0x080861e8|1;/*cambio*/
+CB2_ReturnToFieldFadeFromBlack = 0x080861e8|1;
 
 ConvertIntToDecimalStringN = 0x08008cc0|1;
 StringAppend = 0x08008bc0|1;
@@ -86,9 +86,14 @@ gStringVar2 = 0x02021dc4;
 gStringVar3 = 0x02021ec4;
 gStringVar4 = 0x02021fc4;
 
-PlayCry1 = 0x080a3274|1;/*cambio*/
+PlayCry1 = 0x080a3274|1;
 IsCryPlaying = 0x080a36ec|1;
-CreateMonSprite_FieldMove = 0x080b5fe8|1;
+CreateMonSprite_FieldMove = 0x080b5fe8|1;/*static u8*/
 FreeResourcesAndDestroySprite = 0x080b6070|1;
 SpriteCallbackDummy = 0x08007428|1;
 gSprites = 0x02020630;
+
+GetMonSpritePalStructFromOtIdPersonality = 0x0806e7cc|1;
+IndexOfSpritePaletteTag = 0x08008804|1;
+PreservePaletteInWeather = 0x080ac3f8|1;
+CreateMonPicSprite_HandleDeoxys = 0x0818d7d8|1;

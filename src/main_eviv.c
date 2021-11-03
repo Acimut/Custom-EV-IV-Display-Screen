@@ -11,6 +11,16 @@
 #include "include/string_util.h"
 #include "include/sprite.h"
 
+#include "include/party_menu.h"
+#include "include/scanline_effect.h"
+#include "include/gpu_regs.h"
+#include "include/new_menu_helpers.h"
+#include "include/field_effect.h"
+#include "include/text_window.h"
+#include "include/overworld.h"
+#include "include/field_weather.h"
+#include "include/trainer_pokemon_sprites.h"
+
 #include "main_eviv.h"
 
 #define ESP //comment this to use the english text
@@ -420,11 +430,22 @@ static void HidePokemonPic2(u8 taskId)
     task->data[0]++;
 }
 
+static u8 CreateMonSprite_Field(u16 species, u32 otId, u32 personality, s16 x, s16 y, u8 subpriority)
+{
+    const struct CompressedSpritePalette * spritePalette = GetMonSpritePalStructFromOtIdPersonality(species, otId, personality);
+    u16 spriteId = CreateMonPicSprite_HandleDeoxys(species, otId, personality, 1, x, y, 0, spritePalette->tag);
+    PreservePaletteInWeather(IndexOfSpritePaletteTag(spritePalette->tag) + 0x10);
+    if (spriteId == 0xFFFF)
+        return MAX_SPRITES;
+    else
+        return spriteId;
+}
+
 static void ShowPokemonPic2(u16 species, u32 otId, u32 personality, u8 x, u8 y)
 {
     u8 spriteId;
 
-    spriteId = CreateMonSprite_FieldMove(species, otId, personality, 8 * x + 40, 8 * y + 40, FALSE);
+    spriteId = CreateMonSprite_Field(species, otId, personality, 8 * x + 40, 8 * y + 40, FALSE);
     gSpriteTaskId = CreateTask(Task_ScriptShowMonPic, 80);
 
     gSprites[spriteId].hFlip = SPRITE_VIEW_DIRECTION;
@@ -588,7 +609,7 @@ const u8 gText_Speed[]  = _("VELOCID.");
 
 const u8 gText_Your[]   = _("Tu ");
 const u8 gText_Is[]     = _(" es ");
-const u8 gText_Happy[]  = _("% felíz");
+const u8 gText_Happy[]  = _("% felíz.");
 
 const u8 gText_Less_Than[]  = _("¡Menos de ");
 const u8 gText_Steps_to_hatching[]  = _(" pasos para eclosionar!");
@@ -603,7 +624,7 @@ const u8 gText_Speed[]  = _("SPEED");
 
 const u8 gText_Your[]   = _("Your ");
 const u8 gText_Is[]     = _(" is ");
-const u8 gText_Happy[]  = _("% happy");
+const u8 gText_Happy[]  = _("% happy.");
 
 const u8 gText_Less_Than[]  = _(" Less than ");
 const u8 gText_Steps_to_hatching[]  = _(" steps to hatching!");
