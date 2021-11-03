@@ -1,6 +1,6 @@
 .gba
 .thumb
-.open "BPRE.gba","build/romBPRE.gba", 0x08000000
+.open "BPEE.gba","build/romBPEE.gba", 0x08000000
 //---------------------------------------------------
 .align 4
 .org insertinto

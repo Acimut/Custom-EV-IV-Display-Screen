@@ -8,13 +8,12 @@ include $(DEVKITARM)/base_tools
 
 #-------------------------------------------------------------------------------
 
-export ROM_CODE := BPRE
-export INSERT_INTO := 0x08ff0000
+include config.mk
 
 export BUILD := build
 export SRC := src
 export BINARY := $(BUILD)/linked.o
-export RESOURCES := $(SRC)/graphics
+export RESOURCES := graphics
 
 export ARMIPS ?= armips.exe
 export GFX ?= gbagfx.exe
@@ -23,14 +22,14 @@ export LD := $(PREFIX)ld
 
 export ASFLAGS := -mthumb
 	
-export INCLUDES := -I $(SRC)
+export INCLUDES := -I $(SRC) -I . -I include -D$(ROM_CODE)
 export WARNINGFLAGS :=	-Wall -Wno-discarded-array-qualifiers \
 	-Wno-int-conversion
-export CFLAGS := -O2 -Wextra -mthumb -mno-thumb-interwork -mcpu=arm7tdmi -mtune=arm7tdmi \
-	-march=armv4t -mlong-calls -fno-inline -fno-builtin -std=gnu11 -mabi=apcs-gnu -x c -c \
-	-MMD $(WARNINGFLAGS) $(INCLUDES) -O -finline 
-
-export LDFLAGS := --relocatable -T linker.ld -T $(ROM_CODE).ld 
+export CFLAGS := -g -O2 $(WARNINGFLAGS) -mthumb -std=gnu11 $(INCLUDES) -mcpu=arm7tdmi \
+	-march=armv4t -mno-thumb-interwork -fno-inline -fno-builtin -mlong-calls -DROM_$(ROM_CODE) \
+	-fdiagnostics-color
+export DEPFLAGS = -MT $@ -MMD -MP -MF "$(@:%.o=%.d)"
+export LDFLAGS := -T linker.ld -r $(ROM_CODE).ld 
 
 #-------------------------------------------------------------------------------
 	
@@ -51,15 +50,15 @@ GBA_BIN_LZ := $(TILEMAP:%=%.lz)
 
 # Sources
 # C_MAIN función principal que inicializa el sistema. Se compila primero que nada.
-C_MAIN := $(call rwildcard,$(SRC),MainEvIv.c)
-HEADERS := $(call rwildcard,$(SRC),*.h)
+C_MAIN := $(call rwildcard,$(SRC),call_eviv.c)
+# HEADERS := $(call rwildcard,$(SRC),*.h)
 C_SRC := $(call rwildcard,$(SRC),*.c)
 S_SRC := $(call rwildcard,$(SRC),*.s)
 
 # Binaries
-C_MAIN := $(C_MAIN:%=$(BUILD)/%.o)
-C_OBJ := $(C_SRC:%=$(BUILD)/%.o)
-S_OBJ := $(S_SRC:%=$(BUILD)/%.o)
+C_MAIN := $(C_MAIN:%.c=$(BUILD)/%.o)
+C_OBJ := $(C_SRC:%.c=$(BUILD)/%.o)
+S_OBJ := $(S_SRC:%.s=$(BUILD)/%.o)
 
 ALL_OBJ := $(C_MAIN) $(C_OBJ) $(S_OBJ)
 
@@ -70,8 +69,8 @@ ALL_OBJ := $(C_MAIN) $(C_OBJ) $(S_OBJ)
 all: clean graphics rom
 
 rom: main$(ROM_CODE).asm $(BINARY)
-	@echo -e "Creating ROM"
-	$(ARMIPS) main$(ROM_CODE).asm -definelabel insertinto $(INSERT_INTO) -sym offsets.txt
+	@echo "\nCreating ROM"
+	$(ARMIPS) main$(ROM_CODE).asm -definelabel insertinto $(OFFSET) -sym offsets.txt
 
 clean:
 	rm -rf $(BINARY)
@@ -81,18 +80,19 @@ clean:
 	rm -rf $(GBA_BIN_LZ)
 
 $(BINARY): $(ALL_OBJ)
-	@echo -e "Linking ELF binary $@"
+	@echo "\nLinking ELF binary $@"
 	@$(LD) $(LDFLAGS) -o $@ $^
 	
-$(BUILD)/%.c.o: %.c $(HEADERS)
-	@echo -e "Compiling $<"
+$(BUILD)/%.o: %.c
+	@echo "\nCompiling $<"
 	@mkdir -p $(@D)
-	$(PREPROC) "$<" charmap.txt | $(CC) $(CFLAGS) -MF "$(@:%.o=%.d)" -MT "$@" -o "$@" -
+	@$(CC) $(DEPFLAGS) $(CFLAGS) -E -c $< -o $(BUILD)/$*.i
+	@$(PREPROC) $(BUILD)/$*.i charmap.txt | $(CC) $(CFLAGS) -x c -o $@ -c -
 
-$(BUILD)/%.s.o: %.s $(HEADERS)
+$(BUILD)/%.o: %.s
 	@echo -e "Assembling $<"
 	@mkdir -p $(@D)
-	@$(AS) $(ASFLAGS) -o $@
+	$(PREPROC) "$<" charmap.txt | @$(AS) $(ASFLAGS) -o $@
 
 %.4bpp: %.png  ; $(GFX) $< $@
 %.pal: %.png  ; $(GFX) $< $@
@@ -112,3 +112,7 @@ paltogbapal: $(GBAPAL)
 bintolz: $(GBA_BIN_LZ)
 
 graphics: pngto4bpp gba4bpptolz pngtopal paltogbapal bintolz
+
+firered:              	; @$(MAKE) ROM_CODE=BPRE
+rojofuego:           	; @$(MAKE) ROM_CODE=BPRS
+emerald:              	; @$(MAKE) ROM_CODE=BPEE
