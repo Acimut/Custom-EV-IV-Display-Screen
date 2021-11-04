@@ -1,7 +1,6 @@
 #include "include/global.h"
 #include "include/menu.h"
 #include "include/task.h"
-#include "include/constants/fanfares.h"
 #include "include/constants/songs.h"
 #include "include/bg.h"
 #include "include/malloc.h"
@@ -51,7 +50,7 @@ static u8 EvIvLoadGfx(void);
 static void EvIvVblankHandler(void);
 static void Task_WaitForExit(u8);
 static void Task_EvIvReturnToOverworld(u8);
-static void MostrarSprite(struct Pokemon *mon);
+static void ShowSprite(struct Pokemon *mon);
 static void EvIvPrintText(struct Pokemon *mon);
 static void ShowPokemonPic2(u16 species, u32 otId, u32 personality, u8 x, u8 y);
 static void Task_ScriptShowMonPic(u8 taskId);
@@ -225,7 +224,7 @@ static void Task_EvIvInit(u8 taskId)
         SetGpuReg(REG_OFFSET_BG1HOFS, 0);
         break;
     case 5:
-        MostrarSprite(&gPlayerParty[gCurrentMon]);
+        ShowSprite(&gPlayerParty[gCurrentMon]);
         EvIvPrintText(&gPlayerParty[gCurrentMon]);
         break;
     case 6:
@@ -263,7 +262,7 @@ static void Task_WaitForExit(u8 taskId)
             else
                 gCurrentMon++;
             HidePokemonPic2(gSpriteTaskId);
-            MostrarSprite(&gPlayerParty[gCurrentMon]);
+            ShowSprite(&gPlayerParty[gCurrentMon]);
             EvIvPrintText(&gPlayerParty[gCurrentMon]);
         }
         if (JOY_REPT(DPAD_UP) && gPlayerPartyCount > 1)
@@ -273,7 +272,7 @@ static void Task_WaitForExit(u8 taskId)
             else
                 gCurrentMon--;
             HidePokemonPic2(gSpriteTaskId);
-            MostrarSprite(&gPlayerParty[gCurrentMon]);
+            ShowSprite(&gPlayerParty[gCurrentMon]);
             EvIvPrintText(&gPlayerParty[gCurrentMon]);
         }
         if (JOY_NEW(A_BUTTON) || JOY_NEW(B_BUTTON))
@@ -401,7 +400,7 @@ static u8 EvIvLoadGfx(void)
     return 0;
 }
 
-static void MostrarSprite(struct Pokemon *mon)
+static void ShowSprite(struct Pokemon *mon)
 {
     u16 species = GetMonData(mon, MON_DATA_SPECIES, NULL);
     u8 isEgg    = GetMonData(mon, MON_DATA_IS_EGG, NULL);
@@ -584,7 +583,7 @@ static const u8 gBlueTextColor[3]   = {TEXT_COLOR_TRANSPARENT,  TEXT_COLOR_BLUE,
 static const u8 gRedTextColor[3]    = {TEXT_COLOR_TRANSPARENT,  TEXT_COLOR_RED,         TEXT_COLOR_LIGHT_GRAY};
 static const u8 gGrayTextColor[3]   = {TEXT_COLOR_TRANSPARENT,  TEXT_COLOR_LIGHT_GRAY,  TEXT_COLOR_DARK_GRAY};
 
-const u8 * gTextColorByNature[] = 
+static const u8 *const gTextColorByNature[] = 
 {
     gBlackTextColor,
     gRedTextColor,
@@ -593,33 +592,33 @@ const u8 * gTextColorByNature[] =
 
 
 const u8 gText_Slash[]      = _("/");
-const u8 gText_CensorEgg[]  = _("{CLEAR_TO 12}?{CLEAR_TO 42}?{CLEAR_TO 66}?\n");
+const u8 gText_CensorEgg[]  = _("{CLEAR_TO 12}?{CLEAR_TO 42}?{CLEAR_TO 66}?");
 
 const u8 gText_BsEvIv[] = _("BS{CLEAR_TO 30}EV{CLEAR_TO 54}IV");
 
 const u8 gText_Total[]  = _("TOTAL");
 
 #ifdef ESP
-const u8 gText_Hp[]     = _("PS\n");
-const u8 gText_Atq[]    = _("ATAQUE\n");
-const u8 gText_Def[]    = _("DEFENSA\n");
-const u8 gText_SpAtk[]  = _("ATQ.ESP.\n");
-const u8 gText_SpDef[]  = _("DEF.ESP.\n");
+const u8 gText_Hp[]     = _("PS");
+const u8 gText_Atq[]    = _("ATAQUE");
+const u8 gText_Def[]    = _("DEFENSA");
+const u8 gText_SpAtk[]  = _("ATQ.ESP.");
+const u8 gText_SpDef[]  = _("DEF.ESP.");
 const u8 gText_Speed[]  = _("VELOCID.");
 
 const u8 gText_Your[]   = _("Tu ");
 const u8 gText_Is[]     = _(" es ");
-const u8 gText_Happy[]  = _("% felíz.");
+const u8 gText_Happy[]  = _("% feliz.");
 
 const u8 gText_Less_Than[]  = _("¡Menos de ");
 const u8 gText_Steps_to_hatching[]  = _(" pasos para eclosionar!");
 #else
 // ENG
-const u8 gText_Hp[]     = _("HP\n");
-const u8 gText_Atq[]    = _("ATTACK\n");
-const u8 gText_Def[]    = _("DEFENSE\n");
-const u8 gText_SpAtk[]  = _("SP.ATK.\n");
-const u8 gText_SpDef[]  = _("SP.DEF.\n");
+const u8 gText_Hp[]     = _("HP");
+const u8 gText_Atq[]    = _("ATTACK");
+const u8 gText_Def[]    = _("DEFENSE");
+const u8 gText_SpAtk[]  = _("SP.ATK.");
+const u8 gText_SpDef[]  = _("SP.DEF.");
 const u8 gText_Speed[]  = _("SPEED");
 
 const u8 gText_Your[]   = _("Your ");
