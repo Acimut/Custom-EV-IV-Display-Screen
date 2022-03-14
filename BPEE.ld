@@ -42,7 +42,7 @@ FreeAllSpritePalettes = 0x0800870c|1;
 ResetTasks = 0x080a8f50|1;
 ScanlineEffect_Stop = 0x080b9fb8|1;
 
-SetVBlankCallback = 0x081c7600|1;
+SetVBlankCallback = 0x080006f0|1;/*SetVBlankCallback_*/
 CopyToBgTilemapBuffer = 0x080022f0|1;
 SetGpuReg = 0x080010b4|1;
 CopyBgTilemapBufferToVram = 0x0800236c|1;
@@ -50,7 +50,7 @@ BeginNormalPaletteFade = 0x080a1ad4|1;
 gPaletteFade = 0x02037fd4;
 gTasks = 0x03005e00;
 gMain = 0x030022c0;
-
+gSaveBlock1Ptr = 0x03005d8c;
 ResetBgsAndClearDma3BusyFlags = 0x080017bc|1;
 InitBgsFromTemplates = 0x080017e8|1;
 ChangeBgX = 0x08001d04|1;

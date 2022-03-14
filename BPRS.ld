@@ -50,7 +50,7 @@ BeginNormalPaletteFade = 0x080705c0|1;
 gPaletteFade = 0x02037ab8;
 gTasks = 0x03004fe0;
 gMain = 0x03003040;
-
+gSaveBlock1Ptr = 0x03004F58;
 ResetBgsAndClearDma3BusyFlags = 0x08001614|1;
 InitBgsFromTemplates = 0x08001654|1;
 ChangeBgX = 0x08001b8c|1;

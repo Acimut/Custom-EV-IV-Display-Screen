@@ -11,7 +11,13 @@ strcmp = 0x081e5f2c|1;
 strcpy = 0x081e5f88|1;
 memmove = 0x081e8e60|1;
 
+gEvIv = 0x03007490;
+SS_backup = 0x030074A0;
+/*
+0x03007480 = end IWRAM
 gEvIv = 0x0203FFF0;
+SS_backup = 0x0203FFC0;
+*/
 
 DestroySpriteAndFreeResources = 0x08007804|1;
 stdpal_get = 0x08150408|1;
@@ -50,7 +56,7 @@ BeginNormalPaletteFade = 0x08070588|1;
 gPaletteFade = 0x02037ab8;
 gTasks = 0x03005090;
 gMain = 0x030030f0;
-
+gSaveBlock1Ptr = 0x03005008;
 ResetBgsAndClearDma3BusyFlags = 0x08001618|1;
 InitBgsFromTemplates = 0x08001658|1;
 ChangeBgX = 0x08001b90|1;
@@ -97,3 +103,29 @@ GetMonSpritePalStructFromOtIdPersonality = 0x08044180|1;
 IndexOfSpritePaletteTag = 0x080089e8|1;
 PreservePaletteInWeather = 0x0807b084|1;
 CreateMonPicSprite_HandleDeoxys = 0x0810c1cc|1;
+
+/*summary screen*/
+sMonSummaryScreen     = 0x0203b140;/*EWRAM*/
+sMonSkillsPrinterXpos = 0x0203b144;/*EWRAM*/
+sLastViewedMonIndex   = 0x0203b16c;/*EWRAM*/
+
+GetBoxMonData       = 0x0803fd44|1;
+BoxMonToMon         = 0x0803e774|1;
+ShowPokemonSummaryScreen = 0x081344f8|1;
+PokeSum_RemoveWindows    = 0x08138414|1;
+ConvertIntToHexStringN   = 0x08008f18|1;
+
+PokeSum_TryPlayMonCry = 0x0813b784|1;
+Task_PokeSum_SwitchDisplayedPokemon = 0x0813b3f0|1;
+IsPageFlipInput = 0x081347a4|1;
+Task_PokeSum_FlipPages = 0x08134bac|1;
+PokeSum_SeekToNextMon = 0x0813b120|1;
+Task_FlipPages_FromInfo = 0x08134e84|1;
+Task_DestroyResourcesOnExit = 0x08137e64|1;
+MenuHelpers_CallLinkSomething = 0x080bf72c|1;
+LinkRecvQueueLengthMoreThan2 = 0x0800b270|1;
+FuncIsActiveTask = 0x08077650|1;
+HideBg = 0x080019d0|1;
+Overworld_LinkRecvQueueLengthMoreThan2 = 0x08058244|1;
+
+

@@ -1,8 +1,8 @@
-#include "include/constants/songs.h"
+#include "constants/songs.h"
 
 #include "main_eviv.h"
 
-void Call_EvIv(void)
+void EvIv_PlayerParty(void)
 {
 #ifdef FIRERED
 //FIFERED
@@ -13,6 +13,6 @@ void Call_EvIv(void)
     PlaySE(SE_RG_CARD_OPEN);
 #endif
     SetVBlankCallback(NULL);
-    SetMainCallback2(CB2_ShowEvIv);
+    SetMainCallback2(CB2_ShowEvIv_PlayerParty);
     ScriptContext2_Enable();
 }

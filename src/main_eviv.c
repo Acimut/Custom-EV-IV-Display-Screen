@@ -1,24 +1,26 @@
-#include "include/global.h"
-#include "include/menu.h"
-#include "include/task.h"
-#include "include/constants/songs.h"
-#include "include/bg.h"
-#include "include/malloc.h"
-#include "include/palette.h"
-#include "include/sprite.h"
-#include "include/window.h"
-#include "include/string_util.h"
-#include "include/sprite.h"
+#include "global.h"
+#include "menu.h"
+#include "task.h"
+#include "constants/songs.h"
+#include "bg.h"
+#include "malloc.h"
+#include "palette.h"
+#include "sprite.h"
+#include "window.h"
+#include "string_util.h"
+#include "sprite.h"
 
-#include "include/party_menu.h"
-#include "include/scanline_effect.h"
-#include "include/gpu_regs.h"
-#include "include/new_menu_helpers.h"
-#include "include/field_effect.h"
-#include "include/text_window.h"
-#include "include/overworld.h"
-#include "include/field_weather.h"
-#include "include/trainer_pokemon_sprites.h"
+#include "party_menu.h"
+#include "scanline_effect.h"
+#include "gpu_regs.h"
+#include "new_menu_helpers.h"
+#include "field_effect.h"
+#include "text_window.h"
+#include "overworld.h"
+#include "field_weather.h"
+#include "trainer_pokemon_sprites.h"
+
+#include "pokemon_summary_screen.h"
 
 #include "main_eviv.h"
 
@@ -50,14 +52,16 @@ static u8 EvIvLoadGfx(void);
 static void EvIvVblankHandler(void);
 static void Task_WaitForExit(u8);
 static void Task_EvIvReturnToOverworld(u8);
+static void BufferMonData(struct Pokemon * mon);
 static void ShowSprite(struct Pokemon *mon);
 static void EvIvPrintText(struct Pokemon *mon);
 static void ShowPokemonPic2(u16 species, u32 otId, u32 personality, u8 x, u8 y);
 static void Task_ScriptShowMonPic(u8 taskId);
-static void HidePokemonPic2(u8 taskId);
+void HidePokemonPic2(u8 taskId);
 
 static void PrintStat(u8 nature, u8 stat);
-static u8 GetDigits(u16 num);
+u8 GetDigitsDec(u32 num);
+u8 GetDigitsHex(u32 num);
 static u8 GetColorByNature(u8 nature, u8 stat);
 
 const u32 gBgEvIvGfx[] = INCBIN_U32("graphics/bgEvIv.4bpp.lz");
@@ -135,28 +139,75 @@ static const struct WindowTemplate windows_templates[] = {
     }, DUMMY_WIN_TEMPLATE
 };
 
+
+
+
+/**
+ * Acimut
+ * 2022-03-02
+ * 
+ * Es necesario un callback para retornar a la pantalla de Summary Screen.
+*/
+
+
+/*
+void ShowPokemonSummaryScreen(
+    struct Pokemon * party, 
+    u8 cursorPos, 
+    u8 lastIdx, 
+    MainCallback savedCallback, 
+    u8 mode);
+*/
+
 struct EvIv
 {
     u8 state;
     u8 gfxStep;
     u8 callbackStep;
-    u8 currentMon;
+    bool8 return_summary_screen;
+
     u8 spriteTaskId;
+    u8 cursorPos;               //CALLBACK SUMMARY SCREEN
+    u8 lastIdx;                 //CALLBACK SUMMARY SCREEN
+    u8 mode;                    //CALLBACK SUMMARY SCREEN
+ 
     u8 stats_ev[NUM_STATS];
     u8 stats_iv[NUM_STATS];
     u8 stats_bs[NUM_STATS];
     u16 totalStatsEV;
     u16 totalStatsIV;
     u16 totalStatsBS;
+
+    struct Pokemon currentMon;
+
+    union
+    {
+        struct Pokemon * mons;
+        struct BoxPokemon * boxMons;
+    } monList;                  //CALLBACK SUMMARY SCREEN
+
+    MainCallback savedCallback; //CALLBACK SUMMARY SCREEN
     u16 tilemapBuffer[0x400];
 };
 
+struct PokeSS
+{
+    struct Pokemon * party;
+    u8 cursorPos;
+    u8 lastIdx;
+    u8 mode;
+    u8 taskId;
+    MainCallback savedCallback;
+};
+
+extern struct PokeSS SS_backup;
+
 extern struct EvIv *gEvIv;
 
-#define gState              gEvIv->state
-#define gGfxStep            gEvIv->gfxStep
-#define gCallbackStep       gEvIv->callbackStep
-#define gCurrentMon         gEvIv->currentMon
+#define gState              gEvIv->state            //Task_WaitForExit  | función que maneja los botones
+#define gGfxStep            gEvIv->gfxStep          //EvIvLoadGfx       | carga gráficos y paletas
+#define gCallbackStep       gEvIv->callbackStep     //Task_EvIvInit     | función inicializadora
+#define gReturn             gEvIv->return_summary_screen
 #define gSpriteTaskId       gEvIv->spriteTaskId
 #define gStats_ev           gEvIv->stats_ev
 #define gStats_iv           gEvIv->stats_iv
@@ -164,6 +215,15 @@ extern struct EvIv *gEvIv;
 #define gTotalStatsEV       gEvIv->totalStatsEV
 #define gTotalStatsIV       gEvIv->totalStatsIV
 #define gTotalStatsBS       gEvIv->totalStatsBS
+
+//CALLBACK SUMMARY SCREEN
+#define SS_party            gEvIv->monList          //Puntero al arreglo de pokémon.
+#define SS_cursorPos        gEvIv->cursorPos        //Número del pokémon actual.
+#define SS_lastIdx          gEvIv->lastIdx          //Cantidad de pokémon.
+#define SS_callback         gEvIv->savedCallback    //Func. de retorno.
+#define SS_mode             gEvIv->mode             //Modo.
+#define gCurrentMon         gEvIv->currentMon       //buffer del pokémon actual
+
 
 static void EvIvBgInit(void)
 {
@@ -182,13 +242,119 @@ static void CB2_EvIv(void)
     UpdatePaletteFade();
 }
 
-void CB2_ShowEvIv(void)
+/**
+ * 2022-03-03
+ * ACIMUT:
+ * Callback summary screen
+*/
+
+#define FREE_AND_SET_NULL_IF_SET(ptr) \
+{                                     \
+    if (ptr != NULL)                  \
+    {                                 \
+        free(ptr);                    \
+        (ptr) = NULL;                 \
+    }                                 \
+}
+
+void CB2_ShowEvIv_SummaryScreen(void)
+{
+    Show_EvIv(SS_backup.party,
+                SS_backup.cursorPos,
+                SS_backup.lastIdx,
+                SS_backup.savedCallback,
+                SS_backup.mode,
+                TRUE);
+    //FREE_AND_SET_NULL_IF_SET(sMonSummaryScreen);
+    //FREE_AND_SET_NULL_IF_SET(sMonSkillsPrinterXpos);
+}
+
+/**
+ * 2022-03-03
+ * ACIMUT:
+ * Esta función configura el ev-iv summary screen por 
+ * defecto, muestra nuestro equipo pokémon.
+*/
+
+void CB2_ShowEvIv_PlayerParty(void)
+{
+    Show_EvIv(gPlayerParty, 0, (gPlayerPartyCount - 1), NULL, PSS_MODE_NORMAL, FALSE);
+}
+
+
+/**
+ * 2022-03-03
+ * ACIMUT:
+ * Esta función podrá ser llamada por la summary screen,
+ * la cual está preparada con suficientes parámetros para
+ * recibir argumentos desde la summary screen y así poder
+ * volver a la summary screen.
+ * 
+ * Usar la ventana arriba a la derecha, donde pone:
+ * EMERALD:     (A)CANCEL
+ * FIRERED:     (+)PAGE (A)CANCEL
+ * ESMERALDA:   (A)SALIR
+ * ROJOFUEGO:   (+)PÁG. (A)SALIR
+ * 
+ * Poner en la segunda página:
+ * EMERALD:     [(A)EV-IV] 
+ * FIRERED:     [(+)PAGE (A)EV-IV]
+ * ya que en esta página no se usa esta ventana.
+ * #También hacer hook en esa parte para capturar el botón A.
+ * 
+ * ESMERALDA:
+ * Ventana arriba a la derecha:
+ * bg = 0
+ * pal = 7
+ * x = 176 = 0xB0 px = 22t        y = 0
+ * tamaño = 64x16 px = 8x2
+ * página 2 = POKEMON SKILLS
+ * 
+ * 
+ * FIRERED:
+ * Ventana arriba a la derecha:
+ * bg = 1 & 2   //wtf!
+ * pal = 7
+ * x = 152 = 0x98 px = 19t        y = 0
+ * tamaño = 88x16 px = 11x2
+ * página 2 = HABIL. POKÉMON
+ * 
+ * -------TAREAS:--------
+ * I:       Realizar hook a la función que maneja los botones.
+ * Task_InputHandler_Info
+ * II: -ok- Realizar hook a la función que carga la ventana X
+ * III:-ok- Realizar una excepción a la función de retorno del ev-iv
+ *          para que decida si retornar a la summary screen o al ow.
+ * IV: -ok- Realizar las excepciones para los tipos de datos de los pokémon,
+ *          así poder imprimir datos de Pokemon o BoxPokemon.
+*/
+
+void Show_EvIv(struct Pokemon * party, u8 cursorPos, u8 lastIdx, MainCallback savedCallback, u8 mode, bool8 return_summary_screen)
 {
     gEvIv = AllocZeroed(sizeof(*gEvIv));
+
+    if (gEvIv == NULL)
+    {
+        SetMainCallback2(savedCallback);
+        return;
+    }
+
+    //FREE_AND_SET_NULL_IF_SET(sMonSummaryScreen);
+    //FREE_AND_SET_NULL_IF_SET(sMonSkillsPrinterXpos);
+    
     gState = 0;
     gGfxStep = 0;
     gCallbackStep = 0;
-    gCurrentMon = 0;
+    
+    SS_party.mons = party;
+    SS_cursorPos = cursorPos;
+    SS_lastIdx = lastIdx;
+    SS_callback = savedCallback;
+    SS_mode = mode;
+    gReturn = return_summary_screen;
+
+    BufferMonData(&gCurrentMon);
+
     EvIvBgInit();
     CreateTask(Task_EvIvInit, 0);
     SetMainCallback2(CB2_EvIv);
@@ -224,8 +390,8 @@ static void Task_EvIvInit(u8 taskId)
         SetGpuReg(REG_OFFSET_BG1HOFS, 0);
         break;
     case 5:
-        ShowSprite(&gPlayerParty[gCurrentMon]);
-        EvIvPrintText(&gPlayerParty[gCurrentMon]);
+        ShowSprite(&gCurrentMon);
+        EvIvPrintText(&gCurrentMon);
         break;
     case 6:
         CopyBgTilemapBufferToVram(0);
@@ -255,26 +421,57 @@ static void Task_WaitForExit(u8 taskId)
         gState++;
         break;
     case 1:
-        if (JOY_REPT(DPAD_DOWN) && gPlayerPartyCount > 1)
+        if (SS_lastIdx > 0)
         {
-            if (gCurrentMon == (gPlayerPartyCount - 1))
-                gCurrentMon = 0;
-            else
-                gCurrentMon++;
-            HidePokemonPic2(gSpriteTaskId);
-            ShowSprite(&gPlayerParty[gCurrentMon]);
-            EvIvPrintText(&gPlayerParty[gCurrentMon]);
+            if (JOY_REPT(DPAD_DOWN))
+            {
+                if (SS_cursorPos == (SS_lastIdx))
+                    SS_cursorPos = 0;
+                else
+                    SS_cursorPos++;
+
+                //si se trata de la caja de pokémon...
+                if (SS_mode == PSS_MODE_BOX)
+                {
+                    //bucle usado en las cajas, donde hay pokémon vacíos.
+                    while (GetBoxMonData(&SS_party.boxMons[SS_cursorPos], MON_DATA_SPECIES, NULL) == SPECIES_NONE)
+                    {
+                        if (SS_cursorPos == (SS_lastIdx))
+                            SS_cursorPos = 0;
+                        else
+                            SS_cursorPos++;
+
+                    }
+                }
+                BufferMonData(&gCurrentMon);
+                HidePokemonPic2(gSpriteTaskId);
+                EvIvPrintText(&gCurrentMon);
+                ShowSprite(&gCurrentMon);
+            }
+            else if (JOY_REPT(DPAD_UP))
+            {
+                if (SS_cursorPos == 0)
+                    SS_cursorPos = (SS_lastIdx);
+                else
+                    SS_cursorPos--;
+    
+                if (SS_mode == PSS_MODE_BOX)
+                {
+                    while (GetBoxMonData(&SS_party.boxMons[SS_cursorPos], MON_DATA_SPECIES, NULL) == SPECIES_NONE)
+                    {
+                        if (SS_cursorPos == 0)
+                            SS_cursorPos = (SS_lastIdx);
+                        else
+                            SS_cursorPos--;
+                    }
+                }
+                BufferMonData(&gCurrentMon);
+                HidePokemonPic2(gSpriteTaskId);
+                EvIvPrintText(&gCurrentMon);
+                ShowSprite(&gCurrentMon);
+            }
         }
-        if (JOY_REPT(DPAD_UP) && gPlayerPartyCount > 1)
-        {
-            if (gCurrentMon == 0)
-                gCurrentMon = (gPlayerPartyCount - 1);
-            else
-                gCurrentMon--;
-            HidePokemonPic2(gSpriteTaskId);
-            ShowSprite(&gPlayerParty[gCurrentMon]);
-            EvIvPrintText(&gPlayerParty[gCurrentMon]);
-        }
+
         if (JOY_NEW(A_BUTTON) || JOY_NEW(B_BUTTON))
         {
 #ifdef FIRERED
@@ -295,13 +492,35 @@ static void Task_WaitForExit(u8 taskId)
     }
 }
 
+void CB2_SummaryScreen(void)
+{
+    ShowPokemonSummaryScreen(SS_backup.party, SS_backup.cursorPos, SS_backup.lastIdx, SS_backup.savedCallback, SS_backup.mode);
+}
+
 static void Task_EvIvReturnToOverworld(u8 taskId)
 {
+    bool8 return_summary_screen = gReturn;
+
     if (gPaletteFade.active)
         return;
+
     DestroyTask(taskId);
     FreeAllWindowBuffers();
-    FREE_AND_SET_NULL(gEvIv);
+    
+
+    //si retorna a la summary screen
+    if (return_summary_screen)
+    {
+        SS_backup.party = SS_party.mons;
+        SS_backup.cursorPos = SS_cursorPos;
+        SS_backup.lastIdx = SS_lastIdx;
+        SS_backup.savedCallback = SS_callback;
+        SS_backup.mode = SS_mode;
+        SetMainCallback2(CB2_SummaryScreen);
+        //ShowPokemonSummaryScreen(SS_party.mons, SS_cursorPos, SS_lastIdx, SS_callback, SS_mode);
+    }
+    else
+    {
 #ifdef FIRERED
 //FIRERED
         SetMainCallback2(CB2_ReturnToFieldFromDiploma);
@@ -309,6 +528,24 @@ static void Task_EvIvReturnToOverworld(u8 taskId)
 //EMERALD
         SetMainCallback2(CB2_ReturnToFieldFadeFromBlack);
 #endif
+    }
+    
+    //FREE_AND_SET_NULL(gEvIv);
+    FREE_AND_SET_NULL_IF_SET(gEvIv);
+}
+
+static void BufferMonData(struct Pokemon * mon)
+{
+    if (SS_mode != PSS_MODE_BOX)
+    {
+        struct Pokemon * partyMons = SS_party.mons;
+        *mon = partyMons[SS_cursorPos];
+    }
+    else
+    {
+        struct BoxPokemon * boxMons = SS_party.boxMons;
+        BoxMonToMon(&boxMons[SS_cursorPos], mon);
+    }
 }
 
 static void ResetBGPos(void)
@@ -423,7 +660,7 @@ static void ShowSprite(struct Pokemon *mon)
         ShowPokemonPic2(SPECIES_EGG, 0, 0x8000, PICMON_X, PICMON_Y);
 }
 
-static void HidePokemonPic2(u8 taskId)
+void HidePokemonPic2(u8 taskId)
 {
     struct Task * task = &gTasks[taskId];
     task->data[0]++;
@@ -484,54 +721,34 @@ static void Task_ScriptShowMonPic(u8 taskId)
     case 1:
 
 #if SPRITE_JUMP == 1
-        if (task->data[3] < 10)
-            gSprites[task->data[2]].x -= 1 * SPRITE_JUMP_DIRECTION;
-        else if (task->data[3] < 18)
+        u8 tmp_var;
+        if (task->data[3] < 48)
         {
-            gSprites[task->data[2]].y += 1;
-            gSprites[task->data[2]].x -= 1 * SPRITE_JUMP_DIRECTION;
-        }
-        else if (task->data[3] < 24)
-        {
-            gSprites[task->data[2]].y += 2;
-            gSprites[task->data[2]].x -= 1 * SPRITE_JUMP_DIRECTION;
-        }
-        else if (task->data[3] < 28)
-        {
-            gSprites[task->data[2]].y += 3;
-            gSprites[task->data[2]].x -= 1 * SPRITE_JUMP_DIRECTION;
-        }
-        else if (task->data[3] < 30)
-        {
-            gSprites[task->data[2]].y -= 3;
-            gSprites[task->data[2]].x -= 1 * SPRITE_JUMP_DIRECTION;
-        }
-        else if (task->data[3] < 32)
-        {
-            gSprites[task->data[2]].y -= 2;
-            gSprites[task->data[2]].x -= 1 * SPRITE_JUMP_DIRECTION;
-        }
-        else if (task->data[3] < 36)
-        {
-            gSprites[task->data[2]].y -= 1;
-            gSprites[task->data[2]].x -= 1 * SPRITE_JUMP_DIRECTION;
-        }
-        else if (task->data[3] < 40)
-            gSprites[task->data[2]].x -= 1 * SPRITE_JUMP_DIRECTION;
-        else if (task->data[3] < 44)
-        {
-            gSprites[task->data[2]].y += 1;
-            gSprites[task->data[2]].x -= 1 * SPRITE_JUMP_DIRECTION;
-        }
-        else if (task->data[3] < 46)
-        {
-            gSprites[task->data[2]].y += 2;
-            gSprites[task->data[2]].x -= 1 * SPRITE_JUMP_DIRECTION;
-        }
-        else if (task->data[3] < 48)
-        {
-            gSprites[task->data[2]].y += 3;
-            gSprites[task->data[2]].x -= 1 * SPRITE_JUMP_DIRECTION;
+            if (task->data[3] < 10)
+                tmp_var = 0;
+            else if (task->data[3] < 18)                
+                tmp_var = 1;
+            else if (task->data[3] < 24)
+                tmp_var = 2;
+            else if (task->data[3] < 28)
+                tmp_var = 3;
+            else if (task->data[3] < 30)
+                tmp_var = -3;
+            else if (task->data[3] < 32)
+                tmp_var = -2;
+            else if (task->data[3] < 36)
+                tmp_var = -1;
+            else if (task->data[3] < 40)
+                tmp_var = 0;
+            else if (task->data[3] < 44)
+                tmp_var = 1;
+            else if (task->data[3] < 46)
+                tmp_var = 2;
+            else
+                tmp_var = 3;
+
+            gSprites[task->data[2]].y += tmp_var;
+            gSprites[task->data[2]].x -= SPRITE_JUMP_DIRECTION;
         }
 #endif
 
@@ -550,19 +767,19 @@ static void Task_ScriptShowMonPic(u8 taskId)
 /*
 
 +- - - - - - - - - - - +
-|PS       160  255  16 |  HP_Y
-|ATAQUE   110   10  30 |  ATK_Y
-|DEFENSA   65   20  31 |  DEF_Y
-|ATA.ESP.  65    1  20 |  SPATK_Y
-|DEF.ESP. 110   80  31 |  SPDEF_Y
-|VELOCID.  30   11  13 |  SPEED_Y
+|HP       160  255  16 |  HP_Y
+|ATTACK   110   10  30 |  ATK_Y
+|DEFENSE   65   20  31 |  DEF_Y
+|SP.ATK.   65    1  20 |  SPATK_Y
+|SP.DEF.  110   80  31 |  SPDEF_Y
+|SPEED     30   11  13 |  SPEED_Y
 +- - - - - - - - - - - +
 |        |    |    |
- PS_X     BS_X EV_X IV_X
+ HP_X     BS_X EV_X IV_X
 
 */
 
-#define PS_X        4
+#define HP_X        4
 #define BS_X        54
 #define EV_X        BS_X + 30
 #define IV_X        EV_X + 30
@@ -599,6 +816,8 @@ const u8 gText_BsEvIv[] = _("BS{CLEAR_TO 30}EV{CLEAR_TO 54}IV");
 const u8 gText_Total[]  = _("TOTAL");
 
 #ifdef ESP
+//08419c7b g 00000007 gText_PokeSum_Controls_Page
+const u8 gText_PokeSum_Controls_Page_EvIv[] = _("{DPAD_LEFTRIGHT}PÁG. {A_BUTTON}EV-IV");
 const u8 gText_Hp[]     = _("PS");
 const u8 gText_Atq[]    = _("ATAQUE");
 const u8 gText_Def[]    = _("DEFENSA");
@@ -610,10 +829,11 @@ const u8 gText_Your[]   = _("Tu ");
 const u8 gText_Is[]     = _(" es ");
 const u8 gText_Happy[]  = _("% feliz.");
 
-const u8 gText_Less_Than[]  = _("¡Menos de ");
-const u8 gText_Steps_to_hatching[]  = _(" pasos para eclosionar!");
+//const u8 gText_Less_Than[]  = _("¡Falta ");//old code
+const u8 gText_Steps_to_hatching[]  = _("Pasos para eclosionar: ");
 #else
 // ENG
+const u8 gText_PokeSum_Controls_Page_EvIv[] = _("{DPAD_LEFTRIGHT}PAGE {A_BUTTON}EV-IV");
 const u8 gText_Hp[]     = _("HP");
 const u8 gText_Atq[]    = _("ATTACK");
 const u8 gText_Def[]    = _("DEFENSE");
@@ -625,8 +845,8 @@ const u8 gText_Your[]   = _("Your ");
 const u8 gText_Is[]     = _(" is ");
 const u8 gText_Happy[]  = _("% happy.");
 
-const u8 gText_Less_Than[]  = _(" Less than ");
-const u8 gText_Steps_to_hatching[]  = _(" steps to hatching!");
+//const u8 gText_Less_Than[]  = _(" ... ");//old code
+const u8 gText_Steps_to_hatching[]  = _("Steps to hatching: ");
 #endif
 
 static void PrintWindow0(struct Pokemon *mon);
@@ -705,11 +925,11 @@ static void PrintWindow0(struct Pokemon *mon)
 {
     u8 temp = 0;
 
-    temp = gCurrentMon + 1;
-    ConvertIntToDecimalStringN(gStringVar4, temp, STR_CONV_MODE_LEFT_ALIGN, 1);
+    temp = SS_cursorPos + 1;
+    ConvertIntToDecimalStringN(gStringVar4, temp, STR_CONV_MODE_LEFT_ALIGN, GetDigitsDec(temp));
     StringAppend(gStringVar4, gText_Slash);
-    temp = gPlayerPartyCount;
-    ConvertIntToDecimalStringN(gStringVar1, temp, STR_CONV_MODE_LEFT_ALIGN, 1);
+    temp = SS_lastIdx + 1;
+    ConvertIntToDecimalStringN(gStringVar1, temp, STR_CONV_MODE_LEFT_ALIGN, GetDigitsDec(temp));
     StringAppend(gStringVar4, gStringVar1);
     AddTextPrinterParameterized3(WIN_POKEMON_NAME, 2, 2, 2, gGrayTextColor, 0, gStringVar4);
 
@@ -721,12 +941,12 @@ static void PrintWindow0(struct Pokemon *mon)
 
 static void PrintWindow1(u8 nature, u8 isEgg)
 {
-    AddTextPrinterParameterized3(WIN_STATS, 2, PS_X, HP_Y,    gTextColorByNature[GetColorByNature(nature, STAT_HP)],    0, gText_Hp);
-    AddTextPrinterParameterized3(WIN_STATS, 2, PS_X, ATK_Y,   gTextColorByNature[GetColorByNature(nature, STAT_ATK)],   0, gText_Atq);
-    AddTextPrinterParameterized3(WIN_STATS, 2, PS_X, DEF_Y,   gTextColorByNature[GetColorByNature(nature, STAT_DEF)],   0, gText_Def);
-    AddTextPrinterParameterized3(WIN_STATS, 2, PS_X, SPATK_Y, gTextColorByNature[GetColorByNature(nature, STAT_SPATK)], 0, gText_SpAtk);
-    AddTextPrinterParameterized3(WIN_STATS, 2, PS_X, SPDEF_Y, gTextColorByNature[GetColorByNature(nature, STAT_SPDEF)], 0, gText_SpDef);
-    AddTextPrinterParameterized3(WIN_STATS, 2, PS_X, SPEED_Y, gTextColorByNature[GetColorByNature(nature, STAT_SPEED)], 0, gText_Speed);
+    AddTextPrinterParameterized3(WIN_STATS, 2, HP_X, HP_Y,    gTextColorByNature[GetColorByNature(nature, STAT_HP)],    0, gText_Hp);
+    AddTextPrinterParameterized3(WIN_STATS, 2, HP_X, ATK_Y,   gTextColorByNature[GetColorByNature(nature, STAT_ATK)],   0, gText_Atq);
+    AddTextPrinterParameterized3(WIN_STATS, 2, HP_X, DEF_Y,   gTextColorByNature[GetColorByNature(nature, STAT_DEF)],   0, gText_Def);
+    AddTextPrinterParameterized3(WIN_STATS, 2, HP_X, SPATK_Y, gTextColorByNature[GetColorByNature(nature, STAT_SPATK)], 0, gText_SpAtk);
+    AddTextPrinterParameterized3(WIN_STATS, 2, HP_X, SPDEF_Y, gTextColorByNature[GetColorByNature(nature, STAT_SPDEF)], 0, gText_SpDef);
+    AddTextPrinterParameterized3(WIN_STATS, 2, HP_X, SPEED_Y, gTextColorByNature[GetColorByNature(nature, STAT_SPEED)], 0, gText_Speed);
 
     if (!isEgg)
     {
@@ -793,7 +1013,7 @@ static void PrintStat(u8 nature, u8 stat)
 
 static void PrintWindow2(u16 species, u8 isEgg, u8 friendship)
 {
-    u16 temp = 0;
+    u32 temp = 0;
 
     if(!isEgg)
     {
@@ -820,21 +1040,28 @@ static void PrintWindow2(u16 species, u8 isEgg, u8 friendship)
         
     }else
     {
-        StringCopy(gStringVar4, gText_Less_Than);
-        temp = (friendship + 1) * 0xFF;
-        ConvertIntToDecimalStringN(gStringVar2, temp, STR_CONV_MODE_LEFT_ALIGN, GetDigits(temp));
+        temp = ((friendship + 1) * 0x100) - (gSaveBlock1Ptr->daycare.stepCounter + 1);
+        if (gSaveBlock1Ptr->daycare.stepCounter == 0xFF)
+            temp += 0x100;
+        //StringCopy(gStringVar4, gText_Less_Than);//old code
+        StringCopy(gStringVar4, gText_Steps_to_hatching);//new code
+        ConvertIntToDecimalStringN(gStringVar2, temp, STR_CONV_MODE_LEFT_ALIGN, GetDigitsDec(temp));
         StringAppend(gStringVar4, gStringVar2);
-        StringAppend(gStringVar4, gText_Steps_to_hatching);
+        //StringAppend(gStringVar4, gText_Steps_to_hatching);//old code
         AddTextPrinterParameterized3(WIN_BOTTOM_BOX, 2, 2, 18, gBlackTextColor, 0, gStringVar4);
     }
+    temp = SS_callback;
+    //temp = SS_backup.savedCallback;
+    ConvertIntToHexStringN(gStringVar4, temp, STR_CONV_MODE_LEFT_ALIGN, GetDigitsHex(temp));
+    AddTextPrinterParameterized3(WIN_BOTTOM_BOX, 0, 0x90, 2, gBlackTextColor, 0, gStringVar4);
 }
 
 /**
- * Devuelve el número de dígitos de un número menor a 65536
+ * Devuelve el número de dígitos de un número
  * 
- * Returns the number of digits in a number less than 65536
+ * Returns the number of digits in a number
 */
-static u8 GetDigits(u16 num)
+u8 GetDigitsDec(u32 num)
 {
     if (num < 10)
         return 1;
@@ -844,9 +1071,79 @@ static u8 GetDigits(u16 num)
         return 3;
     else if (num < 10000)
         return 4;
-    else
+    else if (num < 100000)
         return 5;
+    else if (num < 1000000)
+        return 6;
+    else if (num < 10000000)
+        return 7;
+    else if (num < 100000000)
+        return 8;
+    else if (num < 1000000000)
+        return 9;
+    else
+        return 10;
+    
+    /*if (num > 10)
+        return GetDigitsDec(num/10);
+    else
+        return 1;*/
 }
+
+u8 GetDigitsHex(u32 num)
+{
+    if (num < 0x10)
+        return 1;
+    else if (num < 0x100)
+        return 2;
+    else if (num < 0x1000)
+        return 3;
+    else if (num < 0x10000)
+        return 4;
+    else if (num < 0x100000)
+        return 5;
+    else if (num < 0x1000000)
+        return 6;
+    else if (num < 0x10000000)
+        return 7;
+    else
+        return 8;
+}
+
+
+/**
+ * Devuelve el número de dígitos de un entero con signo
+ * 
+ * Returns the number of digits in a signed int
+*/
+
+/*
+u8 GetDigitsDec_S(s32 num)
+{
+    if (num < 0)
+        num * (-1);
+    
+    if (num < 10)
+        return 1;
+    else if (num < 100)
+        return 2;
+    else if (num < 1000)
+        return 3;
+    else if (num < 10000)
+        return 4;
+    else if (num < 100000)
+        return 5;
+    else if (num < 1000000)
+        return 6;
+    else if (num < 10000000)
+        return 7;
+    else if (num < 100000000)
+        return 8;
+    else if (num < 1000000000)
+        return 9;
+    else
+        return 10;
+}*/
 
 /**
  * Esta función devuelve un número, de acuerdo a la naturaleza.
@@ -951,5 +1248,250 @@ static u8 GetColorByNature(u8 nature, u8 stat)
     case STAT_HP:
     default:
         return 0;
+    }
+}
+
+/**
+ * Acimut
+ * 2022-02
+ * Este código es el encargado de calcular el poder y tipo
+ * del movimiento poder oculto.
+ * 
+ * La operación |= 0xC0 es para que el valor no se reconozca como
+ * cero en algunas funciones, donde se usa & 0x3F para obtener el
+ * valor original, los primeros 6 bits.
+*/
+
+
+/*
+static void atkC1_hiddenpowercalc(void)
+{
+    s32 powerBits, typeBits;
+
+    powerBits = ((gBattleMons[gBattlerAttacker].hpIV & 2) >> 1)
+              | ((gBattleMons[gBattlerAttacker].attackIV & 2) << 0)
+              | ((gBattleMons[gBattlerAttacker].defenseIV & 2) << 1)
+              | ((gBattleMons[gBattlerAttacker].speedIV & 2) << 2)
+              | ((gBattleMons[gBattlerAttacker].spAttackIV & 2) << 3)
+              | ((gBattleMons[gBattlerAttacker].spDefenseIV & 2) << 4);
+    typeBits  = ((gBattleMons[gBattlerAttacker].hpIV & 1) << 0)
+              | ((gBattleMons[gBattlerAttacker].attackIV & 1) << 1)
+              | ((gBattleMons[gBattlerAttacker].defenseIV & 1) << 2)
+              | ((gBattleMons[gBattlerAttacker].speedIV & 1) << 3)
+              | ((gBattleMons[gBattlerAttacker].spAttackIV & 1) << 4)
+              | ((gBattleMons[gBattlerAttacker].spDefenseIV & 1) << 5);
+    gDynamicBasePower = (40 * powerBits) / 63 + 30;
+    gBattleStruct->dynamicMoveType = (15 * typeBits) / 63 + 1;
+    if (gBattleStruct->dynamicMoveType >= TYPE_MYSTERY)
+        ++gBattleStruct->dynamicMoveType;
+    gBattleStruct->dynamicMoveType |= 0xC0;
+    ++gBattlescriptCurrInstr;
+}
+*/
+
+//08134840 l 0000036c Task_InputHandler_Info
+//08134A52
+void hoook_Task_InputHandler_Info(void)
+{
+    if (sMonSummaryScreen->curPageIndex == PSS_PAGE_INFO)
+    {
+        PlaySE(SE_SELECT);
+        sMonSummaryScreen->state3270 = PSS_STATE3270_ATEXIT_FADEOUT;
+    }
+    else if (sMonSummaryScreen->curPageIndex == PSS_PAGE_SKILLS)
+    {
+#ifdef FIRERED
+//FIFERED
+        PlaySE(SE_CARD_OPEN);   
+#else
+//EMERALD
+        PlaySE(SE_RG_CARD_OPEN);
+#endif
+        sMonSummaryScreen->state3270 = PSS_STATE3270_ATEXIT_FADEOUT;
+        SetVBlankCallback(NULL);
+        SS_backup.savedCallback = sMonSummaryScreen->savedCallback;
+        SetMainCallback2(CB2_ShowEvIv_SummaryScreen);
+
+        //Show_EvIv(sMonSummaryScreen->monList.mons,
+        //        sLastViewedMonIndex,
+        //        sMonSummaryScreen->lastIndex,
+        //        sMonSummaryScreen->savedCallback,
+        //        sMonSummaryScreen->mode,
+        //        TRUE);
+    }
+    else if (sMonSummaryScreen->curPageIndex == PSS_PAGE_MOVES)
+    {
+        PlaySE(SE_SELECT);
+        sMonSummaryScreen->pageFlipDirection = 1;
+        PokeSum_RemoveWindows(sMonSummaryScreen->curPageIndex);
+        sMonSummaryScreen->curPageIndex++;
+        sMonSummaryScreen->state3270 = PSS_STATE3270_FLIPPAGES;
+    }
+    //return;
+}
+
+#include "menu_helpers.h"
+#include "link.h"
+
+//static 
+extern void PokeSum_TryPlayMonCry(void);
+extern void Task_PokeSum_SwitchDisplayedPokemon(u8 taskId);
+extern bool32 IsPageFlipInput(u8 direction);
+extern void Task_PokeSum_FlipPages(u8 taskId);
+extern void PokeSum_SeekToNextMon(u8 taskId, s8 direction);
+extern void Task_FlipPages_FromInfo(u8 taskId);
+extern void Task_DestroyResourcesOnExit(u8 taskId);
+
+//static 
+void New_Task_InputHandler_Info(u8 taskId)
+{
+    switch (sMonSummaryScreen->state3270) {
+    case PSS_STATE3270_FADEIN:
+        BeginNormalPaletteFade(0xffffffff, 0, 16, 0, 0);
+        sMonSummaryScreen->state3270 = PSS_STATE3270_PLAYCRY;
+        break;
+    case PSS_STATE3270_PLAYCRY:
+        if (!gPaletteFade.active)
+        {
+            PokeSum_TryPlayMonCry();
+            sMonSummaryScreen->state3270 = PSS_STATE3270_HANDLEINPUT;
+            return;
+        }
+
+        sMonSummaryScreen->state3270 = PSS_STATE3270_PLAYCRY;
+        break;
+    case PSS_STATE3270_HANDLEINPUT:
+        if (MenuHelpers_CallLinkSomething() == TRUE)
+            return;
+        else if (LinkRecvQueueLengthMoreThan2() == TRUE)
+            return;
+        else if (FuncIsActiveTask(Task_PokeSum_SwitchDisplayedPokemon))
+            return;
+
+        if (sMonSummaryScreen->curPageIndex != PSS_PAGE_MOVES_INFO)
+        {
+            if (IsPageFlipInput(1) == TRUE)
+            {
+                if (FuncIsActiveTask(Task_PokeSum_FlipPages))
+                {
+                    sMonSummaryScreen->lastPageFlipDirection = 1;
+                    return;
+                }
+                else if (sMonSummaryScreen->curPageIndex < PSS_PAGE_MOVES)
+                {
+                    PlaySE(SE_SELECT);
+                    HideBg(0);
+                    sMonSummaryScreen->pageFlipDirection = 1;
+                    PokeSum_RemoveWindows(sMonSummaryScreen->curPageIndex);
+                    sMonSummaryScreen->curPageIndex++;
+                    sMonSummaryScreen->state3270 = PSS_STATE3270_FLIPPAGES;
+                }
+                return;
+            }
+            else if (IsPageFlipInput(0) == TRUE)
+            {
+                if (FuncIsActiveTask(Task_PokeSum_FlipPages))
+                {
+                    sMonSummaryScreen->lastPageFlipDirection = 0;
+                    return;
+                }
+                else if (sMonSummaryScreen->curPageIndex > PSS_PAGE_INFO)
+                {
+                    PlaySE(SE_SELECT);
+                    HideBg(0);
+                    sMonSummaryScreen->pageFlipDirection = 0;
+                    PokeSum_RemoveWindows(sMonSummaryScreen->curPageIndex);
+                    sMonSummaryScreen->curPageIndex--;
+                    sMonSummaryScreen->state3270 = PSS_STATE3270_FLIPPAGES;
+                }
+                return;
+            }
+        }
+
+        if ((!FuncIsActiveTask(Task_PokeSum_FlipPages)) || FuncIsActiveTask(Task_PokeSum_SwitchDisplayedPokemon))
+        {
+            if (JOY_NEW(DPAD_UP))
+            {
+                PokeSum_SeekToNextMon(taskId, -1);
+                return;
+            }
+            else if (JOY_NEW(DPAD_DOWN))
+            {
+                PokeSum_SeekToNextMon(taskId, 1);
+                return;
+            }
+            else if (JOY_NEW(A_BUTTON))
+            {
+                if (sMonSummaryScreen->curPageIndex == PSS_PAGE_INFO)
+                {
+                    PlaySE(SE_SELECT);
+                    sMonSummaryScreen->state3270 = PSS_STATE3270_ATEXIT_FADEOUT;
+                }
+                else if (sMonSummaryScreen->curPageIndex == PSS_PAGE_SKILLS)
+                {
+#ifdef FIRERED
+//FIFERED
+                    PlaySE(SE_CARD_OPEN);   
+#else
+//EMERALD
+                    PlaySE(SE_RG_CARD_OPEN);
+#endif
+                    SS_backup.party = sMonSummaryScreen->monList.mons;
+                    SS_backup.cursorPos = sLastViewedMonIndex;
+                    SS_backup.lastIdx = sMonSummaryScreen->lastIndex;
+                    SS_backup.savedCallback = sMonSummaryScreen->savedCallback;
+                    SS_backup.mode = sMonSummaryScreen->mode;
+
+                    SetVBlankCallback(NULL);//revisar
+                    SetMainCallback2(CB2_ShowEvIv_SummaryScreen);
+                    ScriptContext2_Enable();//revisar
+
+                    sMonSummaryScreen->state3270 = PSS_STATE3270_ATEXIT_FADEOUT;
+                }
+                else if (sMonSummaryScreen->curPageIndex == PSS_PAGE_MOVES)
+                {
+                    PlaySE(SE_SELECT);
+                    sMonSummaryScreen->pageFlipDirection = 1;
+                    PokeSum_RemoveWindows(sMonSummaryScreen->curPageIndex);
+                    sMonSummaryScreen->curPageIndex++;
+                    sMonSummaryScreen->state3270 = PSS_STATE3270_FLIPPAGES;
+                }
+                return;
+            }
+            else if (JOY_NEW(B_BUTTON))
+            {
+                sMonSummaryScreen->state3270 = PSS_STATE3270_ATEXIT_FADEOUT;
+            }
+        }
+        break;
+    case PSS_STATE3270_FLIPPAGES:
+        if (sMonSummaryScreen->curPageIndex != PSS_PAGE_MOVES_INFO)
+        {
+            CreateTask(Task_PokeSum_FlipPages, 0);
+            sMonSummaryScreen->state3270 = PSS_STATE3270_HANDLEINPUT;
+        }
+        else
+        {
+            gTasks[sMonSummaryScreen->inputHandlerTaskId].func = Task_FlipPages_FromInfo;
+            sMonSummaryScreen->state3270 = PSS_STATE3270_HANDLEINPUT;
+        }
+        break;
+    case PSS_STATE3270_ATEXIT_FADEOUT:
+        BeginNormalPaletteFade(0xffffffff, 0, 0, 16, 0);
+        sMonSummaryScreen->state3270 = PSS_STATE3270_ATEXIT_WAITLINKDELAY;
+        break;
+    case PSS_STATE3270_ATEXIT_WAITLINKDELAY:
+        if (Overworld_LinkRecvQueueLengthMoreThan2() == TRUE)
+            return;
+        else if (LinkRecvQueueLengthMoreThan2() == TRUE)
+            return;
+
+        sMonSummaryScreen->state3270 = PSS_STATE3270_ATEXIT_WAITFADE;
+        break;
+    default:
+        if (!gPaletteFade.active)
+            Task_DestroyResourcesOnExit(taskId);
+
+        break;
     }
 }
