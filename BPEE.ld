@@ -26,6 +26,8 @@ GetSpeciesName = 0x0806b914|1;
 GetMonNickname = 0x081b1b44|1;
 
 
+
+
 SetMainCallback2 = 0x08000540|1;
 ScriptContext2_Enable = 0x08098e54|1;
 AllocZeroed = 0x08000b4c|1;

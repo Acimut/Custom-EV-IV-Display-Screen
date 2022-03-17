@@ -11,7 +11,6 @@ Características:
 + El color de la estadística de IVs cambia de acuerdo a la naturaleza.
 + Muestra estadísticas base de acuerdo a la especie.
 + Censura la estadística de los huevos, en cambio, dice aprox. cúantos pasos te falta para la eclosión.
-+ Se puede copilar Español y en inglés tan solo comentando ( // ).
 + Bien bomnito y con somniditos xd
 + Huele a limón.
 + base: pokémon fire red.
