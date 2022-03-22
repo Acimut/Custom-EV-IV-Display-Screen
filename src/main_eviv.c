@@ -433,123 +433,80 @@ static void Task_WaitForExit(u8 taskId)
         gState++;
         break;
     case 1:
-        if (JOY_REPT(DPAD_RIGHT) && gPlayerPartyCount > 1)
+        if (gPlayerPartyCount > 1)
         {
-            if (gCurrentMon == (gPlayerPartyCount - 1))
-                gCurrentMon = 0;
-            else
-                gCurrentMon++;
-            HidePokemonPic2(gSpriteTaskId);
-            ShowSprite(&gPlayerParty[gCurrentMon]);
-            EvIvPrintText(&gPlayerParty[gCurrentMon]);
-//-----------------------------------------------------------------------------------------------------------------------------
-//-----------------------------------------------------------------------------------------------------------------------------
-//-----------------------------------------------------------------------------------------------------------------------------
-
-
-            //CreateBallIconObj(&gPlayerParty[gCurrentMon]);
-            //ShowOrHideBallIconObj(TRUE);
-
-
-//-----------------------------------------------------------------------------------------------------------------------------
-//-----------------------------------------------------------------------------------------------------------------------------
-//-----------------------------------------------------------------------------------------------------------------------------     
+            if (JOY_REPT(DPAD_RIGHT) || JOY_REPT(DPAD_DOWN))
+            {
+                if (gCurrentMon == (gPlayerPartyCount - 1))
+                    gCurrentMon = 0;
+                else
+                    gCurrentMon++;
+                HidePokemonPic2(gSpriteTaskId);
+                EvIvPrintText(&gPlayerParty[gCurrentMon]);
+                ShowSprite(&gPlayerParty[gCurrentMon]);
+            }
+            else  if (JOY_REPT(DPAD_LEFT) || JOY_REPT(DPAD_UP))
+            {
+                if (gCurrentMon == 0)
+                    gCurrentMon = (gPlayerPartyCount - 1);
+                else
+                    gCurrentMon--;
+                HidePokemonPic2(gSpriteTaskId);
+                EvIvPrintText(&gPlayerParty[gCurrentMon]);
+                ShowSprite(&gPlayerParty[gCurrentMon]);
+            }
+            /*
+            //bruh
+            else if (JOY_REPT(DPAD_UP))
+            {
+                if (gCurrentMon == 0){
+                    gCurrentMon = (gPlayerPartyCount - 3);
+                }
+                else if(gCurrentMon == 1){
+                    gCurrentMon = (gPlayerPartyCount -2);
+                }
+                else if(gCurrentMon == 2){
+                    gCurrentMon = (gPlayerPartyCount - 1);
+                }
+                else if(gCurrentMon == 3){
+                    gCurrentMon = 0;
+                }
+                else if(gCurrentMon == 4){
+                    gCurrentMon = 1;
+                }
+                else if(gCurrentMon == 5){
+                    gCurrentMon = 2;
+                }
+                HidePokemonPic2(gSpriteTaskId);
+                EvIvPrintText(&gPlayerParty[gCurrentMon]);
+                ShowSprite(&gPlayerParty[gCurrentMon]);
+            }
+            else if (JOY_REPT(DPAD_DOWN))
+            {
+                if (gCurrentMon == 0){
+                    gCurrentMon = (gPlayerPartyCount - 3);
+                }
+                else if(gCurrentMon == 1){
+                    gCurrentMon = (gPlayerPartyCount -2);
+                }
+                else if(gCurrentMon == 2){
+                    gCurrentMon = (gPlayerPartyCount - 1);
+                }
+                else if(gCurrentMon == 3){
+                    gCurrentMon = 0;
+                }
+                else if(gCurrentMon == 4){
+                    gCurrentMon = 1;
+                }
+                else if(gCurrentMon == 5){
+                    gCurrentMon = 2;
+                }
+                HidePokemonPic2(gSpriteTaskId);
+                EvIvPrintText(&gPlayerParty[gCurrentMon]);
+                ShowSprite(&gPlayerParty[gCurrentMon]);
+            }*/
         }
-        if (JOY_REPT(DPAD_LEFT) && gPlayerPartyCount > 1)
-        {
-            if (gCurrentMon == 0)
-                gCurrentMon = (gPlayerPartyCount - 1);
-            else
-                gCurrentMon--;
-            HidePokemonPic2(gSpriteTaskId);
-            ShowSprite(&gPlayerParty[gCurrentMon]);
-            EvIvPrintText(&gPlayerParty[gCurrentMon]);
-//-----------------------------------------------------------------------------------------------------------------------------
-//-----------------------------------------------------------------------------------------------------------------------------
-//-----------------------------------------------------------------------------------------------------------------------------
 
-
-            //CreateBallIconObj(&gPlayerParty[gCurrentMon]);
-            //ShowOrHideBallIconObj(TRUE);
-
-
-//-----------------------------------------------------------------------------------------------------------------------------
-//-----------------------------------------------------------------------------------------------------------------------------
-//-----------------------------------------------------------------------------------------------------------------------------
-
-        }
-         if (JOY_REPT(DPAD_UP) && gPlayerPartyCount > 1)
-        {
-            if (gCurrentMon == 0){
-                gCurrentMon = (gPlayerPartyCount - 3);
-            }
-            else if(gCurrentMon == 1){
-                gCurrentMon = (gPlayerPartyCount -2);
-            }
-            else if(gCurrentMon == 2){
-                gCurrentMon = (gPlayerPartyCount - 1);
-            }
-            else if(gCurrentMon == 3){
-                gCurrentMon = 0;
-            }
-            else if(gCurrentMon == 4){
-                gCurrentMon = 1;
-            }
-            else if(gCurrentMon == 5){
-                gCurrentMon = 2;
-            }
-            HidePokemonPic2(gSpriteTaskId);
-            ShowSprite(&gPlayerParty[gCurrentMon]);
-            EvIvPrintText(&gPlayerParty[gCurrentMon]);
-//-----------------------------------------------------------------------------------------------------------------------------
-//-----------------------------------------------------------------------------------------------------------------------------
-//-----------------------------------------------------------------------------------------------------------------------------
-
-
-            //CreateBallIconObj(&gPlayerParty[gCurrentMon]);
-            //ShowOrHideBallIconObj(TRUE);
-
-
-//-----------------------------------------------------------------------------------------------------------------------------
-//-----------------------------------------------------------------------------------------------------------------------------
-//-----------------------------------------------------------------------------------------------------------------------------
-        }
-         if (JOY_REPT(DPAD_DOWN) && gPlayerPartyCount > 1)
-        {
-            if (gCurrentMon == 0){
-                gCurrentMon = (gPlayerPartyCount - 3);
-            }
-            else if(gCurrentMon == 1){
-                gCurrentMon = (gPlayerPartyCount -2);
-            }
-            else if(gCurrentMon == 2){
-                gCurrentMon = (gPlayerPartyCount - 1);
-            }
-            else if(gCurrentMon == 3){
-                gCurrentMon = 0;
-            }
-            else if(gCurrentMon == 4){
-                gCurrentMon = 1;
-            }
-            else if(gCurrentMon == 5){
-                gCurrentMon = 2;
-            }
-            HidePokemonPic2(gSpriteTaskId);
-            ShowSprite(&gPlayerParty[gCurrentMon]);
-            EvIvPrintText(&gPlayerParty[gCurrentMon]);
-//-----------------------------------------------------------------------------------------------------------------------------
-//-----------------------------------------------------------------------------------------------------------------------------
-//-----------------------------------------------------------------------------------------------------------------------------
-
-
-            //CreateBallIconObj(&gPlayerParty[gCurrentMon]);
-            //ShowOrHideBallIconObj(TRUE);
-
-
-//-----------------------------------------------------------------------------------------------------------------------------
-//-----------------------------------------------------------------------------------------------------------------------------
-//-----------------------------------------------------------------------------------------------------------------------------
-        }
         if (JOY_NEW(A_BUTTON) || JOY_NEW(B_BUTTON))
         {
 #ifdef FIRERED
