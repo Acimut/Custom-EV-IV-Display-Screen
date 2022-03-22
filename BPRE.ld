@@ -24,33 +24,35 @@ gBaseStatsPtr = 0x080001BC;
 GetMonData = 0x0803fbe8|1;
 GetSpeciesName = 0x08040fd0|1;
 GetMonNickname = 0x081202e0|1;
+
+/* tio terry */
 GetMonGender = 0x0803f720|1;
 BlitMoveInfoIcon = 0x08107D68|1;
-IsMonShiny = 0x8044470 | 1;
-gPokeBallTiles = 0x826056C | 1;
-gPokeBallPals = 0x82605CC | 1;
-gBallSpriteTemplates = 0x82606F4 | 1;
-CreateSprite = 0x8006F8C | 1;
+IsMonShiny = 0x08044470|1;
+gPokeBallTiles = 0x0826056C;         /* const 0826056c g 00000060 gBallSpriteSheets */
+gPokeBallPals = 0x082605CC;          /* const 082605cc g 00000060 gBallSpritePalettes */
+gBallSpriteTemplates = 0x082606F4;   /* const 082606f4 g 00000120 gBallSpriteTemplates */
+CreateSprite = 0x08006F8C|1;
 
-SpriteCB_TestBallThrow = 0x804ABD4 | 1;
-SpriteCB_ReleaseMonFromBall = 0x804B268 | 1;
-CreatePokeballSpriteToReleaseMon = 0x804B908 | 1;
-objc_ball_instanciate2_entry_804B9E8 = 0x804B9E8 | 1;
-sub_804BD94 = 0x804BD94 | 1;
-LoadBallGfx = 0x804BEF4 | 1;
-FreeBallGfx = 0x804BF64 | 1;
-ItemIdToBallId = 0x80EF52C | 1;
-PokeBallOpenParticleAnimation = 0x80F06A4 | 1;
-TimerBallOpenParticleAnimation = 0x80F0818 | 1;
-DiveBallOpenParticleAnimation = 0x80F091C | 1;
-SafariBallOpenParticleAnimation = 0x80F0A20 | 1;
-UltraBallOpenParticleAnimation = 0x80F0B20 | 1;
-GreatBallOpenParticleAnimation = 0x80F0C28 | 1;
-RepeatBallOpenParticleAnimation = 0x80F0DB4 | 1;
-MasterBallOpenParticleAnimation = 0x80F0F10 | 1;
-PremierBallOpenParticleAnimation = 0x80F103C | 1;
-FreeBallTiles = 0x80F1198 | 1;
-
+SpriteCB_TestBallThrow = 0x0804ABD4|1;
+SpriteCB_ReleaseMonFromBall = 0x0804B268|1;
+CreatePokeballSpriteToReleaseMon = 0x0804B908|1;
+objc_ball_instanciate2_entry_804B9E8 = 0x0804B9E8|1;
+sub_804BD94    = 0x0804BD94|1;
+LoadBallGfx    = 0x0804BEF4|1;
+FreeBallGfx    = 0x0804BF64|1;
+ItemIdToBallId = 0x080EF52C|1;
+PokeBallOpenParticleAnimation    = 0x080F06A4|1;
+TimerBallOpenParticleAnimation   = 0x080F0818|1;
+DiveBallOpenParticleAnimation    = 0x080F091C|1;
+SafariBallOpenParticleAnimation  = 0x080F0A20|1;
+UltraBallOpenParticleAnimation   = 0x080F0B20|1;
+GreatBallOpenParticleAnimation   = 0x080F0C28|1;
+RepeatBallOpenParticleAnimation  = 0x080F0DB4|1;
+MasterBallOpenParticleAnimation  = 0x080F0F10|1;
+PremierBallOpenParticleAnimation = 0x080F103C|1;
+FreeBallTiles = 0x080F1198|1;       /* 080f1198 l 00000080 DestroyBallOpenAnimationParticle */
+/* ------ */
 
 
 QuestLog_CutRecording = 0x08112364|1;

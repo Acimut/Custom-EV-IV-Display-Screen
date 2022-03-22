@@ -65,8 +65,8 @@
 //-----------------------------------------------------------------------------------------------------------------------------
 
 
-//#include "include/pokeball.h"
-//#include "include/battle_anim.h"
+#include "include/pokeball.h"
+#include "include/battle_anim.h"
 
 
 //-----------------------------------------------------------------------------------------------------------------------------
@@ -121,7 +121,7 @@ static void HidePokemonPic2(u8 taskId);
 static void PrintStat(u8 nature, u8 stat);
 static u8 GetDigits(u16 num);
 static u8 GetColorByNature(u8 nature, u8 stat);
-
+static void LoadBalls(void);
 
 
 //-----------------------------------------------------------------------------------------------------------------------------
@@ -271,6 +271,7 @@ struct EvIv
     u8 stats_ev[NUM_STATS];
     u8 stats_iv[NUM_STATS];
     u8 stats_bs[NUM_STATS];
+    u8 ballSpriteId[PARTY_SIZE];    //id de los sprites de las balls.
     u16 totalStatsEV;
     u16 totalStatsIV;
     u16 totalStatsBS;
@@ -307,6 +308,7 @@ extern struct EvIv *gEvIv;
 #define gStats_ev           gEvIv->stats_ev
 #define gStats_iv           gEvIv->stats_iv
 #define gStats_bs           gEvIv->stats_bs
+#define gBallSpriteId       gEvIv->ballSpriteId
 #define gTotalStatsEV       gEvIv->totalStatsEV
 #define gTotalStatsIV       gEvIv->totalStatsIV
 #define gTotalStatsBS       gEvIv->totalStatsBS
@@ -389,6 +391,7 @@ static void Task_EvIvInit(u8 taskId)
         SetGpuReg(REG_OFFSET_BG1HOFS, 0);
         break;
     case 5:
+        LoadBalls();
         ShowSprite(&gPlayerParty[gCurrentMon]);
 //-----------------------------------------------------------------------------------------------------------------------------
 //-----------------------------------------------------------------------------------------------------------------------------
@@ -696,6 +699,69 @@ static void ShowSprite(struct Pokemon *mon)
     }else
         ShowPokemonPic2(SPECIES_EGG, 0, 0x8000, PICMON_X, PICMON_Y);
 }
+
+
+/**
+ * 2022/03/21
+ * ::ACIMUT::
+ * 
+ * 1. Obtener los tipos de balls de todo el equipo.
+ * 2. Cargar los gráficos en la vram.
+ * 3. Crear un sprite para cada ball y guardar el spriteId.
+ * 4. Crear una función para cambiar la animación de la ball.
+ * 
+*/
+
+#define BALL_X      100
+#define BALL_Y      20
+#define BALL_SIZE   32
+
+static const u8 ball_cords[][2] = 
+{
+    {BALL_X, BALL_Y},
+    {BALL_X + BALL_SIZE, BALL_Y},
+    {BALL_X + (BALL_SIZE * 2), BALL_Y},
+    {BALL_X, BALL_Y + BALL_SIZE},
+    {BALL_X + BALL_SIZE, BALL_Y + BALL_SIZE},
+    {BALL_X + (BALL_SIZE * 2), BALL_Y + BALL_SIZE}
+};
+
+static void LoadBalls(void)
+{
+    u8 i;
+    u16 ballItemId;
+    u8 ballId;
+    u8 isEgg ;
+
+    for (i = 0; i < gPlayerPartyCount; i++)
+    {
+        isEgg  = GetMonData(&gPlayerParty[i], MON_DATA_IS_EGG, NULL);
+        if (!isEgg)
+            ballItemId = GetMonData(&gPlayerParty[i]);
+        else
+            ballItemId = 0;
+
+        //cargamos los gráficos
+        ballId = ItemIdToBallId(ballItemId);
+        LoadBallGfx(ballId);
+
+        //guardamos los spriteId
+        gBallSpriteId[i] = CreateSprite(&gBallSpriteTemplates[ballId], ball_cords[i][0], ball_cords[i][1], 0);
+        gSprites[gBallSpriteId[i]].callback = SpriteCallbackDummy;
+        gSprites[gBallSpriteId[i]].oam.priority = 0;
+
+        //gSprites[gBallSpriteId[i]].invisible = TRUE;
+    }
+}
+
+/**
+ * Esta función destruye un sprite xd
+*/
+void EvIv_DestroySprite(u8 spriteId)
+{
+    DestroySpriteAndFreeResources(&gSprites[spriteId]);
+}
+
 //-----------------------------------------------------------------------------------------------------------------------------
 //-----------------------------------------------------------------------------------------------------------------------------
 //-----------------------------------------------------------------------------------------------------------------------------
@@ -963,7 +1029,7 @@ const u8 gText_Speed[]  = _("Velocidad");
 const u8 gText_Your[]   = _("Tu ");
 const u8 gText_Is[]     = _(" es ");
 const u8 gText_Happy[]  = _("% feliz.");
-const const u8 gLevel[]  = _("Nv. ");
+const u8 gLevel[]  = _("Nv. ");
 
 const u8 gText_Less_Than[]  = _("  ¡Menos de ");
 const u8 gText_Steps_to_hatching[]  = _(" pasos para eclosionar!");
@@ -1007,7 +1073,7 @@ const u8 gText_Speed[]  = _("Speed");
 const u8 gText_Your[]   = _("Your ");
 const u8 gText_Is[]     = _(" is ");
 const u8 gText_Happy[]  = _("% happy.");
-const const u8 gLevel[]  = _("Lv. ");
+const u8 gLevel[]  = _("Lv. ");
 
 const u8 gText_Less_Than[]  = _("  Less than... ");
 const u8 gText_Steps_to_hatching[]  = _(" steps to hatching!");
