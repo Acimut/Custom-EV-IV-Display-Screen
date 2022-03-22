@@ -393,17 +393,8 @@ static void Task_EvIvInit(u8 taskId)
     case 5:
         LoadBalls();
         ShowSprite(&gPlayerParty[gCurrentMon]);
-//-----------------------------------------------------------------------------------------------------------------------------
-//-----------------------------------------------------------------------------------------------------------------------------
-//-----------------------------------------------------------------------------------------------------------------------------
-
-
-        //ShowOrHideBallIconObj(TRUE);
-
-//-----------------------------------------------------------------------------------------------------------------------------
-//-----------------------------------------------------------------------------------------------------------------------------
-//-----------------------------------------------------------------------------------------------------------------------------
         EvIvPrintText(&gPlayerParty[gCurrentMon]);
+        gSprites[gBallSpriteId[gCurrentMon]].animNum = 4;
         break;
     case 6:
         CopyBgTilemapBufferToVram(0);
@@ -435,76 +426,58 @@ static void Task_WaitForExit(u8 taskId)
     case 1:
         if (gPlayerPartyCount > 1)
         {
-            if (JOY_REPT(DPAD_RIGHT) || JOY_REPT(DPAD_DOWN))
+            if (JOY_REPT(DPAD_RIGHT))
             {
+                gSprites[gBallSpriteId[gCurrentMon]].animNum = 3;
+
                 if (gCurrentMon == (gPlayerPartyCount - 1))
                     gCurrentMon = 0;
                 else
                     gCurrentMon++;
+
+                gSprites[gBallSpriteId[gCurrentMon]].animNum = 4;
+
                 HidePokemonPic2(gSpriteTaskId);
                 EvIvPrintText(&gPlayerParty[gCurrentMon]);
                 ShowSprite(&gPlayerParty[gCurrentMon]);
             }
-            else  if (JOY_REPT(DPAD_LEFT) || JOY_REPT(DPAD_UP))
+            else  if (JOY_REPT(DPAD_LEFT))
             {
+                gSprites[gBallSpriteId[gCurrentMon]].animNum = 3;
+
                 if (gCurrentMon == 0)
                     gCurrentMon = (gPlayerPartyCount - 1);
                 else
                     gCurrentMon--;
+
+                gSprites[gBallSpriteId[gCurrentMon]].animNum = 4;
+
                 HidePokemonPic2(gSpriteTaskId);
                 EvIvPrintText(&gPlayerParty[gCurrentMon]);
                 ShowSprite(&gPlayerParty[gCurrentMon]);
             }
-            /*
-            //bruh
-            else if (JOY_REPT(DPAD_UP))
+
+            else if (JOY_REPT(DPAD_UP) || JOY_REPT(DPAD_DOWN))
             {
-                if (gCurrentMon == 0){
-                    gCurrentMon = (gPlayerPartyCount - 3);
+                if (gCurrentMon > 2)
+                {
+                    gSprites[gBallSpriteId[gCurrentMon]].animNum = 3;
+                    gCurrentMon -= 3;
+                    gSprites[gBallSpriteId[gCurrentMon]].animNum = 4;
+                    HidePokemonPic2(gSpriteTaskId);
+                    EvIvPrintText(&gPlayerParty[gCurrentMon]);
+                    ShowSprite(&gPlayerParty[gCurrentMon]);
                 }
-                else if(gCurrentMon == 1){
-                    gCurrentMon = (gPlayerPartyCount -2);
+                else if (gPlayerPartyCount > (gCurrentMon + 3))
+                {
+                    gSprites[gBallSpriteId[gCurrentMon]].animNum = 3;
+                    gCurrentMon += 3;
+                    gSprites[gBallSpriteId[gCurrentMon]].animNum = 4;
+                    HidePokemonPic2(gSpriteTaskId);
+                    EvIvPrintText(&gPlayerParty[gCurrentMon]);
+                    ShowSprite(&gPlayerParty[gCurrentMon]);
                 }
-                else if(gCurrentMon == 2){
-                    gCurrentMon = (gPlayerPartyCount - 1);
-                }
-                else if(gCurrentMon == 3){
-                    gCurrentMon = 0;
-                }
-                else if(gCurrentMon == 4){
-                    gCurrentMon = 1;
-                }
-                else if(gCurrentMon == 5){
-                    gCurrentMon = 2;
-                }
-                HidePokemonPic2(gSpriteTaskId);
-                EvIvPrintText(&gPlayerParty[gCurrentMon]);
-                ShowSprite(&gPlayerParty[gCurrentMon]);
             }
-            else if (JOY_REPT(DPAD_DOWN))
-            {
-                if (gCurrentMon == 0){
-                    gCurrentMon = (gPlayerPartyCount - 3);
-                }
-                else if(gCurrentMon == 1){
-                    gCurrentMon = (gPlayerPartyCount -2);
-                }
-                else if(gCurrentMon == 2){
-                    gCurrentMon = (gPlayerPartyCount - 1);
-                }
-                else if(gCurrentMon == 3){
-                    gCurrentMon = 0;
-                }
-                else if(gCurrentMon == 4){
-                    gCurrentMon = 1;
-                }
-                else if(gCurrentMon == 5){
-                    gCurrentMon = 2;
-                }
-                HidePokemonPic2(gSpriteTaskId);
-                EvIvPrintText(&gPlayerParty[gCurrentMon]);
-                ShowSprite(&gPlayerParty[gCurrentMon]);
-            }*/
         }
 
         if (JOY_NEW(A_BUTTON) || JOY_NEW(B_BUTTON))
@@ -713,6 +686,7 @@ static void LoadBalls(void)
 
 /**
  * Esta función destruye un sprite xd
+ * unused.
 */
 void EvIv_DestroySprite(u8 spriteId)
 {
@@ -898,11 +872,11 @@ static void Task_ScriptShowMonPic(u8 taskId)
 |VELOCID.  30   11  13 |  SPEED_Y
 +- - - - - - - - - - - +
 |        |    |    |
- PS_X     BS_X EV_X IV_X
+ HP_X     BS_X EV_X IV_X
 
 */
 
-#define PS_X        4
+#define HP_X        4
 #define BS_X        60
 #define EV_X        BS_X + 30
 #define IV_X        EV_X + 36
@@ -1194,12 +1168,12 @@ static void PrintWindow0(struct Pokemon *mon)
 
 static void PrintWindow1(u8 nature, u8 isEgg)
 {
-    AddTextPrinterParameterized3(WIN_STATS, 2, PS_X, HP_Y,    gBlackTextColor, 0, gText_Hp);
-    AddTextPrinterParameterized3(WIN_STATS, 2, PS_X, ATK_Y,   gBlackTextColor, 0, gText_Atq);
-    AddTextPrinterParameterized3(WIN_STATS, 2, PS_X, DEF_Y,   gBlackTextColor, 0, gText_Def);
-    AddTextPrinterParameterized3(WIN_STATS, 2, PS_X, SPATK_Y, gBlackTextColor, 0, gText_SpAtk);
-    AddTextPrinterParameterized3(WIN_STATS, 2, PS_X, SPDEF_Y, gBlackTextColor, 0, gText_SpDef);
-    AddTextPrinterParameterized3(WIN_STATS, 2, PS_X, SPEED_Y, gBlackTextColor, 0, gText_Speed);
+    AddTextPrinterParameterized3(WIN_STATS, 2, HP_X, HP_Y,    gBlackTextColor, 0, gText_Hp);
+    AddTextPrinterParameterized3(WIN_STATS, 2, HP_X, ATK_Y,   gBlackTextColor, 0, gText_Atq);
+    AddTextPrinterParameterized3(WIN_STATS, 2, HP_X, DEF_Y,   gBlackTextColor, 0, gText_Def);
+    AddTextPrinterParameterized3(WIN_STATS, 2, HP_X, SPATK_Y, gBlackTextColor, 0, gText_SpAtk);
+    AddTextPrinterParameterized3(WIN_STATS, 2, HP_X, SPDEF_Y, gBlackTextColor, 0, gText_SpDef);
+    AddTextPrinterParameterized3(WIN_STATS, 2, HP_X, SPEED_Y, gBlackTextColor, 0, gText_Speed);
 
     if (!isEgg)
     {
