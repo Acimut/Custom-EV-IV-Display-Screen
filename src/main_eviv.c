@@ -712,9 +712,9 @@ static void ShowSprite(struct Pokemon *mon)
  * 
 */
 
-#define BALL_X      100
+#define BALL_X      200
 #define BALL_Y      20
-#define BALL_SIZE   32
+#define BALL_SIZE   16
 
 static const u8 ball_cords[][2] = 
 {
