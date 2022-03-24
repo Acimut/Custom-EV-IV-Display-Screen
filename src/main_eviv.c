@@ -6,22 +6,27 @@
 |||         Custom EV - IV Display Screen (Terry's Edition)             |||
 |||                                                                     |||
 |||Esta es una Modificación del Custom EV - IV Display Screen de Acimut |||
-|||la cual incluye cambios esteticos que la versión original no posee.  |||
+|||la cual incluye algunos cambios esteticos que la versión original    |||
+|||no posee.                                                            |||
 |||                                                                     |||
-|||Caracteristicas:                                                     ||/---------------/
-|||                                                                     |/---------------/|
-|||Versión de Acimut:                                                   /---------------/||
-|||Ve aqui(https://whackahack.com/foro/threads/fr-rf-custom-ev-iv-display-screen.65588/)|||
-|||para que las leas y lo apoyes xd.                                    \---------------\||
-|||                                                                     |\---------------\|
-|||Versión de Tio Terry (Mia):                                          ||\---------------\
-|||-Reorganizacion de varios textos.                                    |||
+|||Caracteristicas:                                                     |||
+|||                                                                     |||
+|||Versión de Acimut:                                                   |||
+|||-Ve aqui(https://whackahack.com/foro/threads/                        |||
+||| fr-rf-custom-ev-iv-display-screen.65588/)                           |||
+||| para que las leas y lo apoyes xd.                                   |||
+|||                                                                     |||
+|||Versión de Tio Terry (Mia):                                          |||
+|||-Reorganización de textos.                                           |||
 |||-Naturalezas con nombre e indicadores con su respectivo color.       |||
-|||-Nivel y Tipos del Pokémon.                                          |||
-|||-Tipo de Poder Oculto segun IVs.                                     |||
-|||-Pokeballs del team (la pokeball del pokémon seleccionado se movera).|||
-|||-Otro fondo xd.                                                      |||
-|||-Conserva el olor a limón.                                           |||
+|||-Nivel, Genero y Tipos del Pokémon.                                  |||
+|||-Tipo de Poder Oculto segun la suma de Ivs.                          |||
+|||-Pokeballs del equipo.                                               |||
+||| (la Pokeball del Pokémon seleccionado se abrira).                   |||
+|||-Fondo rediseñado.                                                   |||
+|||-El Nombre y Nivel del Pokémon se tornaran amarillos si el Pokémon   |||
+||| es Shiny.                                                           |||
+|||-Conserva el olor a Limón.                                           |||
 |||                                                                     |||
 |||No es un aporte a nivel FUAAAAA QUE WAPO Y KE LA CANCION, pero       |||
 |||queria compartirlo y provar a ver que tal se me da v:                |||
@@ -32,15 +37,23 @@
 |||                                                                     |||
 |||                                                                     |||
 |||Creditos:                                                            |||
+|||Acimut - Repositorio base, paciencia y ayuda con la elaboración de   |||
+|||         varias funciones.                                           |||
 |||Tio_Terry - Modificaciónes esteticas.                                |||
 |||ACE10 - Ideas y sugerencias.                                         |||
 |||Tohru - Más ideas y sugerencias.                                     |||
-|||Acimut - Repositorio base y ayuda con la elaboración de              |||
-|||         varias funciones.                                           |||
+|||Cefer - Más y más ideas y sugerencias.                               |||
+|||                                                                     |||
+|||                                                                     |||
+|||                                                                     |||
+|||                                                                     |||
+|||Pido por favor que si lo usas, almenos intenta compilarlo xd,        |||
+|||por ti mismo, si no puedes pide ayuda, todos en este lugar son       |||
+|||amables y te la pueden brindar...                                    |||
 |||                                                                     |||
 |||Subido a: https://whackahack.com/foro/threads                        |||
 |||                                                                     |||
-|||Ver. 1.0.1 2022.                                                     |||
+|||Ver. 1.1 2022.                                                       |||
 ||/---------------------------------------------------------------------\||
 |/-----------------------------------------------------------------------\|
 /-------------------------------------------------------------------------\
@@ -59,20 +72,8 @@
 #include "include/window.h"
 #include "include/string_util.h"
 #include "include/sprite.h"
-
-//-----------------------------------------------------------------------------------------------------------------------------
-//-----------------------------------------------------------------------------------------------------------------------------
-//-----------------------------------------------------------------------------------------------------------------------------
-
-
 #include "include/pokeball.h"
 #include "include/battle_anim.h"
-
-
-//-----------------------------------------------------------------------------------------------------------------------------
-//-----------------------------------------------------------------------------------------------------------------------------
-//-----------------------------------------------------------------------------------------------------------------------------
-
 #include "include/party_menu.h"
 #include "include/scanline_effect.h"
 #include "include/gpu_regs.h"
@@ -92,7 +93,7 @@
 
 // 1 = DE DERECHA A IZQUIERDA, 0 = EN EL CENTRO -1 = DE IZQUIERDA A DERECHA.
 // 1 = FROM RIGHT TO LEFT, 0 = IN THE CENTER -1 = FROM LEFT TO RIGHT.
-#define SPRITE_JUMP_DIRECTION   0
+#define SPRITE_JUMP_DIRECTION   1
 
 // 1 = A LA DERECHA, 0 = A LA IZQUIERDA.
 // 1 = RIGHT, 0 = LEFT.
@@ -101,11 +102,11 @@
 
 //coordenada x del sprite pokémon, se mide en tiles de x8 pixeles
 //x coordinate of the pokémon sprite, measured in tiles of x8 pixels
-#define PICMON_X    21
+#define PICMON_X    20
 
 //coordenada y del sprite pokémon, se mide en tiles de x8 pixeles
 //y coordinate of the pokémon sprite, measured in tiles of x8 pixels
-#define PICMON_Y     5
+#define PICMON_Y     6
 
 static void Task_EvIvInit(u8);
 static u8 EvIvLoadGfx(void);
@@ -122,26 +123,6 @@ static void PrintStat(u8 nature, u8 stat);
 static u8 GetDigits(u16 num);
 static u8 GetColorByNature(u8 nature, u8 stat);
 static void LoadBalls(void);
-
-
-//-----------------------------------------------------------------------------------------------------------------------------
-//-----------------------------------------------------------------------------------------------------------------------------
-//-----------------------------------------------------------------------------------------------------------------------------
-
-
-
-//static void ShowOrHideBallIconObj(u8 invisible);
-//static void CreateBallIconObj(struct Pokemon *mon);
-
-
-
-//-----------------------------------------------------------------------------------------------------------------------------
-//-----------------------------------------------------------------------------------------------------------------------------
-//-----------------------------------------------------------------------------------------------------------------------------
-
-
-
-
 
 const u32 gBgEvIvGfx[] = INCBIN_U32("graphics/bgEvIv.4bpp.lz");
 const u32 gBgEvIvTilemap[] = INCBIN_U32("graphics/bgEvIv.bin.lz");
@@ -225,7 +206,7 @@ static const struct WindowTemplate windows_templates[] = {
         .baseBlock = 0x000
     },{//window 1 = stats
         .bg = 0,
-        .tilemapLeft = 2,
+        .tilemapLeft = 1,
         .tilemapTop = 5,
         .width = WINDOW1_WIDTH,
         .height = WINDOW1_HEIGTH,
@@ -243,7 +224,7 @@ static const struct WindowTemplate windows_templates[] = {
     },{//window 3 = Hidden Power
        //window 3 = Poder Oculto
         .bg = 0,
-        .tilemapLeft = 16,
+        .tilemapLeft = 15,
         .tilemapTop = 16,
         .width = WINDOW3_WIDTH,
         .height = WINDOW3_HEIGTH,
@@ -271,31 +252,19 @@ struct EvIv
     u8 stats_ev[NUM_STATS];
     u8 stats_iv[NUM_STATS];
     u8 stats_bs[NUM_STATS];
-    u8 ballSpriteId[PARTY_SIZE];    //id de los sprites de las balls.
-    u16 totalStatsEV;
-    u16 totalStatsIV;
-    u16 totalStatsBS;
-    u16 tilemapBuffer[0x400];  
-
+    u8 ballSpriteId[PARTY_SIZE];
     u8 level;
     u8 nat;
+    u8 hidenmove;
+    u8 varshiny;
+
+    u16 totalStatsEV;
+    u16 totalStatsBS;
+    u16 tilemapBuffer[0x400];  
     u16 gen;
-    u16 nidoranmf;
     u16 typ1;
     u16 typ2;
-    u8 movetype;
-
-//-----------------------------------------------------------------------------------------------------------------------------
-//-----------------------------------------------------------------------------------------------------------------------------
-//-----------------------------------------------------------------------------------------------------------------------------
-    u8 ball;
-    u8 var;
-
-
-//-----------------------------------------------------------------------------------------------------------------------------
-//-----------------------------------------------------------------------------------------------------------------------------
-//-----------------------------------------------------------------------------------------------------------------------------
-
+    
 };
 
 extern struct EvIv *gEvIv;
@@ -309,28 +278,17 @@ extern struct EvIv *gEvIv;
 #define gStats_iv           gEvIv->stats_iv
 #define gStats_bs           gEvIv->stats_bs
 #define gBallSpriteId       gEvIv->ballSpriteId
-#define gTotalStatsEV       gEvIv->totalStatsEV
-#define gTotalStatsIV       gEvIv->totalStatsIV
-#define gTotalStatsBS       gEvIv->totalStatsBS
-
-#define gLevelmon           gEvIv->level
+#define gLevelMon           gEvIv->level
 #define gNature             gEvIv->nat
+#define gHiddenMove         gEvIv->hidenmove
+#define gVarShiny           gEvIv->varshiny
+
+#define gTotalStatsEV       gEvIv->totalStatsEV
+#define gTotalStatsBS       gEvIv->totalStatsBS
 #define gGen                gEvIv->gen
-#define gType1                 gEvIv->typ1
-#define gType2                 gEvIv->typ2
-#define gMoveHidden         gEvIv->movetype
-#define gVar                gEvIv->var
+#define gType1              gEvIv->typ1
+#define gType2              gEvIv->typ2
 
-//-----------------------------------------------------------------------------------------------------------------------------
-//-----------------------------------------------------------------------------------------------------------------------------
-//-----------------------------------------------------------------------------------------------------------------------------
-//#define gBall               gEvIv->ball
-
-
-
-//-----------------------------------------------------------------------------------------------------------------------------
-//-----------------------------------------------------------------------------------------------------------------------------
-//-----------------------------------------------------------------------------------------------------------------------------
 
 static void EvIvBgInit(void)
 {
@@ -642,8 +600,10 @@ static void ShowSprite(struct Pokemon *mon)
  * 
 */
 
-#define BALL_X      200
-#define BALL_Y      20
+
+
+#define BALL_X      188
+#define BALL_Y      21
 #define BALL_SIZE   16
 
 static const u8 ball_cords[][2] = 
@@ -667,15 +627,17 @@ static void LoadBalls(void)
     {
         isEgg  = GetMonData(&gPlayerParty[i], MON_DATA_IS_EGG, NULL);
         if (!isEgg)
-            ballItemId = GetMonData(&gPlayerParty[i]);
+            ballItemId = GetMonData(&gPlayerParty[i], MON_DATA_POKEBALL, NULL);
         else
             ballItemId = 0;
 
-        //cargamos los gráficos
+        //Load the graphics
+        //Cargamos los gráficos
         ballId = ItemIdToBallId(ballItemId);
         LoadBallGfx(ballId);
 
-        //guardamos los spriteId
+        //Save the spriteId
+        //Guardamos los spriteId
         gBallSpriteId[i] = CreateSprite(&gBallSpriteTemplates[ballId], ball_cords[i][0], ball_cords[i][1], 0);
         gSprites[gBallSpriteId[i]].callback = SpriteCallbackDummy;
         gSprites[gBallSpriteId[i]].oam.priority = 0;
@@ -693,50 +655,6 @@ void EvIv_DestroySprite(u8 spriteId)
     DestroySpriteAndFreeResources(&gSprites[spriteId]);
 }
 
-//-----------------------------------------------------------------------------------------------------------------------------
-//-----------------------------------------------------------------------------------------------------------------------------
-//-----------------------------------------------------------------------------------------------------------------------------
-
-/*
-
-static void CreateBallIconObj(struct Pokemon *mon)
-{
-    u16 ballItemId;
-    u8 ballId;
-    u8 isEgg    = GetMonData(mon, MON_DATA_IS_EGG, NULL);
-
-    if (!isEgg){
-        ballItemId = GetMonData(&gPlayerParty[gCurrentMon], MON_DATA_POKEBALL, NULL);
-    }else{
-        ballItemId = 0x04;
-    }
-
-    ballId = ItemIdToBallId(ballItemId);
-    LoadBallGfx(ballId);
-
-    gBall = CreateSprite(&gBallSpriteTemplates[ballId], 106, 88, NULL);
-    gSprites[gBall].callback = SpriteCallbackDummy;
-    gSprites[gBall].oam.priority = NULL;
-
-    ShowOrHideBallIconObj(TRUE);
-}
-
-atic void ShowOrHideBallIconObj(u8 invisible)
-{
-    gSprites[gBall].invisible = invisible;
-}
-
-static void DestroyBallIconObj(void)
-{
-    DestroySpriteAndFreeResources2(&gSprites[gBall]);
-}
-
-
-*/
-
-//-----------------------------------------------------------------------------------------------------------------------------
-//-----------------------------------------------------------------------------------------------------------------------------
-//-----------------------------------------------------------------------------------------------------------------------------
 static void HidePokemonPic2(u8 taskId)
 {
     struct Task * task = &gTasks[taskId];
@@ -902,14 +820,13 @@ static const u8 gShinyTextColor[3]  = {TEXT_COLOR_TRANSPARENT,  8,              
 
 static const u8 *const gTextColorByNature[] = 
 {
-    gGrayTextColor,
+    gBlackTextColor,
     gRedTextColor,
     gBlueTextColor
 };
 
 //Texts to display according to defined language (capitalize if necessary)
 //Textos a mostrar segun idioma definido (capitalizar si es necesario)
-const u8 gNPokemon[]        = _("Pokémon");
 const u8 gText_CensorEgg[]  = _("{CLEAR_TO 12}-{CLEAR_TO 42}-{CLEAR_TO 72}-");
 const u8 gText_BsEvIv[] = _(" Bs{CLEAR_TO 30} Ev{CLEAR_TO 60} Iv");
 const u8 gText_Total[]  = _("Total:");
@@ -949,21 +866,21 @@ const u8 gSASSY[]        = _("Grosera");
 const u8 gCAREFUL[]      = _("Cauta");
 const u8 gQUIRKY[]       = _("Rara");
 
-const u8 gText_Slash[]  = _(" de ");
 const u8 gText_Hp[]     = _("Ps");
 const u8 gText_Atq[]    = _("Ataque");
 const u8 gText_Def[]    = _("Defensa");
-const u8 gText_SpAtk[]  = _("Atq. Esp.");
-const u8 gText_SpDef[]  = _("Def. Esp.");
-const u8 gText_Speed[]  = _("Velocidad");
+const u8 gText_SpAtk[]  = _("At. Esp.");
+const u8 gText_SpDef[]  = _("De. Esp.");
+const u8 gText_Speed[]  = _("Velocid.");
 
 const u8 gText_Your[]   = _("Tu ");
 const u8 gText_Is[]     = _(" es ");
 const u8 gText_Happy[]  = _("% feliz.");
-const u8 gLevel[]  = _("Nv. ");
+const u8 gLevel[]       = _("Nv. ");
 
-const u8 gText_Less_Than[]  = _("  ¡Menos de ");
-const u8 gText_Steps_to_hatching[]  = _(" pasos para eclosionar!");
+const u8 gStepts[]      = _("Pasos restantes:");
+const u8 gText_Less_Than[]  = _("¡Menos de ");
+const u8 gText_Steps_to_hatching[]  = _(" pasos!");
 #else
 // ENG
 //If you want to make them appear in uppercase you should write them xd
@@ -993,7 +910,6 @@ const u8 gSASSY[]        = _("Sassy");
 const u8 gCAREFUL[]      = _("Careful");
 const u8 gQUIRKY[]       = _("Quirky");
 
-const u8 gText_Slash[]  = _(" of ");
 const u8 gText_Hp[]     = _("Hp");
 const u8 gText_Atq[]    = _("Attack");
 const u8 gText_Def[]    = _("Defense");
@@ -1006,8 +922,9 @@ const u8 gText_Is[]     = _(" is ");
 const u8 gText_Happy[]  = _("% happy.");
 const u8 gLevel[]  = _("Lv. ");
 
-const u8 gText_Less_Than[]  = _("  Less than... ");
-const u8 gText_Steps_to_hatching[]  = _(" steps to hatching!");
+const u8 gStepts[]      = _("Steps to hatch:");
+const u8 gText_Less_Than[]  = _("Less than ");
+const u8 gText_Steps_to_hatching[]  = _(" steps!");
 #endif
 
 static void PrintWindow0(struct Pokemon *mon);
@@ -1028,7 +945,6 @@ static void EvIvPrintText(struct Pokemon *mon)
     //reset the totals.
     //reinicia los totales.
     gTotalStatsEV = 0;
-    gTotalStatsIV = 0;
     gTotalStatsBS = 0;
 
     //get pokémon stats
@@ -1069,37 +985,22 @@ static void EvIvPrintText(struct Pokemon *mon)
     for (int i = 0; i < NUM_STATS; i++)
     {
         gTotalStatsEV += gStats_ev[i];
-        gTotalStatsIV += gStats_iv[i];
         gTotalStatsBS += gStats_bs[i];
     }
 
     //Get more data from the Pokémon
     //Obtiene mas datos del Pokémon
-    gLevelmon = GetMonData(mon,MON_DATA_LEVEL,NULL);
+    gLevelMon = GetMonData(mon,MON_DATA_LEVEL,NULL);
     gGen      = GetMonGender(mon);
 
     gType1 = gBaseStatsPtr[species].type1;
     gType2 = gBaseStatsPtr[species].type2;
 
     if(!IsMonShiny(mon)){
-        gVar = 0;
+        gVarShiny = 0;
     }else{
-        gVar = 1;
+        gVarShiny = 1;
     }
-//-------------------------------------------------------------------------------------------------------------------
-//-------------------------------------------------------------------------------------------------------------------
-//-------------------------------------------------------------------------------------------------------------------
-    //gBall = GetMonData(mon, MON_DATA_POKEBALL, NULL);
-    
-    
-
-
-
-
-
-//-------------------------------------------------------------------------------------------------------------------
-//-------------------------------------------------------------------------------------------------------------------
-//-------------------------------------------------------------------------------------------------------------------
 
 
     FillWindowPixelBuffer(0, 0);
@@ -1125,44 +1026,17 @@ static void EvIvPrintText(struct Pokemon *mon)
 static void PrintWindow0(struct Pokemon *mon)
 {
     gNature = GetNature(mon);
-    u8 temp = 0;
 
-
-    AddTextPrinterParameterized3(WIN_POKEMON_NAME, 2, 0xBA, 13, gGrayTextColor, 0, gNPokemon);
-    temp = gCurrentMon + 1;
-    ConvertIntToDecimalStringN(gStringVar4, temp, STR_CONV_MODE_LEFT_ALIGN, 1);
-    StringAppend(gStringVar4, gText_Slash);
-    temp = gPlayerPartyCount;
-    ConvertIntToDecimalStringN(gStringVar1, temp, STR_CONV_MODE_LEFT_ALIGN, 1);
-    StringAppend(gStringVar4, gStringVar1);
-    AddTextPrinterParameterized3(WIN_POKEMON_NAME, 2, 0xBA, 22, gGrayTextColor, 0, gStringVar4);
-    AddTextPrinterParameterized3(WIN_POKEMON_NAME, 2, 0x44, 18, gGrayTextColor, 0, gText_BsEvIv);
+    AddTextPrinterParameterized3(WIN_POKEMON_NAME, 2, BS_X, 22, gGrayTextColor, 0, gText_BsEvIv);
     GetMonNickname(mon, gStringVar4);
 
     if (!IsMonShiny(mon)){
-        AddTextPrinterParameterized3(WIN_POKEMON_NAME, 2, 0, 3, gGrayTextColor, 0, gStringVar4);
+        AddTextPrinterParameterized3(WIN_POKEMON_NAME, 2, 0, 2, gGrayTextColor, 0, gStringVar4);
     }else{
-        AddTextPrinterParameterized3(WIN_POKEMON_NAME, 2, 0, 3, gShinyTextColor, 0, gStringVar4);
+        AddTextPrinterParameterized3(WIN_POKEMON_NAME, 2, 0, 2, gShinyTextColor, 0, gStringVar4);
     }
     
     
-//-------------------------------------------------------------------------------------------------------------------
-//-------------------------------------------------------------------------------------------------------------------
-//-------------------------------------------------------------------------------------------------------------------
-
-        //ConvertIntToDecimalStringN(gStringVar1, gBall, STR_CONV_MODE_RIGHT_ALIGN, 3);
-        //AddTextPrinterParameterized3(WIN_POKEMON_NAME, 2, 0xB6, 7, gGrayTextColor, 0, gStringVar1);
-
-
-        
-
-
-
-
-//-------------------------------------------------------------------------------------------------------------------
-//-------------------------------------------------------------------------------------------------------------------
-//-------------------------------------------------------------------------------------------------------------------
-
 
 }
 
@@ -1186,151 +1060,151 @@ static void PrintWindow1(u8 nature, u8 isEgg)
 
         
     if(gNature==NATURE_HARDY){
-        AddTextPrinterParameterized3(WIN_BOTTOM_BOX, 2, 180, 12, gBlackTextColor, 0, gHARDY);
+        AddTextPrinterParameterized3(WIN_BOTTOM_BOX, 2, 187, 17, gGrayTextColor, 0, gHARDY);
 
     }else if(gNature==NATURE_LONELY){
-        AddTextPrinterParameterized3(WIN_BOTTOM_BOX, 2, 180, 12, gBlackTextColor, 0, gLONELY);
-        AddTextPrinterParameterized3(WIN_STATS, 2, BS_X-14, ATK_Y, gDarkRedColor, 0, gArrowU);
-        AddTextPrinterParameterized3(WIN_STATS, 2, BS_X-14, DEF_Y, gDarkBlueColor, 0, gArrowD);
+        AddTextPrinterParameterized3(WIN_BOTTOM_BOX, 2, 187, 17, gGrayTextColor, 0, gLONELY);
+        AddTextPrinterParameterized3(WIN_STATS, 2, BS_X-14, ATK_Y, gRedTextColor, 0, gArrowU);
+        AddTextPrinterParameterized3(WIN_STATS, 2, BS_X-14, DEF_Y, gBlueTextColor, 0, gArrowD);
     }
 
     else if(gNature==NATURE_BRAVE){
-        AddTextPrinterParameterized3(WIN_BOTTOM_BOX, 2, 180, 12, gBlackTextColor, 0, gBRAVE);
-        AddTextPrinterParameterized3(WIN_STATS, 2, BS_X-14, ATK_Y, gDarkRedColor, 0, gArrowU);
-        AddTextPrinterParameterized3(WIN_STATS, 2, BS_X-14, SPEED_Y, gDarkBlueColor, 0, gArrowD);
+        AddTextPrinterParameterized3(WIN_BOTTOM_BOX, 2, 187, 17, gGrayTextColor, 0, gBRAVE);
+        AddTextPrinterParameterized3(WIN_STATS, 2, BS_X-14, ATK_Y, gRedTextColor, 0, gArrowU);
+        AddTextPrinterParameterized3(WIN_STATS, 2, BS_X-14, SPEED_Y, gBlueTextColor, 0, gArrowD);
     }
 
     else if(gNature==NATURE_ADAMANT){
-        AddTextPrinterParameterized3(WIN_BOTTOM_BOX, 2, 180, 12, gBlackTextColor, 0, gADAMANT);
-        AddTextPrinterParameterized3(WIN_STATS, 2, BS_X-14, ATK_Y, gDarkRedColor, 0, gArrowU);
-        AddTextPrinterParameterized3(WIN_STATS, 2, BS_X-14, SPATK_Y, gDarkBlueColor, 0, gArrowD);
+        AddTextPrinterParameterized3(WIN_BOTTOM_BOX, 2, 187, 17, gGrayTextColor, 0, gADAMANT);
+        AddTextPrinterParameterized3(WIN_STATS, 2, BS_X-14, ATK_Y, gRedTextColor, 0, gArrowU);
+        AddTextPrinterParameterized3(WIN_STATS, 2, BS_X-14, SPATK_Y, gBlueTextColor, 0, gArrowD);
     }
 
     else if(gNature==NATURE_NAUGHTY){
-        AddTextPrinterParameterized3(WIN_BOTTOM_BOX, 2, 180, 12, gBlackTextColor, 0, gNAUGHTY);
-        AddTextPrinterParameterized3(WIN_STATS, 2, BS_X-14, ATK_Y, gDarkRedColor, 0, gArrowU);
-        AddTextPrinterParameterized3(WIN_STATS, 2, BS_X-14, SPDEF_Y, gDarkBlueColor, 0, gArrowD);
+        AddTextPrinterParameterized3(WIN_BOTTOM_BOX, 2, 187, 17, gGrayTextColor, 0, gNAUGHTY);
+        AddTextPrinterParameterized3(WIN_STATS, 2, BS_X-14, ATK_Y, gRedTextColor, 0, gArrowU);
+        AddTextPrinterParameterized3(WIN_STATS, 2, BS_X-14, SPDEF_Y, gBlueTextColor, 0, gArrowD);
     }
 
     else if(gNature==NATURE_BOLD){
-        AddTextPrinterParameterized3(WIN_BOTTOM_BOX, 2, 180, 12, gBlackTextColor, 0, gBOLD);
-        AddTextPrinterParameterized3(WIN_STATS, 2, BS_X-14, DEF_Y, gDarkRedColor, 0, gArrowU);
-        AddTextPrinterParameterized3(WIN_STATS, 2, BS_X-14, ATK_Y, gDarkBlueColor, 0, gArrowD);
+        AddTextPrinterParameterized3(WIN_BOTTOM_BOX, 2, 187, 17, gGrayTextColor, 0, gBOLD);
+        AddTextPrinterParameterized3(WIN_STATS, 2, BS_X-14, DEF_Y, gRedTextColor, 0, gArrowU);
+        AddTextPrinterParameterized3(WIN_STATS, 2, BS_X-14, ATK_Y, gBlueTextColor, 0, gArrowD);
     }
 
     else if(gNature==NATURE_DOCILE){
-        AddTextPrinterParameterized3(WIN_BOTTOM_BOX, 2, 180, 12, gBlackTextColor, 0, gDOCILE);
+        AddTextPrinterParameterized3(WIN_BOTTOM_BOX, 2, 187, 17, gGrayTextColor, 0, gDOCILE);
     }
 
     else if(gNature==NATURE_RELAXED){
-        AddTextPrinterParameterized3(WIN_BOTTOM_BOX, 2, 180, 12, gBlackTextColor, 0, gRELAXED);
-        AddTextPrinterParameterized3(WIN_STATS, 2, BS_X-14, DEF_Y, gDarkRedColor, 0, gArrowU);
-        AddTextPrinterParameterized3(WIN_STATS, 2, BS_X-14, SPEED_Y, gDarkBlueColor, 0, gArrowD);
+        AddTextPrinterParameterized3(WIN_BOTTOM_BOX, 2, 187, 17, gGrayTextColor, 0, gRELAXED);
+        AddTextPrinterParameterized3(WIN_STATS, 2, BS_X-14, DEF_Y, gRedTextColor, 0, gArrowU);
+        AddTextPrinterParameterized3(WIN_STATS, 2, BS_X-14, SPEED_Y, gBlueTextColor, 0, gArrowD);
     }
 
     else if(gNature==NATURE_IMPISH){
-        AddTextPrinterParameterized3(WIN_BOTTOM_BOX, 2, 180, 12, gBlackTextColor, 0, gIMPISH);
-        AddTextPrinterParameterized3(WIN_STATS, 2, BS_X-14, DEF_Y, gDarkRedColor, 0, gArrowU);
-        AddTextPrinterParameterized3(WIN_STATS, 2, BS_X-14, SPATK_Y, gDarkBlueColor, 0, gArrowD);
+        AddTextPrinterParameterized3(WIN_BOTTOM_BOX, 2, 187, 17, gGrayTextColor, 0, gIMPISH);
+        AddTextPrinterParameterized3(WIN_STATS, 2, BS_X-14, DEF_Y, gRedTextColor, 0, gArrowU);
+        AddTextPrinterParameterized3(WIN_STATS, 2, BS_X-14, SPATK_Y, gBlueTextColor, 0, gArrowD);
     }
 
     else if(gNature==NATURE_LAX){
-        AddTextPrinterParameterized3(WIN_BOTTOM_BOX, 2, 180, 12, gBlackTextColor, 0, gLAX);
-        AddTextPrinterParameterized3(WIN_STATS, 2, BS_X-14, DEF_Y, gDarkRedColor, 0, gArrowU);
-        AddTextPrinterParameterized3(WIN_STATS, 2, BS_X-14, SPDEF_Y, gDarkBlueColor, 0, gArrowD);
+        AddTextPrinterParameterized3(WIN_BOTTOM_BOX, 2, 187, 17, gGrayTextColor, 0, gLAX);
+        AddTextPrinterParameterized3(WIN_STATS, 2, BS_X-14, DEF_Y, gRedTextColor, 0, gArrowU);
+        AddTextPrinterParameterized3(WIN_STATS, 2, BS_X-14, SPDEF_Y, gBlueTextColor, 0, gArrowD);
     }
 
     else if(gNature==NATURE_TIMID){
-        AddTextPrinterParameterized3(WIN_BOTTOM_BOX, 2, 180, 12, gBlackTextColor, 0, gTIMID);
-        AddTextPrinterParameterized3(WIN_STATS, 2, BS_X-14, SPEED_Y, gDarkRedColor, 0, gArrowU);
-        AddTextPrinterParameterized3(WIN_STATS, 2, BS_X-14, ATK_Y, gDarkBlueColor, 0, gArrowD);
+        AddTextPrinterParameterized3(WIN_BOTTOM_BOX, 2, 187, 17, gGrayTextColor, 0, gTIMID);
+        AddTextPrinterParameterized3(WIN_STATS, 2, BS_X-14, SPEED_Y, gRedTextColor, 0, gArrowU);
+        AddTextPrinterParameterized3(WIN_STATS, 2, BS_X-14, ATK_Y, gBlueTextColor, 0, gArrowD);
     }
 
     else if(gNature==NATURE_HASTY){
-        AddTextPrinterParameterized3(WIN_BOTTOM_BOX, 2, 180, 12, gBlackTextColor, 0, gHASTY);
-        AddTextPrinterParameterized3(WIN_STATS, 2, BS_X-14, SPEED_Y, gDarkRedColor, 0, gArrowU);
-        AddTextPrinterParameterized3(WIN_STATS, 2, BS_X-14, DEF_Y, gDarkBlueColor, 0, gArrowD);
+        AddTextPrinterParameterized3(WIN_BOTTOM_BOX, 2, 187, 17, gGrayTextColor, 0, gHASTY);
+        AddTextPrinterParameterized3(WIN_STATS, 2, BS_X-14, SPEED_Y, gRedTextColor, 0, gArrowU);
+        AddTextPrinterParameterized3(WIN_STATS, 2, BS_X-14, DEF_Y, gBlueTextColor, 0, gArrowD);
     }
 
     else if(gNature==NATURE_SERIOUS){
-        AddTextPrinterParameterized3(WIN_BOTTOM_BOX, 2, 180, 12, gBlackTextColor, 0, gSERIOUS);
+        AddTextPrinterParameterized3(WIN_BOTTOM_BOX, 2, 187, 17, gGrayTextColor, 0, gSERIOUS);
     }
 
     else if(gNature==NATURE_JOLLY){
-        AddTextPrinterParameterized3(WIN_BOTTOM_BOX, 2, 180, 12, gBlackTextColor, 0, gJOLLY);
-        AddTextPrinterParameterized3(WIN_STATS, 2, BS_X-14, SPEED_Y, gDarkRedColor, 0, gArrowU);
-        AddTextPrinterParameterized3(WIN_STATS, 2, BS_X-14, SPATK_Y, gDarkBlueColor, 0, gArrowD);
+        AddTextPrinterParameterized3(WIN_BOTTOM_BOX, 2, 187, 17, gGrayTextColor, 0, gJOLLY);
+        AddTextPrinterParameterized3(WIN_STATS, 2, BS_X-14, SPEED_Y, gRedTextColor, 0, gArrowU);
+        AddTextPrinterParameterized3(WIN_STATS, 2, BS_X-14, SPATK_Y, gBlueTextColor, 0, gArrowD);
     }
 
     else if(gNature==NATURE_NAIVE){
-        AddTextPrinterParameterized3(WIN_BOTTOM_BOX, 2, 180, 12, gBlackTextColor, 0, gNAIVE);
-        AddTextPrinterParameterized3(WIN_STATS, 2, BS_X-14, SPEED_Y, gDarkRedColor, 0, gArrowU);
-        AddTextPrinterParameterized3(WIN_STATS, 2, BS_X-14, SPDEF_Y, gDarkBlueColor, 0, gArrowD);
+        AddTextPrinterParameterized3(WIN_BOTTOM_BOX, 2, 187, 17, gGrayTextColor, 0, gNAIVE);
+        AddTextPrinterParameterized3(WIN_STATS, 2, BS_X-14, SPEED_Y, gRedTextColor, 0, gArrowU);
+        AddTextPrinterParameterized3(WIN_STATS, 2, BS_X-14, SPDEF_Y, gBlueTextColor, 0, gArrowD);
     }
 
     else if(gNature==NATURE_MODEST){
-        AddTextPrinterParameterized3(WIN_BOTTOM_BOX, 2, 180, 12, gBlackTextColor, 0, gMODEST);
-        AddTextPrinterParameterized3(WIN_STATS, 2, BS_X-14, SPATK_Y, gDarkRedColor, 0, gArrowU);
-        AddTextPrinterParameterized3(WIN_STATS, 2, BS_X-14, ATK_Y, gDarkBlueColor, 0, gArrowD);
+        AddTextPrinterParameterized3(WIN_BOTTOM_BOX, 2, 187, 17, gGrayTextColor, 0, gMODEST);
+        AddTextPrinterParameterized3(WIN_STATS, 2, BS_X-14, SPATK_Y, gRedTextColor, 0, gArrowU);
+        AddTextPrinterParameterized3(WIN_STATS, 2, BS_X-14, ATK_Y, gBlueTextColor, 0, gArrowD);
     }
 
     else if(gNature==NATURE_MILD){
-        AddTextPrinterParameterized3(WIN_BOTTOM_BOX, 2, 180, 12, gBlackTextColor, 0, gMILD);
-        AddTextPrinterParameterized3(WIN_STATS, 2, BS_X-14, SPATK_Y, gDarkRedColor, 0, gArrowU);
-        AddTextPrinterParameterized3(WIN_STATS, 2, BS_X-14, DEF_Y, gDarkBlueColor, 0, gArrowD);
+        AddTextPrinterParameterized3(WIN_BOTTOM_BOX, 2, 187, 17, gGrayTextColor, 0, gMILD);
+        AddTextPrinterParameterized3(WIN_STATS, 2, BS_X-14, SPATK_Y, gRedTextColor, 0, gArrowU);
+        AddTextPrinterParameterized3(WIN_STATS, 2, BS_X-14, DEF_Y, gBlueTextColor, 0, gArrowD);
     }
 
     else if(gNature==NATURE_QUIET){
-        AddTextPrinterParameterized3(WIN_BOTTOM_BOX, 2, 180, 12, gBlackTextColor, 0, gQUIET);
-        AddTextPrinterParameterized3(WIN_STATS, 2, BS_X-14, SPATK_Y, gDarkRedColor, 0, gArrowU);
-        AddTextPrinterParameterized3(WIN_STATS, 2, BS_X-14, SPEED_Y, gDarkBlueColor, 0, gArrowD);
+        AddTextPrinterParameterized3(WIN_BOTTOM_BOX, 2, 187, 17, gGrayTextColor, 0, gQUIET);
+        AddTextPrinterParameterized3(WIN_STATS, 2, BS_X-14, SPATK_Y, gRedTextColor, 0, gArrowU);
+        AddTextPrinterParameterized3(WIN_STATS, 2, BS_X-14, SPEED_Y, gBlueTextColor, 0, gArrowD);
     }
 
     else if(gNature==NATURE_BASHFUL){
-        AddTextPrinterParameterized3(WIN_BOTTOM_BOX, 2, 180, 12, gBlackTextColor, 0, gBASHFUL);
+        AddTextPrinterParameterized3(WIN_BOTTOM_BOX, 2, 187, 17, gGrayTextColor, 0, gBASHFUL);
     }
 
     else if(gNature==NATURE_RASH){
-        AddTextPrinterParameterized3(WIN_BOTTOM_BOX, 2, 180, 12, gBlackTextColor, 0, gRASH);
-        AddTextPrinterParameterized3(WIN_STATS, 2, BS_X-14, SPATK_Y, gDarkRedColor, 0, gArrowU);
-        AddTextPrinterParameterized3(WIN_STATS, 2, BS_X-14, SPDEF_Y, gDarkBlueColor, 0, gArrowD);
+        AddTextPrinterParameterized3(WIN_BOTTOM_BOX, 2, 187, 17, gGrayTextColor, 0, gRASH);
+        AddTextPrinterParameterized3(WIN_STATS, 2, BS_X-14, SPATK_Y, gRedTextColor, 0, gArrowU);
+        AddTextPrinterParameterized3(WIN_STATS, 2, BS_X-14, SPDEF_Y, gBlueTextColor, 0, gArrowD);
     }
 
     else if(gNature==NATURE_CALM){
-        AddTextPrinterParameterized3(WIN_BOTTOM_BOX, 2, 180, 12, gBlackTextColor, 0, gCALM);
-        AddTextPrinterParameterized3(WIN_STATS, 2, BS_X-14, SPDEF_Y, gDarkRedColor, 0, gArrowU);
-        AddTextPrinterParameterized3(WIN_STATS, 2, BS_X-14, ATK_Y, gDarkBlueColor, 0, gArrowD);
+        AddTextPrinterParameterized3(WIN_BOTTOM_BOX, 2, 187, 17, gGrayTextColor, 0, gCALM);
+        AddTextPrinterParameterized3(WIN_STATS, 2, BS_X-14, SPDEF_Y, gRedTextColor, 0, gArrowU);
+        AddTextPrinterParameterized3(WIN_STATS, 2, BS_X-14, ATK_Y, gBlueTextColor, 0, gArrowD);
     }
 
     else if(gNature==NATURE_GENTLE){
-        AddTextPrinterParameterized3(WIN_BOTTOM_BOX, 2, 180, 12, gBlackTextColor, 0, gGENTLE);
-        AddTextPrinterParameterized3(WIN_STATS, 2, BS_X-14, SPDEF_Y, gDarkRedColor, 0, gArrowU);
-        AddTextPrinterParameterized3(WIN_STATS, 2, BS_X-14, DEF_Y, gDarkBlueColor, 0, gArrowD);
+        AddTextPrinterParameterized3(WIN_BOTTOM_BOX, 2, 187, 17, gGrayTextColor, 0, gGENTLE);
+        AddTextPrinterParameterized3(WIN_STATS, 2, BS_X-14, SPDEF_Y, gRedTextColor, 0, gArrowU);
+        AddTextPrinterParameterized3(WIN_STATS, 2, BS_X-14, DEF_Y, gBlueTextColor, 0, gArrowD);
     }
 
     else if(gNature==NATURE_SASSY){
-        AddTextPrinterParameterized3(WIN_BOTTOM_BOX, 2, 180, 12, gBlackTextColor, 0, gSASSY);
-        AddTextPrinterParameterized3(WIN_STATS, 2, BS_X-14, SPDEF_Y, gDarkRedColor, 0, gArrowU);
-        AddTextPrinterParameterized3(WIN_STATS, 2, BS_X-14, SPEED_Y, gDarkBlueColor, 0, gArrowD);
+        AddTextPrinterParameterized3(WIN_BOTTOM_BOX, 2, 187, 17, gGrayTextColor, 0, gSASSY);
+        AddTextPrinterParameterized3(WIN_STATS, 2, BS_X-14, SPDEF_Y, gRedTextColor, 0, gArrowU);
+        AddTextPrinterParameterized3(WIN_STATS, 2, BS_X-14, SPEED_Y, gBlueTextColor, 0, gArrowD);
     }
 
     else if(gNature==NATURE_CAREFUL){
-        AddTextPrinterParameterized3(WIN_BOTTOM_BOX, 2, 180, 12, gBlackTextColor, 0, gCAREFUL);
-        AddTextPrinterParameterized3(WIN_STATS, 2, BS_X-14, SPDEF_Y, gDarkRedColor, 0, gArrowU);
-        AddTextPrinterParameterized3(WIN_STATS, 2, BS_X-14, SPATK_Y, gDarkBlueColor, 0, gArrowD);
+        AddTextPrinterParameterized3(WIN_BOTTOM_BOX, 2, 187, 17, gGrayTextColor, 0, gCAREFUL);
+        AddTextPrinterParameterized3(WIN_STATS, 2, BS_X-14, SPDEF_Y, gRedTextColor, 0, gArrowU);
+        AddTextPrinterParameterized3(WIN_STATS, 2, BS_X-14, SPATK_Y, gBlueTextColor, 0, gArrowD);
     }
 
     else if(gNature==NATURE_QUIRKY){
-        AddTextPrinterParameterized3(WIN_BOTTOM_BOX, 2, 180, 12, gBlackTextColor, 0, gQUIRKY);
+        AddTextPrinterParameterized3(WIN_BOTTOM_BOX, 2, 187, 17, gGrayTextColor, 0, gQUIRKY);
     }
 
     }else{
-        AddTextPrinterParameterized3(WIN_STATS, 2, BS_X, HP_Y,    gGrayTextColor, 0, gText_CensorEgg);
-        AddTextPrinterParameterized3(WIN_STATS, 2, BS_X, ATK_Y,   gGrayTextColor, 0, gText_CensorEgg);
-        AddTextPrinterParameterized3(WIN_STATS, 2, BS_X, DEF_Y,   gGrayTextColor, 0, gText_CensorEgg);
-        AddTextPrinterParameterized3(WIN_STATS, 2, BS_X, SPATK_Y, gGrayTextColor, 0, gText_CensorEgg);
-        AddTextPrinterParameterized3(WIN_STATS, 2, BS_X, SPDEF_Y, gGrayTextColor, 0, gText_CensorEgg);
-        AddTextPrinterParameterized3(WIN_STATS, 2, BS_X, SPEED_Y, gGrayTextColor, 0, gText_CensorEgg);
+        AddTextPrinterParameterized3(WIN_STATS, 2, BS_X, HP_Y,    gBlackTextColor, 0, gText_CensorEgg);
+        AddTextPrinterParameterized3(WIN_STATS, 2, BS_X, ATK_Y,   gBlackTextColor, 0, gText_CensorEgg);
+        AddTextPrinterParameterized3(WIN_STATS, 2, BS_X, DEF_Y,   gBlackTextColor, 0, gText_CensorEgg);
+        AddTextPrinterParameterized3(WIN_STATS, 2, BS_X, SPATK_Y, gBlackTextColor, 0, gText_CensorEgg);
+        AddTextPrinterParameterized3(WIN_STATS, 2, BS_X, SPDEF_Y, gBlackTextColor, 0, gText_CensorEgg);
+        AddTextPrinterParameterized3(WIN_STATS, 2, BS_X, SPEED_Y, gBlackTextColor, 0, gText_CensorEgg);
     }
 }
 
@@ -1385,23 +1259,23 @@ static void PrintWindow2(u16 species, u8 isEgg, u8 friendship)
     
     if(!isEgg){
 
-    BlitMoveInfoIcon(WIN_TYPE, gType1 + 1, 1, 5);
+    BlitMoveInfoIcon(WIN_TYPE, gType1 + 1, 1, 4);
     if (gType1 != gType2){
-        BlitMoveInfoIcon(WIN_TYPE, gType2 + 1, 35, 5);
+        BlitMoveInfoIcon(WIN_TYPE, gType2 + 1, 35, 4);
     }
             
-    gMoveHidden = ((gStats_iv[STAT_HP] & 1)) |
+    gHiddenMove = ((gStats_iv[STAT_HP] & 1)) |
                   ((gStats_iv[STAT_ATK] & 1) << 1) |
                   ((gStats_iv[STAT_DEF] & 1) << 2) |
                   ((gStats_iv[STAT_SPEED] & 1) << 3) |
                   ((gStats_iv[STAT_SPATK] & 1) << 4) |
                   ((gStats_iv[STAT_SPDEF] & 1) << 5);
 
-    gMoveHidden = ((15 * gMoveHidden) / 63) + 1;
-    if (gMoveHidden >= TYPE_MYSTERY){
-        ++gMoveHidden;
+    gHiddenMove = ((15 * gHiddenMove) / 63) + 1;
+    if (gHiddenMove >= TYPE_MYSTERY){
+        ++gHiddenMove;
     }     
-        BlitMoveInfoIcon(WIN_HIDDEN_MOVE, gMoveHidden + 1, 3, 2);
+        BlitMoveInfoIcon(WIN_HIDDEN_MOVE, gHiddenMove + 1, 3, 2);
 
         if      (gGen==0x00){
             AddTextPrinterParameterized3(WIN_POKEMON_NAME, 2, 55, 3, gBlueTextColor, 0, gMale);
@@ -1413,23 +1287,21 @@ static void PrintWindow2(u16 species, u8 isEgg, u8 friendship)
         
 
 
-        AddTextPrinterParameterized3(WIN_BOTTOM_BOX, 2, 14, 1, gBlackTextColor, 0, gText_Total);
+        AddTextPrinterParameterized3(WIN_BOTTOM_BOX, 2, 6, 1, gBlackTextColor, 0, gText_Total);
 
         ConvertIntToDecimalStringN(gStringVar1, gTotalStatsBS, STR_CONV_MODE_RIGHT_ALIGN, 3);
         ConvertIntToDecimalStringN(gStringVar2, gTotalStatsEV, STR_CONV_MODE_RIGHT_ALIGN, 3);
-        ConvertIntToDecimalStringN(gStringVar3, gTotalStatsIV, STR_CONV_MODE_RIGHT_ALIGN, 3);
-        AddTextPrinterParameterized3(WIN_BOTTOM_BOX, 2, BS_X + 8, 1, gGrayTextColor, 0, gStringVar1);
-        AddTextPrinterParameterized3(WIN_BOTTOM_BOX, 2, EV_X + 8, 1, gGrayTextColor, 0, gStringVar2);
-        AddTextPrinterParameterized3(WIN_BOTTOM_BOX, 2, IV_X + 2, 1, gGrayTextColor, 0, gStringVar3);
+        AddTextPrinterParameterized3(WIN_BOTTOM_BOX, 2, BS_X, 1, gBlackTextColor, 0, gStringVar1);
+        AddTextPrinterParameterized3(WIN_BOTTOM_BOX, 2, EV_X, 1, gBlackTextColor, 0, gStringVar2);
 
-        ConvertIntToDecimalStringN(gStringVar4, gLevelmon, STR_CONV_MODE_LEFT_ALIGN, 3);
+        ConvertIntToDecimalStringN(gStringVar4, gLevelMon, STR_CONV_MODE_LEFT_ALIGN, 3);
 
-        if(gVar==0){
-        AddTextPrinterParameterized3(WIN_BOTTOM_BOX, 2, 165, 0, gGrayTextColor, 0, gLevel);
-        AddTextPrinterParameterized3(WIN_BOTTOM_BOX, 2, 186, 0, gGrayTextColor, 0, gStringVar4);
-    }else if(gVar==1){
-        AddTextPrinterParameterized3(WIN_BOTTOM_BOX, 2, 165, 0, gShinyTextColor, 0, gLevel);
-        AddTextPrinterParameterized3(WIN_BOTTOM_BOX, 2, 186, 0, gShinyTextColor, 0, gStringVar4);
+        if(gVarShiny==0){
+        AddTextPrinterParameterized3(WIN_BOTTOM_BOX, 2, 187, 5, gGrayTextColor, 0, gLevel);
+        AddTextPrinterParameterized3(WIN_BOTTOM_BOX, 2, 208, 5, gGrayTextColor, 0, gStringVar4);
+    }else if(gVarShiny==1){
+        AddTextPrinterParameterized3(WIN_BOTTOM_BOX, 2, 187, 5, gShinyTextColor, 0, gLevel);
+        AddTextPrinterParameterized3(WIN_BOTTOM_BOX, 2, 208, 5, gShinyTextColor, 0, gStringVar4);
     }
 
         StringCopy(gStringVar4, gText_Your);
@@ -1442,20 +1314,19 @@ static void PrintWindow2(u16 species, u8 isEgg, u8 friendship)
         StringAppend(gStringVar4, gStringVar2);
         
         StringAppend(gStringVar4, gText_Happy);
-        AddTextPrinterParameterized3(WIN_BOTTOM_BOX, 2, 14, 12, gBlackTextColor, 0, gStringVar4);
+        AddTextPrinterParameterized3(WIN_BOTTOM_BOX, 2, 6, 17, gBlackTextColor, 0, gStringVar4);
         
         
     }else
     {
-        AddTextPrinterParameterized3(WIN_BOTTOM_BOX, 2, 14, 1, gBlackTextColor, 0, gText_Total);
-        AddTextPrinterParameterized3(WIN_BOTTOM_BOX, 2, BS_X + 8, 1, gGrayTextColor, 0, gText_CensorEgg);
+        AddTextPrinterParameterized3(WIN_BOTTOM_BOX, 2, 6, 1, gBlackTextColor, 0, gStepts);
         StringCopy(gStringVar4, gText_Less_Than);
         temp = (friendship + 1) * 0xFF;
         ConvertIntToDecimalStringN(gStringVar2, temp, STR_CONV_MODE_LEFT_ALIGN, GetDigits(temp));
         StringAppend(gStringVar4, gStringVar2);
         StringAppend(gStringVar4, gText_Steps_to_hatching);
-        AddTextPrinterParameterized3(WIN_BOTTOM_BOX, 2, 2, 12, gBlackTextColor, 0, gStringVar4);
-        BlitMoveInfoIcon(WIN_HIDDEN_MOVE, 0x0A, 3, 2);
+        AddTextPrinterParameterized3(WIN_BOTTOM_BOX, 2, 6, 17, gBlackTextColor, 0, gStringVar4);
+        AddTextPrinterParameterized3(WIN_HIDDEN_MOVE, 2, 3, 2, gBlackTextColor, 0, gNoneG);
     }
 }
 
