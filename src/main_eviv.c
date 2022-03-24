@@ -1278,11 +1278,11 @@ static void PrintWindow2(u16 species, u8 isEgg, u8 friendship)
         BlitMoveInfoIcon(WIN_HIDDEN_MOVE, gHiddenMove + 1, 3, 2);
 
         if      (gGen==0x00){
-            AddTextPrinterParameterized3(WIN_POKEMON_NAME, 2, 55, 3, gBlueTextColor, 0, gMale);
+            AddTextPrinterParameterized3(WIN_POKEMON_NAME, 2, 66, 3, gBlueTextColor, 0, gMale);
         }else if(gGen==0xFE){
-            AddTextPrinterParameterized3(WIN_POKEMON_NAME, 2, 55, 3, gRedTextColor,  0, gFemale);
+            AddTextPrinterParameterized3(WIN_POKEMON_NAME, 2, 66, 3, gRedTextColor,  0, gFemale);
         }else if(gGen==0xFF){
-            AddTextPrinterParameterized3(WIN_POKEMON_NAME, 2, 55, 3, gGrayTextColor, 0, gNoneG);
+            AddTextPrinterParameterized3(WIN_POKEMON_NAME, 2, 66, 3, gGrayTextColor, 0, gNoneG);
         }
         
 
