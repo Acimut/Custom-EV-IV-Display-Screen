@@ -24,8 +24,10 @@
 |||-Pokeballs del equipo.                                               |||
 ||| (la Pokeball del Pokémon seleccionado se abrira).                   |||
 |||-Fondo rediseñado.                                                   |||
+||| (Configurado en 2 colores segun el genero del prota)                |||
 |||-El Nombre y Nivel del Pokémon se tornaran amarillos si el Pokémon   |||
 ||| es Shiny.                                                           |||
+|||-Compatible con Fire Red, Rojo Fuego y Emerald.                      |||
 |||-Conserva el olor a Limón.                                           |||
 |||                                                                     |||
 |||No es un aporte a nivel FUAAAAA QUE WAPO Y KE LA CANCION, pero       |||
@@ -85,10 +87,22 @@
 #include "include/trainer_pokemon_sprites.h"
 #include "main_eviv.h"
 
-//#define ESP //comment this to use the english text
+//#define ESP //comment this to use the english text.
 
-// 1 = ACTIVADO, 0 = DESACTIVADO. Activa o desactiva el salto de sprite
-// 1 = ON, 0 = OFF.  Activates or deactivates the sprite jump
+
+//escribe RF si usas Pokémon Edición Rojo Fuego.
+//        EM si usas Pokémon Emerald Edition.
+//        ES si usas Pokémon Edición Esmeralda.
+//comenta si no usas ninguna de las anteriores.
+//write RF if use Pokémon Edición Rojo Fuego.
+//      EM if use Pokémon Emerald Edition.
+//      ES if use Pokémon Edición Esmeralda.
+//coment if you don't use any of the above.
+
+//#define ES
+
+// 1 = ACTIVADO, 0 = DESACTIVADO. Activa o desactiva el salto de sprite.
+// 1 = ON, 0 = OFF.  Activates or deactivates the sprite jump.
 #define SPRITE_JUMP             1
 
 // 1 = DE DERECHA A IZQUIERDA, 0 = EN EL CENTRO -1 = DE IZQUIERDA A DERECHA.
@@ -126,15 +140,12 @@ static void LoadBalls(void);
 
 const u32 gBgEvIvGfx[] = INCBIN_U32("graphics/bgEvIv.4bpp.lz");
 const u32 gBgEvIvTilemap[] = INCBIN_U32("graphics/bgEvIv.bin.lz");
-const u16 gBgEvIvPal[] = INCBIN_U16("graphics/bgEvIv.gbapal");
+const u16 gBgEvIvPal_B[] = INCBIN_U16("graphics/bgEvIv.gbapal");
+const u16 gBgEvIvPal_G[] = INCBIN_U16("graphics/bgEvIv_G.gbapal");
 
 //                      |0 Transparent  |1 White  |2 Gray   |3 Light grey |4 Red    |5 Dark Red    |6 Blue   |7 Dark Blue   |8 Yellow   |9 Dark Yellow
 //                      |0 Trabsparente |1 Blaco  |2 Gris   |3 Gris Claro |4 Rojo   |5 Rojo Oscuro |6 Azul   |7 Azul Oscuro |8 Amarillo |9 Amarillo Oscuro
 const u16 gPalText[] = {0x542E,         0x7FFF,   0x318C,   0x675A,       0x319E,   0x1CFE,        0x7EC4,   0x6600,        0x239E,     0x0611};
-
-//Palette of Type Icons (Change 0x08XXXXXX if necessary)
-//Paleta de Iconos de Tipos (Cambiar 0x08XXXXXX si es necesario)
-const u16*gPalType=0x08E95DBC;
 
 
 enum
@@ -228,7 +239,7 @@ static const struct WindowTemplate windows_templates[] = {
         .tilemapTop = 16,
         .width = WINDOW3_WIDTH,
         .height = WINDOW3_HEIGTH,
-        .paletteNum = 14,
+        .paletteNum = 12,
         .baseBlock = WINDOW3_BASEBLOCK
     },{//window 4 = types
        //window 4 = tipos
@@ -237,7 +248,7 @@ static const struct WindowTemplate windows_templates[] = {
         .tilemapTop = 2,
         .width = WINDOW4_WIDTH,
         .height = WINDOW4_HEIGTH,
-        .paletteNum = 14,
+        .paletteNum = 12,
         .baseBlock = WINDOW4_BASEBLOCK
     },DUMMY_WIN_TEMPLATE
 };
@@ -536,6 +547,7 @@ static u8 EvIvLoadGfx(void)
     {
     case 0:
         ResetTempTileDataBuffers();
+        CreateMoveTypeIcons();
         break;
     case 1:
         DecompressAndCopyTileDataToVram(1, gBgEvIvGfx, 0, 0, 0);
@@ -547,15 +559,49 @@ static u8 EvIvLoadGfx(void)
         }
         return 0;
     case 3:
-        LoadPalette(gBgEvIvPal, 0, 0x20);
+        if (gSaveBlock2Ptr->playerGender == MALE)
+        {   
+            LoadPalette(gBgEvIvPal_B, 0, 0x20);
+        }
+        else
+        {
+            LoadPalette(gBgEvIvPal_G, 0, 0x20);
+        }
+
 #ifdef FIRERED
 //FIRERED
         //LoadPalette(stdpal_get(0), 0xf0, 0x20);
         LoadPalette(gPalText, 0xF0, 0x14);
+
+        #ifdef RF
+        //Palette of Type Icons in Rojo Fuego(Change 0x08XXXXXX if necessary)
+        //Paleta de Iconos de Tipos en Rojo Fuego(Cambiar 0x08XXXXXX si es necesario)
+        const u16*gPalType=0x08E95CF0;
+        #else
+        //Palette of Type Icons in Fire Red(Change 0x08XXXXXX if necessary)
+        //Paleta de Iconos de Tipos en Fire Red(Cambiar 0x08XXXXXX si es necesario)
+        const u16*gPalType=0x08E95DBC;
+        #endif
+
         LoadPalette(gPalType, 0xE0, 0x20);
+
 #else
 //EMERALD
-        LoadPalette(GetTextWindowPalette(0), 0xf0, 0x20);
+        //LoadPalette(GetTextWindowPalette(0), 0xf0, 0x20);
+        LoadPalette(gPalText, 0xF0, 0x14);
+
+        #ifdef ES
+        //Palette of Type Icons in Esmeralda(Change 0x08XXXXXX if necessary)
+        //Paleta de Iconos de Tipos en Esmeralda(Cambiar 0x08XXXXXX si es necesario)
+        const u32*gPalType=0x08D97B84;
+        #else
+        //Palette of Type Icons in Emerald(Change 0x08XXXXXX if necessary)
+        //Paleta de Iconos de Tipos en Emerald(Cambiar 0x08XXXXXX si es necesario)
+        const u32*gPalType=0x08D97B84;
+        #endif
+
+        LoadCompressedPalette(gPalType, 0xC0, 0x60);
+
 #endif
         break;
     default:
@@ -1277,12 +1323,20 @@ static void PrintWindow2(u16 species, u8 isEgg, u8 friendship)
     }     
         BlitMoveInfoIcon(WIN_HIDDEN_MOVE, gHiddenMove + 1, 3, 2);
 
-        if      (gGen==0x00){
-            AddTextPrinterParameterized3(WIN_POKEMON_NAME, 2, 66, 3, gBlueTextColor, 0, gMale);
-        }else if(gGen==0xFE){
-            AddTextPrinterParameterized3(WIN_POKEMON_NAME, 2, 66, 3, gRedTextColor,  0, gFemale);
-        }else if(gGen==0xFF){
-            AddTextPrinterParameterized3(WIN_POKEMON_NAME, 2, 66, 3, gGrayTextColor, 0, gNoneG);
+        if (species != SPECIES_NIDORAN_M && species != SPECIES_NIDORAN_F)
+        {
+            switch (gGen)
+            {
+            //AddTextPrinterParameterized3(WIN_POKEMON_NAME, 2, 66, 3, gBlueTextColor, 0, gMale);
+            case MON_MALE:
+            //else if(gGen==0xFE){
+            AddTextPrinterParameterized3(WIN_POKEMON_NAME, 2, 66, 3, gBlueTextColor,  0, gMale);
+            break;
+            case MON_FEMALE:
+            //}else if(gGen==0xFF){
+            AddTextPrinterParameterized3(WIN_POKEMON_NAME, 2, 66, 3, gRedTextColor, 0, gFemale);
+            break;
+            }
         }
         
 

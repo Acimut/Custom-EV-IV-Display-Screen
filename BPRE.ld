@@ -33,7 +33,6 @@ gPokeBallTiles = 0x0826056C;         /* const 0826056c g 00000060 gBallSpriteShe
 gPokeBallPals = 0x082605CC;          /* const 082605cc g 00000060 gBallSpritePalettes */
 gBallSpriteTemplates = 0x082606F4;   /* const 082606f4 g 00000120 gBallSpriteTemplates */
 CreateSprite = 0x08006F8C|1;
-
 SpriteCB_TestBallThrow = 0x0804ABD4|1;
 SpriteCB_ReleaseMonFromBall = 0x0804B268|1;
 CreatePokeballSpriteToReleaseMon = 0x0804B908|1;
@@ -52,6 +51,15 @@ RepeatBallOpenParticleAnimation  = 0x080F0DB4|1;
 MasterBallOpenParticleAnimation  = 0x080F0F10|1;
 PremierBallOpenParticleAnimation = 0x080F103C|1;
 FreeBallTiles = 0x080F1198|1;       /* 080f1198 l 00000080 DestroyBallOpenAnimationParticle */
+
+gSaveDataBuffer = 0x02039A38;
+gSaveBlock1ptr = 0x3005008;
+gSaveBlock2ptr = 0x300500C;
+gSaveBlock3ptr = 0x3005010;
+gFirstSaveSector = 0x3005380;
+gSaveCounter = 0x3005390;
+gFastSaveSection = 0x3005394;
+gRamSaveSectionLocations = 0x30053B0;
 /* ------ */
 
 

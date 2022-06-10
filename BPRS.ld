@@ -25,6 +25,44 @@ GetMonData = 0x0803fad4|1;
 GetSpeciesName = 0x08040EBC|1;
 GetMonNickname = 0x08120440|1;
 
+/* tio terry */
+GetMonGender = 0x0803f60c|1;
+BlitMoveInfoIcon = 0x08107F10|1;
+IsMonShiny = 0x0804435c|1;
+gPokeBallTiles = 0x0825bd34;         /* const 0825bd34 g 00000060 gBallSpriteSheets */
+gPokeBallPals = 0x0825db94;          /* const 0825db94 g 00000060 gBallSpritePalettes */
+gBallSpriteTemplates = 0x0825bebc;   /* const 0825bebc g 00000120 gBallSpriteTemplates */
+CreateSprite = 0x08006ef8|1;
+SpriteCB_TestBallThrow = 0x0804ACC8|1;
+SpriteCB_ReleaseMonFromBall = 0x0804B35C|1;
+CreatePokeballSpriteToReleaseMon = 0x0804B9FC|1;
+objc_ball_instanciate2_entry_804BADC = 0x0804BADC|1;
+sub_804BE88    = 0x0804BE88|1;
+LoadBallGfx    = 0x0804BFE8|1;
+FreeBallGfx    = 0x0804C058|1;
+ItemIdToBallId = 0x080EF89C|1;
+PokeBallOpenParticleAnimation    = 0x080F0A14|1;
+TimerBallOpenParticleAnimation   = 0x080F0B88|1;
+DiveBallOpenParticleAnimation    = 0x080F0C8C|1;
+SafariBallOpenParticleAnimation  = 0x080F0D90|1;
+UltraBallOpenParticleAnimation   = 0x080F0E90|1;
+GreatBallOpenParticleAnimation   = 0x080F0F98|1;
+RepeatBallOpenParticleAnimation  = 0x080F1124|1;
+MasterBallOpenParticleAnimation  = 0x080F1280|1;
+PremierBallOpenParticleAnimation = 0x080F13AC|1;
+FreeBallTiles = 0x080F1508|1;       /* 080f1508 l 00000080 DestroyBallOpenAnimationParticle */
+
+gSaveDataBuffer = 0x02039A38;
+gSaveBlock1ptr = 0x3004F58;
+gSaveBlock2ptr = 0x3004F5C;
+gSaveBlock3ptr = 0x3005010;
+gFirstSaveSector = 0x30052D0;
+gSaveCounter = 0x30052E0;
+gFastSaveSection = 0x30052E4;
+gRamSaveSectionLocations = 0x3005300;
+/* ------ */
+
+
 QuestLog_CutRecording = 0x08112554|1;
 SetMainCallback2 = 0x08000540|1;
 ScriptContext2_Enable = 0x08069a04|1;
