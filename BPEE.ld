@@ -26,6 +26,7 @@ GetSpeciesName = 0x0806b914|1;
 GetMonNickname = 0x081b1b44|1;
 
 /* tio terry */
+ListMenuLoadStdPalAt = 0x0819a2bc|1;
 GetMonGender = 0x08069FB4|1;
 BlitMoveInfoIcon = 0x0819A2F8|1;
 IsMonShiny = 0x0806EBA4|1;

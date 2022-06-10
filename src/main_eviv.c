@@ -567,42 +567,7 @@ static u8 EvIvLoadGfx(void)
         {
             LoadPalette(gBgEvIvPal_G, 0, 0x20);
         }
-
-#ifdef FIRERED
-//FIRERED
-        //LoadPalette(stdpal_get(0), 0xf0, 0x20);
-        LoadPalette(gPalText, 0xF0, 0x14);
-
-        #ifdef RF
-        //Palette of Type Icons in Rojo Fuego(Change 0x08XXXXXX if necessary)
-        //Paleta de Iconos de Tipos en Rojo Fuego(Cambiar 0x08XXXXXX si es necesario)
-        const u16*gPalType=0x08E95CF0;
-        #else
-        //Palette of Type Icons in Fire Red(Change 0x08XXXXXX if necessary)
-        //Paleta de Iconos de Tipos en Fire Red(Cambiar 0x08XXXXXX si es necesario)
-        const u16*gPalType=0x08E95DBC;
-        #endif
-
-        LoadPalette(gPalType, 0xE0, 0x20);
-
-#else
-//EMERALD
-        //LoadPalette(GetTextWindowPalette(0), 0xf0, 0x20);
-        LoadPalette(gPalText, 0xF0, 0x14);
-
-        #ifdef ES
-        //Palette of Type Icons in Esmeralda(Change 0x08XXXXXX if necessary)
-        //Paleta de Iconos de Tipos en Esmeralda(Cambiar 0x08XXXXXX si es necesario)
-        const u32*gPalType=0x08D97B84;
-        #else
-        //Palette of Type Icons in Emerald(Change 0x08XXXXXX if necessary)
-        //Paleta de Iconos de Tipos en Emerald(Cambiar 0x08XXXXXX si es necesario)
-        const u32*gPalType=0x08D97B84;
-        #endif
-
-        LoadCompressedPalette(gPalType, 0xC0, 0x60);
-
-#endif
+        ListMenuLoadStdPalAt(0xC0, 1);//type palette
         break;
     default:
         return 1;
