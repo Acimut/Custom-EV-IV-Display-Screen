@@ -13,7 +13,7 @@ build/*
 *.ss2
 *.ss3
 *.zip
-offsets.txt
+offsets*.txt
 Script.txt
 
 # GBA
