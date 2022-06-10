@@ -123,6 +123,24 @@ struct PokemonSummaryScreenData
     u8 ALIGNED(4) unk3304; /* 0x3304 */
 };
 
+struct Struct203B144
+{
+    u16 unk00;
+    u16 curHpStr;
+    u16 atkStr;
+    u16 defStr;
+    u16 spAStr;
+    u16 spDStr;
+    u16 speStr;
+    u16 expStr;
+    u16 toNextLevel;
+
+    u16 curPp[5];
+    u16 maxPp[5];
+
+    u16 unk26;
+};
+
 
 //static EWRAM_DATA 
 extern struct PokemonSummaryScreenData * sMonSummaryScreen;

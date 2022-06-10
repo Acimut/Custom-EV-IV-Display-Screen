@@ -128,4 +128,7 @@ FuncIsActiveTask = 0x08077650|1;
 HideBg = 0x080019d0|1;
 Overworld_LinkRecvQueueLengthMoreThan2 = 0x08058244|1;
 
-
+Cb2_ReturnToPSS = 0x0808ce60|1;
+CB2_ReturnToTradeMenuFromSummary = 0x0804cf14|1;
+CB2_ReturnToPartyMenuFromSummaryScreen = 0x08122dbc|1;
+CB2_ReturnToField = 0x080567dc|1;
