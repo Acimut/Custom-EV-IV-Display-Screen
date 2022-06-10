@@ -547,7 +547,7 @@ static u8 EvIvLoadGfx(void)
     {
     case 0:
         ResetTempTileDataBuffers();
-        CreateMoveTypeIcons();
+        //CreateMoveTypeIcons();// warning: implicit declaration of function
         break;
     case 1:
         DecompressAndCopyTileDataToVram(1, gBgEvIvGfx, 0, 0, 0);
@@ -567,6 +567,7 @@ static u8 EvIvLoadGfx(void)
         {
             LoadPalette(gBgEvIvPal_G, 0, 0x20);
         }
+        LoadPalette(gPalText, 0xF0, 0x14);
         ListMenuLoadStdPalAt(0xC0, 1);//type palette
         break;
     default:
