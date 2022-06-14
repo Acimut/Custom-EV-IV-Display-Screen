@@ -265,7 +265,6 @@ struct EvIv
     u8 stats_bs[NUM_STATS];
     u8 ballSpriteId[PARTY_SIZE];
     u8 level;
-    u8 nat;
     u8 hidenmove;
     u8 varshiny;
 
@@ -290,7 +289,6 @@ extern struct EvIv *gEvIv;
 #define gStats_bs           gEvIv->stats_bs
 #define gBallSpriteId       gEvIv->ballSpriteId
 #define gLevelMon           gEvIv->level
-#define gNature             gEvIv->nat
 #define gHiddenMove         gEvIv->hidenmove
 #define gVarShiny           gEvIv->varshiny
 
@@ -818,6 +816,9 @@ static void Task_ScriptShowMonPic(u8 taskId)
 #define SPDEF_Y     SPATK_Y + 14
 #define SPEED_Y     SPDEF_Y + 14
 
+#define ARROW_X     BS_X - 14
+#define ARROW_UP    0
+#define ARROW_DOWN  1
 
 
 //                                     resaltado                color fuente            sombra
@@ -939,6 +940,66 @@ const u8 gText_Less_Than[]  = _("Less than ");
 const u8 gText_Steps_to_hatching[]  = _(" steps!");
 #endif
 
+
+const u8 *const gNatureNamePointers[] = 
+{
+    [NATURE_HARDY]      = gHARDY,
+    [NATURE_LONELY]     = gLONELY,
+    [NATURE_BRAVE]      = gBRAVE,
+    [NATURE_ADAMANT]    = gADAMANT,
+    [NATURE_NAUGHTY]    = gNAUGHTY,
+    [NATURE_BOLD]       = gBOLD,
+    [NATURE_DOCILE]     = gDOCILE,
+    [NATURE_RELAXED]    = gRELAXED,
+    [NATURE_IMPISH]     = gIMPISH,
+    [NATURE_LAX]        = gLAX,
+    [NATURE_TIMID]      = gTIMID,
+    [NATURE_HASTY]      = gHASTY,
+    [NATURE_SERIOUS]    = gSERIOUS,
+    [NATURE_JOLLY]      = gJOLLY,
+    [NATURE_NAIVE]      = gNAIVE,
+    [NATURE_MODEST]     = gMODEST,
+    [NATURE_MILD]       = gMILD,
+    [NATURE_QUIET]      = gQUIET,
+    [NATURE_BASHFUL]    = gBASHFUL,
+    [NATURE_RASH]       = gRASH,
+    [NATURE_CALM]       = gCALM,
+    [NATURE_GENTLE]     = gGENTLE,
+    [NATURE_SASSY]      = gSASSY,
+    [NATURE_CAREFUL]    = gCAREFUL,
+    [NATURE_QUIRKY]     = gQUIRKY,
+};
+
+const u8 gArrowCoord_Y[][2] = 
+{
+    //                      UP      DOWN
+    [NATURE_HARDY]      = {0xFF,    0xFF},
+    [NATURE_LONELY]     = {ATK_Y,   DEF_Y},
+    [NATURE_BRAVE]      = {ATK_Y,   SPEED_Y},
+    [NATURE_ADAMANT]    = {ATK_Y,   SPATK_Y},
+    [NATURE_NAUGHTY]    = {ATK_Y,   SPDEF_Y},
+    [NATURE_BOLD]       = {DEF_Y,   ATK_Y},
+    [NATURE_DOCILE]     = {0xFF,    0xFF},
+    [NATURE_RELAXED]    = {DEF_Y,   SPEED_Y},
+    [NATURE_IMPISH]     = {DEF_Y,   SPATK_Y},
+    [NATURE_LAX]        = {DEF_Y,   SPDEF_Y},
+    [NATURE_TIMID]      = {SPEED_Y, ATK_Y},
+    [NATURE_HASTY]      = {SPEED_Y, DEF_Y},
+    [NATURE_SERIOUS]    = {0xFF,    0xFF},
+    [NATURE_JOLLY]      = {SPEED_Y, SPATK_Y},
+    [NATURE_NAIVE]      = {SPEED_Y, SPDEF_Y},
+    [NATURE_MODEST]     = {SPATK_Y, ATK_Y},
+    [NATURE_MILD]       = {SPATK_Y, DEF_Y},
+    [NATURE_QUIET]      = {SPATK_Y, SPEED_Y},
+    [NATURE_BASHFUL]    = {0xFF,    0xFF},
+    [NATURE_RASH]       = {SPATK_Y, SPDEF_Y},
+    [NATURE_CALM]       = {SPDEF_Y, ATK_Y},
+    [NATURE_GENTLE]     = {SPDEF_Y, DEF_Y},
+    [NATURE_SASSY]      = {SPDEF_Y, SPEED_Y},
+    [NATURE_CAREFUL]    = {SPDEF_Y, SPATK_Y},
+    [NATURE_QUIRKY]     = {0xFF,    0xFF},
+};
+
 static void PrintWindow0(struct Pokemon *mon);
 static void PrintWindow1(u8 nature, u8 isEgg);
 static void PrintWindow2(u16 species, u8 isEgg, u8 friendship);
@@ -1036,9 +1097,7 @@ static void EvIvPrintText(struct Pokemon *mon)
 }
 
 static void PrintWindow0(struct Pokemon *mon)
-{
-    gNature = GetNature(mon);
-
+{   
     AddTextPrinterParameterized3(WIN_POKEMON_NAME, 2, BS_X, 22, gGrayTextColor, 0, gText_BsEvIv);
     GetMonNickname(mon, gStringVar4);
 
@@ -1070,145 +1129,15 @@ static void PrintWindow1(u8 nature, u8 isEgg)
         PrintStat(nature, STAT_SPDEF);
         PrintStat(nature, STAT_SPEED);
 
-        
-    if(gNature==NATURE_HARDY){
-        AddTextPrinterParameterized3(WIN_BOTTOM_BOX, 2, 187, 17, gGrayTextColor, 0, gHARDY);
+        //imprime la naturaleza
+        AddTextPrinterParameterized3(WIN_BOTTOM_BOX, 2, 187, 17, gGrayTextColor, 0, gNatureNamePointers[nature]);
 
-    }else if(gNature==NATURE_LONELY){
-        AddTextPrinterParameterized3(WIN_BOTTOM_BOX, 2, 187, 17, gGrayTextColor, 0, gLONELY);
-        AddTextPrinterParameterized3(WIN_STATS, 2, BS_X-14, ATK_Y, gRedTextColor, 0, gArrowU);
-        AddTextPrinterParameterized3(WIN_STATS, 2, BS_X-14, DEF_Y, gBlueTextColor, 0, gArrowD);
-    }
-
-    else if(gNature==NATURE_BRAVE){
-        AddTextPrinterParameterized3(WIN_BOTTOM_BOX, 2, 187, 17, gGrayTextColor, 0, gBRAVE);
-        AddTextPrinterParameterized3(WIN_STATS, 2, BS_X-14, ATK_Y, gRedTextColor, 0, gArrowU);
-        AddTextPrinterParameterized3(WIN_STATS, 2, BS_X-14, SPEED_Y, gBlueTextColor, 0, gArrowD);
-    }
-
-    else if(gNature==NATURE_ADAMANT){
-        AddTextPrinterParameterized3(WIN_BOTTOM_BOX, 2, 187, 17, gGrayTextColor, 0, gADAMANT);
-        AddTextPrinterParameterized3(WIN_STATS, 2, BS_X-14, ATK_Y, gRedTextColor, 0, gArrowU);
-        AddTextPrinterParameterized3(WIN_STATS, 2, BS_X-14, SPATK_Y, gBlueTextColor, 0, gArrowD);
-    }
-
-    else if(gNature==NATURE_NAUGHTY){
-        AddTextPrinterParameterized3(WIN_BOTTOM_BOX, 2, 187, 17, gGrayTextColor, 0, gNAUGHTY);
-        AddTextPrinterParameterized3(WIN_STATS, 2, BS_X-14, ATK_Y, gRedTextColor, 0, gArrowU);
-        AddTextPrinterParameterized3(WIN_STATS, 2, BS_X-14, SPDEF_Y, gBlueTextColor, 0, gArrowD);
-    }
-
-    else if(gNature==NATURE_BOLD){
-        AddTextPrinterParameterized3(WIN_BOTTOM_BOX, 2, 187, 17, gGrayTextColor, 0, gBOLD);
-        AddTextPrinterParameterized3(WIN_STATS, 2, BS_X-14, DEF_Y, gRedTextColor, 0, gArrowU);
-        AddTextPrinterParameterized3(WIN_STATS, 2, BS_X-14, ATK_Y, gBlueTextColor, 0, gArrowD);
-    }
-
-    else if(gNature==NATURE_DOCILE){
-        AddTextPrinterParameterized3(WIN_BOTTOM_BOX, 2, 187, 17, gGrayTextColor, 0, gDOCILE);
-    }
-
-    else if(gNature==NATURE_RELAXED){
-        AddTextPrinterParameterized3(WIN_BOTTOM_BOX, 2, 187, 17, gGrayTextColor, 0, gRELAXED);
-        AddTextPrinterParameterized3(WIN_STATS, 2, BS_X-14, DEF_Y, gRedTextColor, 0, gArrowU);
-        AddTextPrinterParameterized3(WIN_STATS, 2, BS_X-14, SPEED_Y, gBlueTextColor, 0, gArrowD);
-    }
-
-    else if(gNature==NATURE_IMPISH){
-        AddTextPrinterParameterized3(WIN_BOTTOM_BOX, 2, 187, 17, gGrayTextColor, 0, gIMPISH);
-        AddTextPrinterParameterized3(WIN_STATS, 2, BS_X-14, DEF_Y, gRedTextColor, 0, gArrowU);
-        AddTextPrinterParameterized3(WIN_STATS, 2, BS_X-14, SPATK_Y, gBlueTextColor, 0, gArrowD);
-    }
-
-    else if(gNature==NATURE_LAX){
-        AddTextPrinterParameterized3(WIN_BOTTOM_BOX, 2, 187, 17, gGrayTextColor, 0, gLAX);
-        AddTextPrinterParameterized3(WIN_STATS, 2, BS_X-14, DEF_Y, gRedTextColor, 0, gArrowU);
-        AddTextPrinterParameterized3(WIN_STATS, 2, BS_X-14, SPDEF_Y, gBlueTextColor, 0, gArrowD);
-    }
-
-    else if(gNature==NATURE_TIMID){
-        AddTextPrinterParameterized3(WIN_BOTTOM_BOX, 2, 187, 17, gGrayTextColor, 0, gTIMID);
-        AddTextPrinterParameterized3(WIN_STATS, 2, BS_X-14, SPEED_Y, gRedTextColor, 0, gArrowU);
-        AddTextPrinterParameterized3(WIN_STATS, 2, BS_X-14, ATK_Y, gBlueTextColor, 0, gArrowD);
-    }
-
-    else if(gNature==NATURE_HASTY){
-        AddTextPrinterParameterized3(WIN_BOTTOM_BOX, 2, 187, 17, gGrayTextColor, 0, gHASTY);
-        AddTextPrinterParameterized3(WIN_STATS, 2, BS_X-14, SPEED_Y, gRedTextColor, 0, gArrowU);
-        AddTextPrinterParameterized3(WIN_STATS, 2, BS_X-14, DEF_Y, gBlueTextColor, 0, gArrowD);
-    }
-
-    else if(gNature==NATURE_SERIOUS){
-        AddTextPrinterParameterized3(WIN_BOTTOM_BOX, 2, 187, 17, gGrayTextColor, 0, gSERIOUS);
-    }
-
-    else if(gNature==NATURE_JOLLY){
-        AddTextPrinterParameterized3(WIN_BOTTOM_BOX, 2, 187, 17, gGrayTextColor, 0, gJOLLY);
-        AddTextPrinterParameterized3(WIN_STATS, 2, BS_X-14, SPEED_Y, gRedTextColor, 0, gArrowU);
-        AddTextPrinterParameterized3(WIN_STATS, 2, BS_X-14, SPATK_Y, gBlueTextColor, 0, gArrowD);
-    }
-
-    else if(gNature==NATURE_NAIVE){
-        AddTextPrinterParameterized3(WIN_BOTTOM_BOX, 2, 187, 17, gGrayTextColor, 0, gNAIVE);
-        AddTextPrinterParameterized3(WIN_STATS, 2, BS_X-14, SPEED_Y, gRedTextColor, 0, gArrowU);
-        AddTextPrinterParameterized3(WIN_STATS, 2, BS_X-14, SPDEF_Y, gBlueTextColor, 0, gArrowD);
-    }
-
-    else if(gNature==NATURE_MODEST){
-        AddTextPrinterParameterized3(WIN_BOTTOM_BOX, 2, 187, 17, gGrayTextColor, 0, gMODEST);
-        AddTextPrinterParameterized3(WIN_STATS, 2, BS_X-14, SPATK_Y, gRedTextColor, 0, gArrowU);
-        AddTextPrinterParameterized3(WIN_STATS, 2, BS_X-14, ATK_Y, gBlueTextColor, 0, gArrowD);
-    }
-
-    else if(gNature==NATURE_MILD){
-        AddTextPrinterParameterized3(WIN_BOTTOM_BOX, 2, 187, 17, gGrayTextColor, 0, gMILD);
-        AddTextPrinterParameterized3(WIN_STATS, 2, BS_X-14, SPATK_Y, gRedTextColor, 0, gArrowU);
-        AddTextPrinterParameterized3(WIN_STATS, 2, BS_X-14, DEF_Y, gBlueTextColor, 0, gArrowD);
-    }
-
-    else if(gNature==NATURE_QUIET){
-        AddTextPrinterParameterized3(WIN_BOTTOM_BOX, 2, 187, 17, gGrayTextColor, 0, gQUIET);
-        AddTextPrinterParameterized3(WIN_STATS, 2, BS_X-14, SPATK_Y, gRedTextColor, 0, gArrowU);
-        AddTextPrinterParameterized3(WIN_STATS, 2, BS_X-14, SPEED_Y, gBlueTextColor, 0, gArrowD);
-    }
-
-    else if(gNature==NATURE_BASHFUL){
-        AddTextPrinterParameterized3(WIN_BOTTOM_BOX, 2, 187, 17, gGrayTextColor, 0, gBASHFUL);
-    }
-
-    else if(gNature==NATURE_RASH){
-        AddTextPrinterParameterized3(WIN_BOTTOM_BOX, 2, 187, 17, gGrayTextColor, 0, gRASH);
-        AddTextPrinterParameterized3(WIN_STATS, 2, BS_X-14, SPATK_Y, gRedTextColor, 0, gArrowU);
-        AddTextPrinterParameterized3(WIN_STATS, 2, BS_X-14, SPDEF_Y, gBlueTextColor, 0, gArrowD);
-    }
-
-    else if(gNature==NATURE_CALM){
-        AddTextPrinterParameterized3(WIN_BOTTOM_BOX, 2, 187, 17, gGrayTextColor, 0, gCALM);
-        AddTextPrinterParameterized3(WIN_STATS, 2, BS_X-14, SPDEF_Y, gRedTextColor, 0, gArrowU);
-        AddTextPrinterParameterized3(WIN_STATS, 2, BS_X-14, ATK_Y, gBlueTextColor, 0, gArrowD);
-    }
-
-    else if(gNature==NATURE_GENTLE){
-        AddTextPrinterParameterized3(WIN_BOTTOM_BOX, 2, 187, 17, gGrayTextColor, 0, gGENTLE);
-        AddTextPrinterParameterized3(WIN_STATS, 2, BS_X-14, SPDEF_Y, gRedTextColor, 0, gArrowU);
-        AddTextPrinterParameterized3(WIN_STATS, 2, BS_X-14, DEF_Y, gBlueTextColor, 0, gArrowD);
-    }
-
-    else if(gNature==NATURE_SASSY){
-        AddTextPrinterParameterized3(WIN_BOTTOM_BOX, 2, 187, 17, gGrayTextColor, 0, gSASSY);
-        AddTextPrinterParameterized3(WIN_STATS, 2, BS_X-14, SPDEF_Y, gRedTextColor, 0, gArrowU);
-        AddTextPrinterParameterized3(WIN_STATS, 2, BS_X-14, SPEED_Y, gBlueTextColor, 0, gArrowD);
-    }
-
-    else if(gNature==NATURE_CAREFUL){
-        AddTextPrinterParameterized3(WIN_BOTTOM_BOX, 2, 187, 17, gGrayTextColor, 0, gCAREFUL);
-        AddTextPrinterParameterized3(WIN_STATS, 2, BS_X-14, SPDEF_Y, gRedTextColor, 0, gArrowU);
-        AddTextPrinterParameterized3(WIN_STATS, 2, BS_X-14, SPATK_Y, gBlueTextColor, 0, gArrowD);
-    }
-
-    else if(gNature==NATURE_QUIRKY){
-        AddTextPrinterParameterized3(WIN_BOTTOM_BOX, 2, 187, 17, gGrayTextColor, 0, gQUIRKY);
-    }
+        //imprime las flechas
+        if (gArrowCoord_Y[nature][0] != 0xFF)
+        {
+            AddTextPrinterParameterized3(WIN_STATS, 2, ARROW_X, gArrowCoord_Y[nature][ARROW_UP],   gRedTextColor, 0, gArrowU);
+            AddTextPrinterParameterized3(WIN_STATS, 2, ARROW_X, gArrowCoord_Y[nature][ARROW_DOWN], gBlueTextColor, 0, gArrowD);
+        }
 
     }else{
         AddTextPrinterParameterized3(WIN_STATS, 2, BS_X, HP_Y,    gBlackTextColor, 0, gText_CensorEgg);
