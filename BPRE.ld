@@ -127,6 +127,9 @@ LinkRecvQueueLengthMoreThan2 = 0x0800b270|1;
 FuncIsActiveTask = 0x08077650|1;
 HideBg = 0x080019d0|1;
 Overworld_LinkRecvQueueLengthMoreThan2 = 0x08058244|1;
+CB2_SetUpPSS = 0x08135c34|1;
+BufferSelectedMonData = 0x08138b8c|1;
+PokeSum_DestroySprites = 0x0813af90|1;
 
 Cb2_ReturnToPSS = 0x0808ce60|1;
 CB2_ReturnToTradeMenuFromSummary = 0x0804cf14|1;

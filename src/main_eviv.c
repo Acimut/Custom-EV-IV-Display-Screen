@@ -21,6 +21,8 @@
 #include "trainer_pokemon_sprites.h"
 
 #include "pokemon_summary_screen.h"
+#include "menu_helpers.h"
+#include "link.h"
 
 #include "main_eviv.h"
 
@@ -51,7 +53,7 @@ static void Task_EvIvInit(u8);
 static u8 EvIvLoadGfx(void);
 static void EvIvVblankHandler(void);
 static void Task_WaitForExit(u8);
-static void Task_EvIvReturnToOverworld(u8);
+static void Task_EvIvReturn(u8);
 static void BufferMonData(struct Pokemon * mon);
 static void ShowSprite(struct Pokemon *mon);
 static void EvIvPrintText(struct Pokemon *mon);
@@ -266,8 +268,12 @@ void CB2_ShowEvIv_SummaryScreen(void)
                     SS_backup.savedCallback,
                     SS_backup.mode,
                     TRUE);
-    //FREE_AND_SET_NULL_IF_SET(sMonSummaryScreen);
-    //FREE_AND_SET_NULL_IF_SET(sMonSkillsPrinterXpos);
+        //Show_EvIv(sMonSummaryScreen->monList.mons,
+        //        sLastViewedMonIndex,
+        //        sMonSummaryScreen->lastIndex,
+        //        sMonSummaryScreen->savedCallback,
+        //        sMonSummaryScreen->mode,
+        //        TRUE);
 }
 
 /**
@@ -488,7 +494,7 @@ static void Task_WaitForExit(u8 taskId)
         break;
     case 2:
         if (!IsCryPlaying())
-            Task_EvIvReturnToOverworld(taskId);
+            Task_EvIvReturn(taskId);
         break;
     }
 }
@@ -511,8 +517,13 @@ extern void CB2_ReturnToTradeMenuFromSummary(void);
 //08122dbc l 00000044 CB2_ReturnToPartyMenuFromSummaryScreen
 extern void CB2_ReturnToPartyMenuFromSummaryScreen(void);
 
+//08135c34 l 000002ec CB2_SetUpPSS
+extern void CB2_SetUpPSS(void);
+//08138b8c l 00000060 BufferSelectedMonData
+extern void BufferSelectedMonData(struct Pokemon * mon);
 
-static void Task_EvIvReturnToOverworld(u8 taskId)
+
+static void Task_EvIvReturn(u8 taskId)
 {
     bool8 return_summary_screen = gReturn;
 
@@ -520,49 +531,32 @@ static void Task_EvIvReturnToOverworld(u8 taskId)
         return;
 
     HidePokemonPic2(gSpriteTaskId);//bugfix pokémon storage system
-    DestroyTask(taskId);
     FreeAllWindowBuffers();
+    DestroyTask(taskId);
     
 
     //si retorna a la summary screen
     if (return_summary_screen)
     {
-        //struct Pokemon * partyMon;
-        //u8 mode, monIndex, maxMonIndex;
+        sLastViewedMonIndex = SS_cursorPos;
 
-        //SS_backup.party = SS_party.mons;
-        //SS_backup.cursorPos = SS_cursorPos;
-        //SS_backup.lastIdx = SS_lastIdx;
-        //SS_backup.savedCallback = SS_callback;
-        //SS_backup.mode = SS_mode;
+        sMonSummaryScreen->curPageIndex = PSS_PAGE_INFO;
 
-        //partyMon = SS_party.mons;
-        //monIndex = SS_cursorPos;
-        //maxMonIndex = SS_lastIdx;
-        //mode = SS_mode;
-
-        ShowPokemonSummaryScreen(SS_backup.party, SS_backup.cursorPos, SS_backup.lastIdx, SS_backup.savedCallback, SS_backup.mode);
-
-        /*
-        //trade menu
-        if (SS_callback == &CB2_ReturnToTradeMenuFromSummary)
-            ShowPokemonSummaryScreen(partyMon, monIndex, maxMonIndex, CB2_ReturnToTradeMenuFromSummary, mode);
-
-        //pokemon storage system
-        else if (SS_callback == &Cb2_ReturnToPSS)
-            ShowPokemonSummaryScreen(partyMon, monIndex, maxMonIndex, Cb2_ReturnToPSS, mode);
+        sMonSummaryScreen->state3270 = PSS_STATE3270_FADEIN;
+        sMonSummaryScreen->summarySetupStep = 0;//CB2_SetUpPSS step
+        sMonSummaryScreen->loadBgGfxStep = 0;
+        sMonSummaryScreen->spriteCreationStep = 0;
         
-        //party screen
-        else if (SS_callback == &CB2_ReturnToPartyMenuFromSummaryScreen)
-            ShowPokemonSummaryScreen(partyMon, monIndex, maxMonIndex, CB2_ReturnToPartyMenuFromSummaryScreen, mode);
-        //overworld
-        else
-            ShowPokemonSummaryScreen(partyMon, monIndex, maxMonIndex, CB2_ReturnToField, mode);
-        */
+        sMonSummaryScreen->whichBgLayerToTranslate = 0;
+        sMonSummaryScreen->skillsPageBgNum = 2;
+        sMonSummaryScreen->infoAndMovesPageBgNum = 1;
+        sMonSummaryScreen->flippingPages = FALSE;
 
-        //SetMainCallback2(SS_backup.savedCallback);
-        //SetMainCallback2(CB2_SummaryScreen);
-        //ShowPokemonSummaryScreen(SS_party.mons, SS_cursorPos, SS_lastIdx, SS_callback, SS_mode);
+        BufferSelectedMonData(&sMonSummaryScreen->currentMon);
+
+        sMonSummaryScreen->lastPageFlipDirection = 0xff;
+
+        SetMainCallback2(CB2_SetUpPSS);
     }
     else
     {
@@ -1380,8 +1374,7 @@ void hoook_Task_InputHandler_Info(void)
     //return;
 }
 
-#include "menu_helpers.h"
-#include "link.h"
+
 
 //static 
 extern void PokeSum_TryPlayMonCry(void);
@@ -1391,6 +1384,7 @@ extern void Task_PokeSum_FlipPages(u8 taskId);
 extern void PokeSum_SeekToNextMon(u8 taskId, s8 direction);
 extern void Task_FlipPages_FromInfo(u8 taskId);
 extern void Task_DestroyResourcesOnExit(u8 taskId);
+extern void PokeSum_DestroySprites(void);
 
 //static 
 void New_Task_InputHandler_Info(u8 taskId)
@@ -1479,6 +1473,15 @@ void New_Task_InputHandler_Info(u8 taskId)
                 }
                 else if (sMonSummaryScreen->curPageIndex == PSS_PAGE_SKILLS)
                 {
+                    sMonSummaryScreen->state3270 = PSS_STATE3270_EV_IV;
+                    BeginNormalPaletteFade(0xffffffff, 0, 0, 16, RGB_BLACK);
+                    //quitar uso de SS_backup
+                    SS_backup.party = sMonSummaryScreen->monList.mons;
+                    SS_backup.cursorPos = sLastViewedMonIndex;
+                    SS_backup.lastIdx = sMonSummaryScreen->lastIndex;
+                    SS_backup.savedCallback = sMonSummaryScreen->savedCallback;
+                    SS_backup.mode = sMonSummaryScreen->mode;
+                    SS_backup.taskId = taskId;
 #ifdef FIRERED
 //FIFERED
                     PlaySE(SE_CARD_OPEN);   
@@ -1486,18 +1489,6 @@ void New_Task_InputHandler_Info(u8 taskId)
 //EMERALD
                     PlaySE(SE_RG_CARD_OPEN);
 #endif
-                    SS_backup.party = sMonSummaryScreen->monList.mons;
-                    SS_backup.cursorPos = sLastViewedMonIndex;
-                    SS_backup.lastIdx = sMonSummaryScreen->lastIndex;
-                    SS_backup.savedCallback = sMonSummaryScreen->savedCallback;
-                    SS_backup.mode = sMonSummaryScreen->mode;
-                    SS_backup.taskId = taskId;
-
-                    SetVBlankCallback(NULL);//revisar
-                    SetMainCallback2(CB2_ShowEvIv_SummaryScreen);
-                    //ScriptContext2_Enable();//revisar
-
-                    sMonSummaryScreen->state3270 = PSS_STATE3270_ATEXIT_FADEOUT;
                 }
                 else if (sMonSummaryScreen->curPageIndex == PSS_PAGE_MOVES)
                 {
@@ -1539,6 +1530,15 @@ void New_Task_InputHandler_Info(u8 taskId)
 
         sMonSummaryScreen->state3270 = PSS_STATE3270_ATEXIT_WAITFADE;
         break;
+    case PSS_STATE3270_EV_IV:
+        if (!gPaletteFade.active)
+        {
+            SetMainCallback2(CB2_ShowEvIv_SummaryScreen);
+            PokeSum_DestroySprites();
+            FreeAllWindowBuffers();
+            DestroyTask(taskId);
+        }
+        break;
     default:
         if (!gPaletteFade.active)
             Task_DestroyResourcesOnExit(taskId);
@@ -1546,3 +1546,4 @@ void New_Task_InputHandler_Info(u8 taskId)
         break;
     }
 }
+

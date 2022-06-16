@@ -11,7 +11,7 @@
 
 
 //08134840 l 0000036c Task_InputHandler_Info
-/*
+
 .org 0x08134840
 Task_InputHandler_Info_hook:
 .area 0x36C, 0xFF
@@ -22,16 +22,16 @@ Task_InputHandler_Info_hook:
 bx_r3_Task_InputHandler_Info:
         bx r3
 .pool
-.endarea*/
+.endarea
 
-.org 0x08134A52
+/*.org 0x08134A52
     ldr R4, = hoook_Task_InputHandler_Info|1
     bl bx_r4
     //sb 0x08134b38      //PSS_STATE3270_ATEXIT_FADEOUT
     b 0x08134B9A    //end func
 bx_r4:
     bx r4
-.pool
+.pool*/
 
 .align 4
 .org insertinto
