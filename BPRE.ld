@@ -12,8 +12,8 @@ strcpy = 0x081e5f88|1;
 memmove = 0x081e8e60|1;
 
 gEvIv = 0x03007490;
-SS_backup = 0x030074A0;
-/*
+/*SS_backup = 0x030074A0;
+
 0x03007480 = end IWRAM
 gEvIv = 0x0203FFF0;
 SS_backup = 0x0203FFC0;
@@ -106,12 +106,10 @@ CreateMonPicSprite_HandleDeoxys = 0x0810c1cc|1;
 
 /*summary screen*/
 sMonSummaryScreen     = 0x0203b140;/*EWRAM*/
-sMonSkillsPrinterXpos = 0x0203b144;/*EWRAM*/
 sLastViewedMonIndex   = 0x0203b16c;/*EWRAM*/
 
 GetBoxMonData       = 0x0803fd44|1;
 BoxMonToMon         = 0x0803e774|1;
-ShowPokemonSummaryScreen = 0x081344f8|1;
 PokeSum_RemoveWindows    = 0x08138414|1;
 ConvertIntToHexStringN   = 0x08008f18|1;
 
@@ -131,7 +129,13 @@ CB2_SetUpPSS = 0x08135c34|1;
 BufferSelectedMonData = 0x08138b8c|1;
 PokeSum_DestroySprites = 0x0813af90|1;
 
-Cb2_ReturnToPSS = 0x0808ce60|1;
-CB2_ReturnToTradeMenuFromSummary = 0x0804cf14|1;
-CB2_ReturnToPartyMenuFromSummaryScreen = 0x08122dbc|1;
-CB2_ReturnToField = 0x080567dc|1;
+PokeSum_PrintPageName = 0x08136da4|1;
+PokeSum_PrintControlsString = 0x08136df0|1;
+PrintMonLevelNickOnWindow2 = 0x08136e50|1;
+
+VarGet      = 0x0806e568|1;
+VarSet      = 0x0806e584|1;
+FlagSet     = 0x0806e680|1;
+FlagClear   = 0x0806e6a8|1;
+FlagGet     = 0x0806e6d0|1;
+

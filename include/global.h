@@ -12,7 +12,6 @@
 #ifndef FIRERED
 #define FIRERED
 #endif
-//#define EMERALD
 
 #if defined(BPEE)
 #define EMERALD
@@ -581,8 +580,8 @@ struct QuestLogNPCData
 };
 
 #define BERRY_TREES_COUNT  128
-#define FLAGS_COUNT        288 // 300
-#define VARS_COUNT         256
+#define FLAGS_COUNT_FR        288 // 300
+#define VARS_COUNT_FR         256
 #define MAIL_COUNT         (PARTY_SIZE + 10)
 #define PC_MAIL_NUM(i)     (PARTY_SIZE + (i))
 
@@ -636,8 +635,8 @@ struct QuestLog
 
     // These arrays hold the game state for
     // playing back the quest log
-    /*0x0148*/ u8 flags[FLAGS_COUNT];
-    /*0x02c8*/ u16 vars[VARS_COUNT];
+    /*0x0148*/ u8 flags[FLAGS_COUNT_FR];
+    /*0x02c8*/ u16 vars[VARS_COUNT_FR];
     /*0x0468*/ struct QuestLogNPCData npcData[64];
     /*0x0568*/ u16 script[128];
     /*0x0668*/ u16 end[0];
@@ -780,8 +779,8 @@ struct SaveBlock1
     /*0x063A*/ u8 ALIGNED(2) trainerRematches[100];
     /*0x06A0*/ struct ObjectEvent objectEvents[OBJECT_EVENTS_COUNT];//global.fieldmap.h #define OBJECT_EVENTS_COUNT 16
     /*0x08E0*/ struct ObjectEventTemplate objectEventTemplates[64];
-    /*0x0EE0*/ u8 flags[FLAGS_COUNT];
-    /*0x1000*/ u16 vars[VARS_COUNT];
+    /*0x0EE0*/ u8 flags[FLAGS_COUNT_FR];
+    /*0x1000*/ u16 vars[VARS_COUNT_FR];
     /*0x1200*/ u32 gameStats[NUM_GAME_STATS];
     /*0x1300*/ struct QuestLog questLog[QUEST_LOG_SCENE_COUNT];
     /*0x2CA0*/ u16 easyChatProfile[6];
@@ -1075,7 +1074,7 @@ struct SaveBlock1
     /*0xA30*/ struct ObjectEvent objectEvents[OBJECT_EVENTS_COUNT];
     /*0xC70*/ struct ObjectEventTemplate objectEventTemplates[OBJECT_EVENT_TEMPLATES_COUNT];
     /*0x1270*/ u8 flags[NUM_FLAG_BYTES];
-    /*0x139C*/ u16 vars[VARS_COUNT];
+    /*0x139C*/ u16 vars[VARS_COUNT_FR];
     /*0x159C*/ u32 gameStats[NUM_GAME_STATS];
     /*0x169C*/ struct BerryTree berryTrees[BERRY_TREES_COUNT];
     /*0x1A9C*/ struct SecretBase secretBases[20];

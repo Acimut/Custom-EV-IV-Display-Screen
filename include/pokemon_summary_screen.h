@@ -26,6 +26,15 @@ enum PokemonSummaryScreenMode
     PSS_MODE_BOX,
 };
 
+enum PokemonSummaryScreenMode_Emerald
+{
+    SUMMARY_MODE_NORMAL,
+    SUMMARY_MODE_LOCK_MOVES,
+    SUMMARY_MODE_BOX,
+    SUMMARY_MODE_SELECT_MOVE,
+};
+
+#ifdef FIRERED
 enum PokemonSummaryScreenPage
 {
     PSS_PAGE_INFO,
@@ -35,6 +44,16 @@ enum PokemonSummaryScreenPage
     PSS_PAGE_UNK4,
     PSS_PAGE_MOVE_DELETER,
 };
+#else
+enum PokemonSummaryScreenPage
+{
+    PSS_PAGE_INFO,
+    PSS_PAGE_SKILLS,
+    PSS_PAGE_BATTLE_MOVES,
+    PSS_PAGE_CONTEST_MOVES,
+    PSS_PAGE_COUNT,
+};
+#endif
 
 enum PokemonSummaryScreenState3270
 {

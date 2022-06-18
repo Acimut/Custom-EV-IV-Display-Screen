@@ -11,7 +11,8 @@ strcmp = 0x082e9488|1;
 strcpy = 0x082e94e4|1;
 
 
-gEvIv = 0x0203FFF0;
+/*gEvIv = 0x0203FFF0;*/
+gEvIv = 0x030078b0;
 
 DestroySpriteAndFreeResources = 0x08007620|1;
 GetTextWindowPalette = 0x08098c18|1;
@@ -97,3 +98,44 @@ GetMonSpritePalStructFromOtIdPersonality = 0x0806e7cc|1;
 IndexOfSpritePaletteTag = 0x08008804|1;
 PreservePaletteInWeather = 0x080ac3f8|1;
 CreateMonPicSprite_HandleDeoxys = 0x0818d7d8|1;
+
+/*summary screen*/
+sMonSummaryScreen = 0x0203cf1c;/*EWRAM*/
+gLastViewedMonIndex = 0x0203cf20;/*EWRAM*/
+gMonSpritesGfxPtr = 0x020244d4;/*EWRAM*/
+
+/*func*/
+CB2_InitSummaryScreen = 0x081bfae4|1;
+SummaryScreen_SetAnimDelayTaskId = 0x081c488c|1;
+CreateMonSpritesGfxManager = 0x0806f2ac|1;
+
+MenuHelpers_ShouldWaitForLinkRecv = 0x081221ec|1;
+StopCryAndClearCrySongs = 0x080a369c|1;
+DestroyMonSpritesGfxManager = 0x0806f47c|1;
+SummaryScreen_DestroyAnimDelayTask = 0x081c4898|1;
+
+GetLRKeysPressed = 0x081220d0|1;
+ChangeSummaryPokemon = 0x081c0604|1;
+ChangePage = 0x081c0a8c|1;
+StopPokemonAnimations = 0x081c48f0|1;
+BeginCloseSummaryScreen = 0x081c044c|1;
+SwitchToMoveSelection = 0x081c0e48|1;
+
+GetStringRightAlignXOffset = 0x081db368|1;
+PrintAOrBButtonIcon = 0x081c2838|1;
+PrintTextOnWindow = 0x081c25a4|1;
+InBattleFactory = 0x081a6bf4|1;
+InSlateportBattleTent = 0x081b9e94|1;
+RemoveWindowByIndex = 0x081c2d68|1;
+
+ClearWindowTilemap = 0x080038a4|1;
+ScheduleBgCopyTilemapToVram = 0x081999bc|1;
+
+GetBoxMonData = 0x0806a674|1;
+BoxMonToMon = 0x08069004|1;
+
+VarGet = 0x0809d694|1;
+VarSet = 0x0809d6b0|1;
+FlagSet = 0x0809d740|1;
+FlagClear = 0x0809d768|1;
+FlagGet = 0x0809d790|1;

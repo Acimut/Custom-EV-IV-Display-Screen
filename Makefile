@@ -21,8 +21,10 @@ export PREPROC ?= preproc.exe
 export LD := $(PREFIX)ld
 
 export ASFLAGS := -mthumb
-	
-export INCLUDES := -I $(SRC) -I . -I include -D$(ROM_CODE)
+
+# -DFLAG_EV_IV=$(FLAG_EV_IV) -> #define FLAG_EV_IV = 0x829
+# -D$(ROM_CODE)              -> #define BPRE
+export INCLUDES := -I $(SRC) -I . -I include -D$(ROM_CODE) -DFLAG_EV_IV=$(FLAG_EV_IV)
 export WARNINGFLAGS :=	-Wall -Wno-discarded-array-qualifiers \
 	-Wno-int-conversion
 export CFLAGS := -g -O2 $(WARNINGFLAGS) -mthumb -std=gnu17 $(INCLUDES) -mcpu=arm7tdmi \

@@ -16,8 +16,123 @@ extern void Show_EvIv(struct Pokemon * party, u8 cursorPos, u8 lastIdx, MainCall
 //EMERALD
 extern u16 *GetTextWindowPalette(u8 id);//emerald   //text_window.h
 extern void CB2_ReturnToFieldFadeFromBlack(void);//emerald  //overworld.h
-#endif
 
+struct PokemonSummaryScreenData
+{
+    /*0x00*/ union {
+        struct Pokemon *mons;
+        struct BoxPokemon *boxMons;
+    } monList;
+    /*0x04*/ MainCallback callback;
+    /*0x08*/ struct Sprite *markingsSprite;
+    /*0x0C*/ struct Pokemon currentMon;
+    /*0x70*/ struct PokeSummary
+    {
+        u16 species; // 0x0
+        u16 species2; // 0x2
+        u8 isEgg; // 0x4
+        u8 level; // 0x5
+        u8 ribbonCount; // 0x6
+        u8 ailment; // 0x7
+        u8 abilityNum; // 0x8
+        u8 metLocation; // 0x9
+        u8 metLevel; // 0xA
+        u8 metGame; // 0xB
+        u32 pid; // 0xC
+        u32 exp; // 0x10
+        u16 moves[MAX_MON_MOVES]; // 0x14
+        u8 pp[MAX_MON_MOVES]; // 0x1C
+        u16 currentHP; // 0x20
+        u16 maxHP; // 0x22
+        u16 atk; // 0x24
+        u16 def; // 0x26
+        u16 spatk; // 0x28
+        u16 spdef; // 0x2A
+        u16 speed; // 0x2C
+        u16 item; // 0x2E
+        u16 friendship; // 0x30
+        u8 OTGender; // 0x32
+        u8 nature; // 0x33
+        u8 ppBonuses; // 0x34
+        u8 sanity; // 0x35
+        u8 OTName[17]; // 0x36
+        u32 OTID; // 0x48
+    } summary;
+    u16 bgTilemapBuffers[4][2][0x400];
+    u8 mode;
+    bool8 isBoxMon;
+    u8 curMonIndex;
+    u8 maxMonIndex;
+    u8 currPageIndex;
+    u8 minPageIndex;
+    u8 maxPageIndex;
+    bool8 lockMonFlag; // This is used to prevent the player from changing pokemon in the move deleter select, etc, but it is not needed because the input is handled differently there
+    u16 newMove;
+    u8 firstMoveIndex;
+    u8 secondMoveIndex;
+    bool8 lockMovesFlag; // This is used to prevent the player from changing position of moves in a battle or when trading.
+    u8 bgDisplayOrder; // Determines the order page backgrounds are loaded while scrolling between them
+    u8 filler40CA;
+    u8 windowIds[8];
+    u8 spriteIds[28];
+    bool8 unk40EF;
+    s16 switchCounter; // Used for various switch statement cases that decompress/load graphics or pokemon data
+    u8 unk_filler4[6];
+};
+// Screen titles (upper left)
+#define PSS_LABEL_WINDOW_POKEMON_INFO_TITLE 0
+#define PSS_LABEL_WINDOW_POKEMON_SKILLS_TITLE 1
+#define PSS_LABEL_WINDOW_BATTLE_MOVES_TITLE 2
+#define PSS_LABEL_WINDOW_CONTEST_MOVES_TITLE 3
+
+// Button control text (upper right)
+#define PSS_LABEL_WINDOW_PROMPT_CANCEL 4
+#define PSS_LABEL_WINDOW_PROMPT_INFO 5
+#define PSS_LABEL_WINDOW_PROMPT_SWITCH 6
+#define PSS_LABEL_WINDOW_UNUSED1 7
+
+// Info screen
+#define PSS_LABEL_WINDOW_POKEMON_INFO_RENTAL 8
+#define PSS_LABEL_WINDOW_POKEMON_INFO_TYPE 9
+
+// Skills screen
+#define PSS_LABEL_WINDOW_POKEMON_SKILLS_STATS_LEFT 10 // HP, Attack, Defense
+#define PSS_LABEL_WINDOW_POKEMON_SKILLS_STATS_RIGHT 11 // Sp. Attack, Sp. Defense, Speed
+#define PSS_LABEL_WINDOW_POKEMON_SKILLS_EXP 12 // EXP, Next Level
+#define PSS_LABEL_WINDOW_POKEMON_SKILLS_STATUS 13
+
+// Moves screen
+#define PSS_LABEL_WINDOW_MOVES_POWER_ACC 14 // Also contains the power and accuracy values
+#define PSS_LABEL_WINDOW_MOVES_APPEAL_JAM 15
+#define PSS_LABEL_WINDOW_UNUSED2 16
+
+// Above/below the pokemon's portrait (left)
+#define PSS_LABEL_WINDOW_PORTRAIT_DEX_NUMBER 17
+#define PSS_LABEL_WINDOW_PORTRAIT_NICKNAME 18 // The upper name
+#define PSS_LABEL_WINDOW_PORTRAIT_SPECIES 19 // The lower name
+#define PSS_LABEL_WINDOW_END 20
+
+// Dynamic fields for the Pokemon Info page
+#define PSS_DATA_WINDOW_INFO_ORIGINAL_TRAINER 0
+#define PSS_DATA_WINDOW_INFO_ID 1
+#define PSS_DATA_WINDOW_INFO_ABILITY 2
+#define PSS_DATA_WINDOW_INFO_MEMO 3
+
+// Dynamic fields for the Pokemon Skills page
+#define PSS_DATA_WINDOW_SKILLS_HELD_ITEM 0
+#define PSS_DATA_WINDOW_SKILLS_RIBBON_COUNT 1
+#define PSS_DATA_WINDOW_SKILLS_STATS_LEFT 2 // HP, Attack, Defense
+#define PSS_DATA_WINDOW_SKILLS_STATS_RIGHT 3 // Sp. Attack, Sp. Defense, Speed
+#define PSS_DATA_WINDOW_EXP 4 // Exp, next level
+
+// Dynamic fields for the Battle Moves and Contest Moves pages.
+#define PSS_DATA_WINDOW_MOVE_NAMES 0
+#define PSS_DATA_WINDOW_MOVE_PP 1
+#define PSS_DATA_WINDOW_MOVE_DESCRIPTION 2
+
+#define MOVE_SELECTOR_SPRITES_COUNT 10
+
+#else
 
 struct PokemonSummaryScreenData
 {
@@ -122,29 +237,11 @@ struct PokemonSummaryScreenData
     u8 ALIGNED(4) lastPageFlipDirection; /* 0x3300 */
     u8 ALIGNED(4) unk3304; /* 0x3304 */
 };
-
-struct Struct203B144
-{
-    u16 unk00;
-    u16 curHpStr;
-    u16 atkStr;
-    u16 defStr;
-    u16 spAStr;
-    u16 spDStr;
-    u16 speStr;
-    u16 expStr;
-    u16 toNextLevel;
-
-    u16 curPp[5];
-    u16 maxPp[5];
-
-    u16 unk26;
-};
+#endif
 
 
 //static EWRAM_DATA 
 extern struct PokemonSummaryScreenData * sMonSummaryScreen;
-extern struct Struct203B144 * sMonSkillsPrinterXpos;
 
 //static EWRAM_DATA 
 extern u8 sLastViewedMonIndex;
