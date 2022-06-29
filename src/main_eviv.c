@@ -155,7 +155,7 @@ struct EvIv
     u8 spriteTaskId;
     u8 cursorPos;               //CALLBACK SUMMARY SCREEN
     u8 lastIdx;                 //CALLBACK SUMMARY SCREEN
-    u8 mode;                    //CALLBACK SUMMARY SCREEN
+    bool8 isBoxMon;             //CALLBACK SUMMARY SCREEN
  
     u8 stats_ev[NUM_STATS];
     u8 stats_iv[NUM_STATS];
@@ -174,7 +174,7 @@ struct EvIv
 
     MainCallback savedCallback; //CALLBACK SUMMARY SCREEN
     u16 tilemapBuffer[0x400];
-};
+}; //sizeof 2200u = 0x898   2184u = 0x888
 
 
 extern struct EvIv *gEvIv;
@@ -196,7 +196,7 @@ extern struct EvIv *gEvIv;
 #define SS_cursorPos        gEvIv->cursorPos        //Número del pokémon actual.
 #define SS_lastIdx          gEvIv->lastIdx          //Cantidad de pokémon.
 #define SS_callback         gEvIv->savedCallback    //Func. de retorno.
-#define SS_mode             gEvIv->mode             //Modo.
+#define gIsBoxMon           gEvIv->isBoxMon
 #define gCurrentMon         gEvIv->currentMon       //buffer del pokémon actual
 
 
@@ -240,14 +240,14 @@ void CB2_ShowEvIv_SummaryScreen(void)
                 sLastViewedMonIndex,
                 sMonSummaryScreen->lastIndex,
                 sMonSummaryScreen->savedCallback,
-                sMonSummaryScreen->mode,
+                sMonSummaryScreen->isBoxMon,
                 TRUE);
 #else
         Show_EvIv(sMonSummaryScreen->monList.mons,
-                sMonSummaryScreen->curMonIndex,//sLastViewedMonIndex,
+                sMonSummaryScreen->curMonIndex,//gLastViewedMonIndex,
                 sMonSummaryScreen->maxMonIndex,
                 sMonSummaryScreen->callback,
-                sMonSummaryScreen->mode,
+                sMonSummaryScreen->isBoxMon,
                 TRUE);
 #endif
 }
@@ -268,10 +268,10 @@ void CB2_ShowEvIv_PlayerParty(void)
         lastIdx = gPlayerPartyCount - 1;
 #ifdef FIRERED
 //FIRERED
-    Show_EvIv(gPlayerParty, 0, lastIdx, CB2_ReturnToFieldFromDiploma, PSS_MODE_NORMAL, FALSE);
+    Show_EvIv(gPlayerParty, 0, lastIdx, CB2_ReturnToFieldFromDiploma, FALSE, FALSE);
 #else
 //EMERALD
-    Show_EvIv(gPlayerParty, 0, lastIdx, CB2_ReturnToFieldFadeFromBlack, PSS_MODE_NORMAL, FALSE);
+    Show_EvIv(gPlayerParty, 0, lastIdx, CB2_ReturnToFieldFadeFromBlack, FALSE, FALSE);
 #endif
 }
 
@@ -323,7 +323,7 @@ void CB2_ShowEvIv_PlayerParty(void)
  *          así poder imprimir datos de Pokemon o BoxPokemon.
 */
 
-void Show_EvIv(struct Pokemon * party, u8 cursorPos, u8 lastIdx, MainCallback savedCallback, u8 mode, bool8 return_summary_screen)
+void Show_EvIv(struct Pokemon * party, u8 cursorPos, u8 lastIdx, MainCallback savedCallback, bool8 isboxMon, bool8 return_summary_screen)
 {
     gEvIv = AllocZeroed(sizeof(*gEvIv));
 
@@ -341,7 +341,7 @@ void Show_EvIv(struct Pokemon * party, u8 cursorPos, u8 lastIdx, MainCallback sa
     SS_cursorPos = cursorPos;
     SS_lastIdx = lastIdx;
     SS_callback = savedCallback;
-    SS_mode = mode;
+    gIsBoxMon = isboxMon;
     gReturn = return_summary_screen;
 
     BufferMonData(&gCurrentMon);
@@ -422,11 +422,7 @@ static void Task_WaitForExit(u8 taskId)
                     SS_cursorPos++;
 
                 //si se trata de la caja de pokémon...
-#ifdef FIRERED
-                if (SS_mode == PSS_MODE_BOX)
-#else
-                if (SS_mode == SUMMARY_MODE_BOX)
-#endif
+                if (gIsBoxMon)
                 {
                     //bucle usado en las cajas, donde hay pokémon vacíos.
                     while (GetBoxMonData(&SS_party.boxMons[SS_cursorPos], MON_DATA_SPECIES, NULL) == SPECIES_NONE)
@@ -450,11 +446,7 @@ static void Task_WaitForExit(u8 taskId)
                 else
                     SS_cursorPos--;
     
-#ifdef FIRERED
-                if (SS_mode == PSS_MODE_BOX)
-#else
-                if (SS_mode == SUMMARY_MODE_BOX)
-#endif
+                if (gIsBoxMon)
                 {
                     while (GetBoxMonData(&SS_party.boxMons[SS_cursorPos], MON_DATA_SPECIES, NULL) == SPECIES_NONE)
                     {
@@ -563,8 +555,8 @@ static void Task_EvIvReturn(u8 taskId)
     DestroyTask(taskId);
     
     if (return_summary_screen)
-    {
 #ifdef FIRERED
+    {
         sLastViewedMonIndex = SS_cursorPos;
 
         sMonSummaryScreen->curPageIndex = PSS_PAGE_INFO;
@@ -581,10 +573,22 @@ static void Task_EvIvReturn(u8 taskId)
 
         BufferSelectedMonData(&sMonSummaryScreen->currentMon);
 
+        sMonSummaryScreen->isEgg = GetMonData(&sMonSummaryScreen->currentMon, MON_DATA_IS_EGG);
+        sMonSummaryScreen->isBadEgg = GetMonData(&sMonSummaryScreen->currentMon, MON_DATA_SANITY_IS_BAD_EGG);
+
+        if (sMonSummaryScreen->isBadEgg == TRUE)
+            sMonSummaryScreen->isEgg = TRUE;
+
         sMonSummaryScreen->lastPageFlipDirection = 0xff;
 
         SetMainCallback2(CB2_SetUpPSS);
+    }
+    else
+    {
+        SetMainCallback2(CB2_ReturnToFieldFromDiploma);
+    }
 #else
+    {
         sMonSummaryScreen->curMonIndex = SS_cursorPos;
         sMonSummaryScreen->minPageIndex = 0;
         sMonSummaryScreen->maxPageIndex = PSS_PAGE_COUNT - 1;
@@ -596,25 +600,18 @@ static void Task_EvIvReturn(u8 taskId)
         //    CreateMonSpritesGfxManager(MON_SPR_GFX_MANAGER_A, MON_SPR_GFX_MODE_NORMAL);
 
         SetMainCallback2(CB2_InitSummaryScreen);
-#endif
     }
     else
     {
-#ifdef FIRERED
-//FIRERED
-        SetMainCallback2(CB2_ReturnToFieldFromDiploma);
-#else
-//EMERALD
         SetMainCallback2(CB2_ReturnToFieldFadeFromBlack);
-#endif
     }
-    
+#endif
     FREE_AND_SET_NULL_IF_SET(gEvIv);
 }
 
 static void BufferMonData(struct Pokemon * mon)
 {
-    if (SS_mode != PSS_MODE_BOX)
+    if (!gIsBoxMon)
     {
         struct Pokemon * partyMons = SS_party.mons;
         *mon = partyMons[SS_cursorPos];
@@ -1505,6 +1502,7 @@ static void CloseSummaryScreen_AndCallEvIv(u8 taskId)
 {
     if (MenuHelpers_ShouldWaitForLinkRecv() != TRUE && !gPaletteFade.active)
     {
+        FreeAllWindowBuffers();
         SetMainCallback2(CB2_ShowEvIv_SummaryScreen);
     //gLastViewedMonIndex = sMonSummaryScreen->curMonIndex;
         //SummaryScreen_DestroyAnimDelayTask();

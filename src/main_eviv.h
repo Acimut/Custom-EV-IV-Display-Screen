@@ -10,7 +10,7 @@
 #endif
 
 extern void CB2_ShowEvIv_PlayerParty(void);
-extern void Show_EvIv(struct Pokemon * party, u8 cursorPos, u8 lastIdx, MainCallback savedCallback, u8 mode, bool8 return_summary_screen);
+extern void Show_EvIv(struct Pokemon * party, u8 cursorPos, u8 lastIdx, MainCallback savedCallback, bool8 isBoxMon, bool8 return_summary_screen);
 
 #ifdef EMERALD
 //EMERALD
