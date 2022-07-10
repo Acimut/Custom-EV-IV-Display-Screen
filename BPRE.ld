@@ -21,6 +21,9 @@ SS_backup = 0x0203FFC0;
 
 DestroySpriteAndFreeResources = 0x08007804|1;
 stdpal_get = 0x08150408|1;
+ListMenuLoadStdPalAt = 0x08107d38|1;
+BlitMoveInfoIcon = 0x08107d68|1;
+CopyWindowToVram = 0x08003f20|1;
 
 PlaySE = 0x080722cc|1;
 GetNature = 0x08042e9c|1;

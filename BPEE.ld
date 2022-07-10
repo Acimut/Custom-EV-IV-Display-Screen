@@ -16,6 +16,9 @@ gEvIv = 0x030078b0;
 
 DestroySpriteAndFreeResources = 0x08007620|1;
 GetTextWindowPalette = 0x08098c18|1;
+ListMenuLoadStdPalAt = 0x0819a2bc|1;
+BlitMoveInfoIcon = 0x0819a2f8|1;/*BlitMenuInfoIcon*/
+CopyWindowToVram = 0x08003658|1;
 
 PlaySE = 0x080a37a4|1;
 GetNature = 0x0806d070|1;

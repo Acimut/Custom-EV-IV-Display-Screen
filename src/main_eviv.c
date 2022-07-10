@@ -46,7 +46,7 @@
 
 //coordenada x del sprite pokémon, se mide en tiles de x8 pixeles
 //x coordinate of the pokémon sprite, measured in tiles of x8 pixels
-#define PICMON_X    18
+#define PICMON_X    19
 
 //coordenada y del sprite pokémon, se mide en tiles de x8 pixeles
 //y coordinate of the pokémon sprite, measured in tiles of x8 pixels
@@ -77,7 +77,10 @@ enum
 {
     WIN_POKEMON_NAME,
     WIN_STATS,
-    WIN_BOTTOM_BOX
+    WIN_BOTTOM_BOX,
+    WIN_HIDDEN_POWER,
+    WIN_TYPE,
+    WIN_TOP_BOX
 };
 
 extern const struct BaseStats *gBaseStatsPtr;
@@ -107,17 +110,34 @@ static const struct BgTemplate bg_Templates[] = {
 #define WINDOW0_HEIGTH  2
 
 //window 1 = stats
-#define WINDOW1_WIDTH   17
+#define WINDOW1_WIDTH   16
 #define WINDOW1_HEIGTH  11
 #define WINDOW1_BASEBLOCK  (WINDOW0_WIDTH * WINDOW0_HEIGTH)
 
 //window 2 = text in the bottom bar / texto en la barra inferior
-#define WINDOW2_WIDTH   29
+#define WINDOW2_WIDTH   16
 #define WINDOW2_HEIGTH  5
 #define WINDOW2_BASEBLOCK WINDOW1_WIDTH * WINDOW1_HEIGTH + WINDOW1_BASEBLOCK
 
-static const struct WindowTemplate windows_templates[] = {
-    {//window 0 = pokémon name
+//windows 3 = text hidden power
+#define WINDOW3_WIDTH   11
+#define WINDOW3_HEIGTH  4
+#define WINDOW3_BASEBLOCK (WINDOW2_WIDTH * WINDOW2_HEIGTH) + WINDOW2_BASEBLOCK
+
+//window 4 = type hidden power
+#define WINDOW4_WIDTH   5
+#define WINDOW4_HEIGTH  2
+#define WINDOW4_BASEBLOCK (WINDOW3_WIDTH * WINDOW3_HEIGTH) + WINDOW3_BASEBLOCK
+
+//window 5 = POKéMON EV-IV          +SEL. (A)(B)EXIT
+#define WINDOW5_WIDTH   29
+#define WINDOW5_HEIGTH  2
+#define WINDOW5_BASEBLOCK (WINDOW4_WIDTH * WINDOW4_HEIGTH) + WINDOW4_BASEBLOCK
+
+static const struct WindowTemplate windows_templates[] =
+{
+    [WIN_POKEMON_NAME] = 
+    {
         .bg = 0,
         .tilemapLeft = 1,
         .tilemapTop = 2,
@@ -125,15 +145,19 @@ static const struct WindowTemplate windows_templates[] = {
         .height = WINDOW0_HEIGTH,
         .paletteNum = 15,
         .baseBlock = 0x000
-    },{//window 1 = stats
+    },
+    [WIN_STATS] = 
+    {
         .bg = 0,
-        .tilemapLeft = 2,
+        .tilemapLeft = 1,
         .tilemapTop = 4,
         .width = WINDOW1_WIDTH,
         .height = WINDOW1_HEIGTH,
         .paletteNum = 15,
         .baseBlock = WINDOW1_BASEBLOCK
-    },{//window 2 = text in the bottom bar / texto en la barra inferior
+    },
+    [WIN_BOTTOM_BOX] = 
+    {
         .bg = 0,
         .tilemapLeft = 1,
         .tilemapTop = 15,
@@ -141,8 +165,116 @@ static const struct WindowTemplate windows_templates[] = {
         .height = WINDOW2_HEIGTH,
         .paletteNum = 15,
         .baseBlock = WINDOW2_BASEBLOCK
-    }, DUMMY_WIN_TEMPLATE
+    },
+    [WIN_HIDDEN_POWER] = 
+    {
+        .bg = 0,
+        .tilemapLeft = 17,
+        .tilemapTop = 15,
+        .width = WINDOW3_WIDTH,
+        .height = WINDOW3_HEIGTH,
+        .paletteNum = 15,
+        .baseBlock = WINDOW3_BASEBLOCK
+    },
+    [WIN_TYPE] = 
+    {
+        .bg = 0,
+        .tilemapLeft = 25,
+        .tilemapTop = 15,
+        .width = WINDOW4_WIDTH,
+        .height = WINDOW4_HEIGTH,
+        .paletteNum = 14,
+        .baseBlock = WINDOW4_BASEBLOCK
+    },
+    [WIN_TOP_BOX] = 
+    {
+        .bg = 0,
+        .tilemapLeft = 1,
+        .tilemapTop = 0,
+        .width = WINDOW5_WIDTH,
+        .height = WINDOW5_HEIGTH,
+        .paletteNum = 15,
+        .baseBlock = WINDOW5_BASEBLOCK
+    },
+    DUMMY_WIN_TEMPLATE
 };
+
+enum statColor
+{
+    STAT_NEUTRAL,
+    STAT_UP,
+    STAT_DOWN
+};
+
+//                                     fondo                    fuente                  sombra
+//                                     highlight                font                    shadow
+static const u8 gBlackTextColor[3]  = {TEXT_COLOR_TRANSPARENT,  TEXT_COLOR_DARK_GRAY,   TEXT_COLOR_LIGHT_GRAY};
+static const u8 gBlueTextColor[3]   = {TEXT_COLOR_TRANSPARENT,  TEXT_COLOR_BLUE,        TEXT_COLOR_LIGHT_GRAY};
+static const u8 gRedTextColor[3]    = {TEXT_COLOR_TRANSPARENT,  TEXT_COLOR_RED,         TEXT_COLOR_LIGHT_GRAY};
+static const u8 gGrayTextColor[3]   = {TEXT_COLOR_TRANSPARENT,  TEXT_COLOR_LIGHT_GRAY,  TEXT_COLOR_DARK_GRAY};
+static const u8 gWhiteTextColor[3]  = {TEXT_COLOR_TRANSPARENT,  TEXT_COLOR_WHITE,       TEXT_COLOR_TRANSPARENT};
+
+static const u8 *const gTextColorByNature[] = 
+{
+    [STAT_NEUTRAL] = gBlackTextColor,
+    [STAT_UP]      = gRedTextColor,
+    [STAT_DOWN]    = gBlueTextColor
+};
+
+const u8 gText_Slash[]      = _("/");
+const u8 gText_CensorEgg[]  = _("{CLEAR_TO 12}?{CLEAR_TO 42}?{CLEAR_TO 66}?");
+
+const u8 gText_BsEvIv[] = _("BS{CLEAR_TO 30}EV{CLEAR_TO 54}IV");
+
+const u8 gText_Total[]  = _("TOTAL:");
+const u8 gText_Percent[] = _("% ");
+const u8 gText_PokeSum_EvIv[] = _("EV-IV");
+const u8 gText_Tittle[] = _("POKéMON EV-IV");
+
+#ifdef ESP
+const u8 gText_Buttons[] = _("{DPAD_UPDOWN}SEL. {A_BUTTON}{B_BUTTON}SALIR");
+const u8 gText_PokeSum_PageName_PokemonSkills[] = _("HABIL. POKéMON");
+const u8 gText_PokeSum_Controls_Page[] = _("{DPAD_LEFTRIGHT}PÁG.");
+const u8 gText_PokeSum_Controls_Page_EvIv[] = _("{DPAD_LEFTRIGHT}PÁG. {A_BUTTON}EV-IV");
+const u8 gText_PokeSum_NoData[] = _("No data");
+const u8 gText_Cancel2[] = _("CANCEL");
+const u8 gText_Hp[]     = _("PS");
+const u8 gText_Atq[]    = _("ATAQUE");
+const u8 gText_Def[]    = _("DEFENSA");
+const u8 gText_SpAtk[]  = _("ATQ.ESP.");
+const u8 gText_SpDef[]  = _("DEF.ESP.");
+const u8 gText_Speed[]  = _("VELOCID.");
+
+const u8 gText_Your[]   = _("Tu ");
+const u8 gText_Is[]     = _(" es ");
+const u8 gText_Happy[]  = _("Felicidad: ");
+const u8 gText_HiddenPower[] = _("Poder oculto");
+const u8 gText_Power[]  = _("Potencia: ");
+
+const u8 gText_Steps_to_hatching[]  = _("Pasos para\neclosionar: ");
+#else
+// ENG
+const u8 gText_Buttons[] = _("{DPAD_UPDOWN}SEL. {A_BUTTON}{B_BUTTON}EXIT");
+const u8 gText_PokeSum_PageName_PokemonSkills[] = _("POKéMON SKILLS");
+const u8 gText_PokeSum_Controls_Page[] = _("{DPAD_LEFTRIGHT}PAGE");
+const u8 gText_PokeSum_Controls_Page_EvIv[] = _("{DPAD_LEFTRIGHT}PAGE {A_BUTTON}EV-IV");
+const u8 gText_PokeSum_NoData[] = _("No data");
+const u8 gText_Cancel2[] = _("CANCEL");
+const u8 gText_Hp[]     = _("HP");
+const u8 gText_Atq[]    = _("ATTACK");
+const u8 gText_Def[]    = _("DEFENSE");
+const u8 gText_SpAtk[]  = _("SP.ATK.");
+const u8 gText_SpDef[]  = _("SP.DEF.");
+const u8 gText_Speed[]  = _("SPEED");
+
+const u8 gText_Your[]   = _("Your ");
+const u8 gText_Is[]     = _(" is ");
+const u8 gText_Happy[]  = _("Happiniess: ");
+const u8 gText_HiddenPower[] = _("Hidden power");
+const u8 gText_Power[]  = _("Power: ");
+
+const u8 gText_Steps_to_hatching[]  = _("Steps to\nhatch: ");
+#endif
 
 
 struct EvIv
@@ -275,54 +407,6 @@ void CB2_ShowEvIv_PlayerParty(void)
 #endif
 }
 
-
-/**
- * 2022-03-03
- * ACIMUT:
- * Esta función podrá ser llamada por la summary screen,
- * la cual está preparada con suficientes parámetros para
- * recibir argumentos desde la summary screen y así poder
- * volver a la summary screen.
- * 
- * Usar la ventana arriba a la derecha, donde pone:
- * EMERALD:     (A)CANCEL
- * FIRERED:     (+)PAGE (A)CANCEL
- * ESMERALDA:   (A)SALIR
- * ROJOFUEGO:   (+)PÁG. (A)SALIR
- * 
- * Poner en la segunda página:
- * EMERALD:     [(A)EV-IV] 
- * FIRERED:     [(+)PAGE (A)EV-IV]
- * ya que en esta página no se usa esta ventana.
- * #También hacer hook en esa parte para capturar el botón A.
- * 
- * ESMERALDA:
- * Ventana arriba a la derecha:
- * bg = 0
- * pal = 7
- * x = 176 = 0xB0 px = 22t        y = 0
- * tamaño = 64x16 px = 8x2
- * página 2 = POKEMON SKILLS
- * 
- * 
- * FIRERED:
- * Ventana arriba a la derecha:
- * bg = 1 & 2   //wtf!
- * pal = 7
- * x = 152 = 0x98 px = 19t        y = 0
- * tamaño = 88x16 px = 11x2
- * página 2 = HABIL. POKÉMON
- * 
- * -------TAREAS:--------
- * I:       Realizar hook a la función que maneja los botones.
- * Task_InputHandler_Info
- * II: -ok- Realizar hook a la función que carga la ventana X
- * III:-ok- Realizar una excepción a la función de retorno del ev-iv
- *          para que decida si retornar a la summary screen o al ow.
- * IV: -ok- Realizar las excepciones para los tipos de datos de los pokémon,
- *          así poder imprimir datos de Pokemon o BoxPokemon.
-*/
-
 void Show_EvIv(struct Pokemon * party, u8 cursorPos, u8 lastIdx, MainCallback savedCallback, bool8 isboxMon, bool8 return_summary_screen)
 {
     gEvIv = AllocZeroed(sizeof(*gEvIv));
@@ -379,8 +463,12 @@ static void Task_EvIvInit(u8 taskId)
         break;
     case 4:
         SetGpuReg(REG_OFFSET_BG1HOFS, 0);
+        FillWindowPixelBuffer(WIN_TOP_BOX, 0);
+        AddTextPrinterParameterized3(WIN_TOP_BOX, 2, 0x10, 2, gWhiteTextColor, 0, gText_Tittle);
+        AddTextPrinterParameterized3(WIN_TOP_BOX, 0, 0xA0, 1, gWhiteTextColor, 0, gText_Buttons);
         break;
     case 5:
+        PutWindowTilemap(WIN_TOP_BOX);
         ShowSprite(&gCurrentMon);
         EvIvPrintText(&gCurrentMon);
         break;
@@ -704,6 +792,7 @@ static u8 EvIvLoadGfx(void)
 //EMERALD
         LoadPalette(GetTextWindowPalette(0), 0xf0, 0x20);
 #endif
+        ListMenuLoadStdPalAt(0xE0, 1);
         break;
     default:
         return 1;
@@ -866,75 +955,10 @@ static void Task_ScriptShowMonPic(u8 taskId)
 #define SPEED_Y     SPDEF_Y + 14
 
 
-
-//                                     resaltado                fuente                  sombra
-//                                     highlight                font                    shadow
-static const u8 gBlackTextColor[3]  = {TEXT_COLOR_TRANSPARENT,  TEXT_COLOR_DARK_GRAY,   TEXT_COLOR_LIGHT_GRAY};
-static const u8 gBlueTextColor[3]   = {TEXT_COLOR_TRANSPARENT,  TEXT_COLOR_BLUE,        TEXT_COLOR_LIGHT_GRAY};
-static const u8 gRedTextColor[3]    = {TEXT_COLOR_TRANSPARENT,  TEXT_COLOR_RED,         TEXT_COLOR_LIGHT_GRAY};
-static const u8 gGrayTextColor[3]   = {TEXT_COLOR_TRANSPARENT,  TEXT_COLOR_LIGHT_GRAY,  TEXT_COLOR_DARK_GRAY};
-
-static const u8 *const gTextColorByNature[] = 
-{
-    gBlackTextColor,
-    gRedTextColor,
-    gBlueTextColor
-};
-
-
-const u8 gText_Slash[]      = _("/");
-const u8 gText_CensorEgg[]  = _("{CLEAR_TO 12}?{CLEAR_TO 42}?{CLEAR_TO 66}?");
-
-const u8 gText_BsEvIv[] = _("BS{CLEAR_TO 30}EV{CLEAR_TO 54}IV");
-
-const u8 gText_Total[]  = _("TOTAL");
-const u8 gText_Percent[] = _("% ");
-const u8 gText_PokeSum_EvIv[] = _("EV-IV");
-
-#ifdef ESP
-const u8 gText_PokeSum_PageName_PokemonSkills[] = _("HABIL. POKéMON");
-const u8 gText_PokeSum_Controls_Page[] = _("{DPAD_LEFTRIGHT}PÁG.");
-const u8 gText_PokeSum_Controls_Page_EvIv[] = _("{DPAD_LEFTRIGHT}PÁG. {A_BUTTON}EV-IV");
-const u8 gText_PokeSum_NoData[] = _("No data");
-const u8 gText_Cancel2[] = _("CANCEL");
-const u8 gText_Hp[]     = _("PS");
-const u8 gText_Atq[]    = _("ATAQUE");
-const u8 gText_Def[]    = _("DEFENSA");
-const u8 gText_SpAtk[]  = _("ATQ.ESP.");
-const u8 gText_SpDef[]  = _("DEF.ESP.");
-const u8 gText_Speed[]  = _("VELOCID.");
-
-const u8 gText_Your[]   = _("Tu ");
-const u8 gText_Is[]     = _(" es ");
-const u8 gText_Happy[]  = _("Felicidad: ");
-
-//const u8 gText_Less_Than[]  = _("¡Falta ");//old code
-const u8 gText_Steps_to_hatching[]  = _("Pasos para eclosionar: ");
-#else
-// ENG
-const u8 gText_PokeSum_PageName_PokemonSkills[] = _("POKéMON SKILLS");
-const u8 gText_PokeSum_Controls_Page[] = _("{DPAD_LEFTRIGHT}PAGE");
-const u8 gText_PokeSum_Controls_Page_EvIv[] = _("{DPAD_LEFTRIGHT}PAGE {A_BUTTON}EV-IV");
-const u8 gText_PokeSum_NoData[] = _("No data");
-const u8 gText_Cancel2[] = _("CANCEL");
-const u8 gText_Hp[]     = _("HP");
-const u8 gText_Atq[]    = _("ATTACK");
-const u8 gText_Def[]    = _("DEFENSE");
-const u8 gText_SpAtk[]  = _("SP.ATK.");
-const u8 gText_SpDef[]  = _("SP.DEF.");
-const u8 gText_Speed[]  = _("SPEED");
-
-const u8 gText_Your[]   = _("Your ");
-const u8 gText_Is[]     = _(" is ");
-const u8 gText_Happy[]  = _("Happinies: ");
-
-//const u8 gText_Less_Than[]  = _(" ... ");//old code
-const u8 gText_Steps_to_hatching[]  = _("Steps to hatching: ");
-#endif
-
 static void PrintWindow0(struct Pokemon *mon);
 static void PrintWindow1(u8 nature, u8 isEgg);
 static void PrintWindow2(u16 species, u8 isEgg, u8 friendship);
+static void PrintWindow_HiddenPower(u8 isEgg);
 
 static void EvIvPrintText(struct Pokemon *mon)
 {
@@ -991,17 +1015,23 @@ static void EvIvPrintText(struct Pokemon *mon)
         gTotalStatsBS += gStats_bs[i];
     }
 
-    FillWindowPixelBuffer(0, 0);
-    FillWindowPixelBuffer(1, 0);
-    FillWindowPixelBuffer(2, 0);
+    FillWindowPixelBuffer(WIN_POKEMON_NAME, 0);
+    FillWindowPixelBuffer(WIN_STATS, 0);
+    FillWindowPixelBuffer(WIN_BOTTOM_BOX, 0);
+    FillWindowPixelBuffer(WIN_HIDDEN_POWER, 0);
+    FillWindowPixelBuffer(WIN_TYPE, 0);
 
     PrintWindow0(mon);
     PrintWindow1(nature, isEgg);
     PrintWindow2(species, isEgg, friendship);
+    PrintWindow_HiddenPower(isEgg);
 
-    PutWindowTilemap(0);
-    PutWindowTilemap(1);
-    PutWindowTilemap(2);
+    PutWindowTilemap(WIN_POKEMON_NAME);
+    PutWindowTilemap(WIN_STATS);
+    PutWindowTilemap(WIN_BOTTOM_BOX);
+    PutWindowTilemap(WIN_HIDDEN_POWER);
+    PutWindowTilemap(WIN_TYPE);
+    CopyWindowToVram(WIN_TYPE, COPYWIN_GFX);
 }
 
 static void PrintWindow0(struct Pokemon *mon)
@@ -1016,7 +1046,7 @@ static void PrintWindow0(struct Pokemon *mon)
     StringAppend(gStringVar4, gStringVar1);
     AddTextPrinterParameterized3(WIN_POKEMON_NAME, 2, 2, 2, gGrayTextColor, 0, gStringVar4);
 
-    AddTextPrinterParameterized3(WIN_POKEMON_NAME, 2, 0x44, 2, gGrayTextColor, 0, gText_BsEvIv);
+    AddTextPrinterParameterized3(WIN_POKEMON_NAME, 2, 0x3C, 2, gGrayTextColor, 0, gText_BsEvIv);
 
     GetMonNickname(mon, gStringVar4);
     AddTextPrinterParameterized3(WIN_POKEMON_NAME, 2, 0x90, 2, gGrayTextColor, 0, gStringVar4);
@@ -1100,19 +1130,16 @@ static void PrintWindow2(u16 species, u8 isEgg, u8 friendship)
 
     if(!isEgg)
     {
-        AddTextPrinterParameterized3(WIN_BOTTOM_BOX, 2, 14, 4, gBlackTextColor, 0, gText_Total);
+        AddTextPrinterParameterized3(WIN_BOTTOM_BOX, 2, 12, 4, gBlackTextColor, 0, gText_Total);
 
         ConvertIntToDecimalStringN(gStringVar1, gTotalStatsBS, STR_CONV_MODE_RIGHT_ALIGN, 3);
         ConvertIntToDecimalStringN(gStringVar2, gTotalStatsEV, STR_CONV_MODE_RIGHT_ALIGN, 3);
         ConvertIntToDecimalStringN(gStringVar3, gTotalStatsIV, STR_CONV_MODE_RIGHT_ALIGN, 3);
-        AddTextPrinterParameterized3(WIN_BOTTOM_BOX, 2, BS_X + 8, 4, gBlackTextColor, 0, gStringVar1);
-        AddTextPrinterParameterized3(WIN_BOTTOM_BOX, 2, EV_X + 8, 4, gBlackTextColor, 0, gStringVar2);
-        AddTextPrinterParameterized3(WIN_BOTTOM_BOX, 2, IV_X + 2, 4, gBlackTextColor, 0, gStringVar3);
+        AddTextPrinterParameterized3(WIN_BOTTOM_BOX, 2, BS_X, 4, gBlackTextColor, 0, gStringVar1);
+        AddTextPrinterParameterized3(WIN_BOTTOM_BOX, 2, EV_X, 4, gBlackTextColor, 0, gStringVar2);
+        AddTextPrinterParameterized3(WIN_BOTTOM_BOX, 2, IV_X -6, 4, gBlackTextColor, 0, gStringVar3);
 
         StringCopy(gStringVar4, gText_Happy);
-        //GetSpeciesName(gStringVar1, species);
-        //StringAppend(gStringVar4, gStringVar1);
-        //StringAppend(gStringVar4, gText_Is);
         
         temp = (friendship * 100) / 0xFF;
         ConvertIntToDecimalStringN(gStringVar2, temp, STR_CONV_MODE_LEFT_ALIGN, 3);
@@ -1129,8 +1156,65 @@ static void PrintWindow2(u16 species, u8 isEgg, u8 friendship)
         StringCopy(gStringVar4, gText_Steps_to_hatching);
         ConvertIntToDecimalStringN(gStringVar2, temp, STR_CONV_MODE_LEFT_ALIGN, GetDigitsDec(temp));
         StringAppend(gStringVar4, gStringVar2);
-        AddTextPrinterParameterized3(WIN_BOTTOM_BOX, 2, 2, 18, gBlackTextColor, 0, gStringVar4);
+        AddTextPrinterParameterized3(WIN_BOTTOM_BOX, 2, 14, 4, gBlackTextColor, 0, gStringVar4);
     }
+}
+
+static u8 GetPower_HiddenPower(void)
+{
+    s32 powerBits;
+
+    powerBits = ((gStats_iv[STAT_HP] & 2) >> 1)
+              | ((gStats_iv[STAT_ATK] & 2) << 0)
+              | ((gStats_iv[STAT_DEF] & 2) << 1)
+              | ((gStats_iv[STAT_SPEED] & 2) << 2)
+              | ((gStats_iv[STAT_SPATK] & 2) << 3)
+              | ((gStats_iv[STAT_SPDEF] & 2) << 4);
+
+    return (40 * powerBits) / 63 + 30;
+}
+
+static u8 GetType_HiddenPower(void)
+{
+    u8 type;
+    s32 typeBits;
+
+    typeBits  = ((gStats_iv[STAT_HP] & 1) << 0)
+              | ((gStats_iv[STAT_ATK] & 1) << 1)
+              | ((gStats_iv[STAT_DEF] & 1) << 2)
+              | ((gStats_iv[STAT_SPEED] & 1) << 3)
+              | ((gStats_iv[STAT_SPATK] & 1) << 4)
+              | ((gStats_iv[STAT_SPDEF] & 1) << 5);
+
+    type = (15 * typeBits) / 63 + 1;
+
+    if (type >= TYPE_MYSTERY)
+        type++;
+
+    return type;
+}
+
+static void PrintWindow_HiddenPower(u8 isEgg)
+{
+    u8 power = GetPower_HiddenPower();
+    u8 type = GetType_HiddenPower();
+
+    const u8 gText_q[2] = _("?");
+
+    StringCopy(gStringVar4, gText_HiddenPower);
+
+    AddTextPrinterParameterized3(WIN_HIDDEN_POWER, 0, 4, 3, gWhiteTextColor, 0, gStringVar4);
+
+    if (!isEgg)
+    {
+        ConvertIntToDecimalStringN(gStringVar1, power, STR_CONV_MODE_LEFT_ALIGN, GetDigitsDec(power));
+        StringCopy(gStringVar4, gText_Power);
+        StringAppend(gStringVar4, gStringVar1);
+        AddTextPrinterParameterized3(WIN_HIDDEN_POWER, 0, 16, 16, gWhiteTextColor, 0, gStringVar4);
+        BlitMoveInfoIcon(WIN_TYPE, type + 1, 2, 4);
+    }
+    else
+        AddTextPrinterParameterized3(WIN_HIDDEN_POWER, 0, 32, 16, gWhiteTextColor, 0, gText_q);
 }
 
 /**
@@ -1168,149 +1252,44 @@ u8 GetDigitsDec_S(s32 num)
     return GetDigitsDec(num);
 }
 
-/**
- * Esta función devuelve un número, de acuerdo a la naturaleza.
- * 0 = negro
- * 1 = rojo
- * 2 = azul
- * 
- * This function returns a number, according to nature.
- * 0 = black
- * 1 = red
- * 2 = blue
-*/
+static const s8 sNatureStatTable_v2[][5] =
+{
+    //                      Atk             Def             Spd             Sp.Atk          Sp.Def
+    [NATURE_HARDY]   = {    STAT_NEUTRAL,   STAT_NEUTRAL,   STAT_NEUTRAL,   STAT_NEUTRAL,   STAT_NEUTRAL},
+    [NATURE_LONELY]  = {    STAT_UP,        STAT_DOWN,      STAT_NEUTRAL,   STAT_NEUTRAL,   STAT_NEUTRAL},
+    [NATURE_BRAVE]   = {    STAT_UP,        STAT_NEUTRAL,   STAT_DOWN,      STAT_NEUTRAL,   STAT_NEUTRAL},
+    [NATURE_ADAMANT] = {    STAT_UP,        STAT_NEUTRAL,   STAT_NEUTRAL,   STAT_DOWN,      STAT_NEUTRAL},
+    [NATURE_NAUGHTY] = {    STAT_UP,        STAT_NEUTRAL,   STAT_NEUTRAL,   STAT_NEUTRAL,   STAT_DOWN},
+    [NATURE_BOLD]    = {    STAT_DOWN,      STAT_UP,        STAT_NEUTRAL,   STAT_NEUTRAL,   STAT_NEUTRAL},
+    [NATURE_DOCILE]  = {    STAT_NEUTRAL,   STAT_NEUTRAL,   STAT_NEUTRAL,   STAT_NEUTRAL,   STAT_NEUTRAL},
+    [NATURE_RELAXED] = {    STAT_NEUTRAL,   STAT_UP,        STAT_DOWN,      STAT_NEUTRAL,   STAT_NEUTRAL},
+    [NATURE_IMPISH]  = {    STAT_NEUTRAL,   STAT_UP,        STAT_NEUTRAL,   STAT_DOWN,      STAT_NEUTRAL},
+    [NATURE_LAX]     = {    STAT_NEUTRAL,   STAT_UP,        STAT_NEUTRAL,   STAT_NEUTRAL,   STAT_DOWN},
+    [NATURE_TIMID]   = {    STAT_DOWN,      STAT_NEUTRAL,   STAT_UP,        STAT_NEUTRAL,   STAT_NEUTRAL},
+    [NATURE_HASTY]   = {    STAT_NEUTRAL,   STAT_DOWN,      STAT_UP,        STAT_NEUTRAL,   STAT_NEUTRAL},
+    [NATURE_SERIOUS] = {    STAT_NEUTRAL,   STAT_NEUTRAL,   STAT_NEUTRAL,   STAT_NEUTRAL,   STAT_NEUTRAL},
+    [NATURE_JOLLY]   = {    STAT_NEUTRAL,   STAT_NEUTRAL,   STAT_UP,        STAT_DOWN,      STAT_NEUTRAL},
+    [NATURE_NAIVE]   = {    STAT_NEUTRAL,   STAT_NEUTRAL,   STAT_UP,        STAT_NEUTRAL,   STAT_DOWN},
+    [NATURE_MODEST]  = {    STAT_DOWN,      STAT_NEUTRAL,   STAT_NEUTRAL,   STAT_UP,        STAT_NEUTRAL},
+    [NATURE_MILD]    = {    STAT_NEUTRAL,   STAT_DOWN,      STAT_NEUTRAL,   STAT_UP,        STAT_NEUTRAL},
+    [NATURE_QUIET]   = {    STAT_NEUTRAL,   STAT_NEUTRAL,   STAT_DOWN,      STAT_UP,        STAT_NEUTRAL},
+    [NATURE_BASHFUL] = {    STAT_NEUTRAL,   STAT_NEUTRAL,   STAT_NEUTRAL,   STAT_NEUTRAL,   STAT_NEUTRAL},
+    [NATURE_RASH]    = {    STAT_NEUTRAL,   STAT_NEUTRAL,   STAT_NEUTRAL,   STAT_UP,        STAT_DOWN},
+    [NATURE_CALM]    = {    STAT_DOWN,      STAT_NEUTRAL,   STAT_NEUTRAL,   STAT_NEUTRAL,   STAT_UP},
+    [NATURE_GENTLE]  = {    STAT_NEUTRAL,   STAT_DOWN,      STAT_NEUTRAL,   STAT_NEUTRAL,   STAT_UP},
+    [NATURE_SASSY]   = {    STAT_NEUTRAL,   STAT_NEUTRAL,   STAT_DOWN,      STAT_NEUTRAL,   STAT_UP},
+    [NATURE_CAREFUL] = {    STAT_NEUTRAL,   STAT_NEUTRAL,   STAT_NEUTRAL,   STAT_DOWN,      STAT_UP},
+    [NATURE_QUIRKY]  = {    STAT_NEUTRAL,   STAT_NEUTRAL,   STAT_NEUTRAL,   STAT_NEUTRAL,   STAT_NEUTRAL},
+};
+
 static u8 GetColorByNature(u8 nature, u8 stat)
 {
-    switch (stat)
-    {
-    case STAT_ATK:
-        switch (nature)
-        {
-        case NATURE_LONELY:
-        case NATURE_BRAVE:
-        case NATURE_ADAMANT:
-        case NATURE_NAUGHTY:
-            return 1;
-        case NATURE_BOLD:
-        case NATURE_TIMID:
-        case NATURE_MODEST:
-        case NATURE_CALM:
-            return 2;
-        
-        default:
-            return 0;
-        }
-    case STAT_DEF:
-        switch (nature)
-        {
-        case NATURE_BOLD:
-        case NATURE_RELAXED:
-        case NATURE_IMPISH:
-        case NATURE_LAX:
-            return 1;
-        case NATURE_LONELY:
-        case NATURE_HASTY:
-        case NATURE_MILD:
-        case NATURE_GENTLE:
-            return 2;
-        
-        default:
-            return 0;
-        }
-    case STAT_SPATK:
-        switch (nature)
-        {
-        case NATURE_MODEST:
-        case NATURE_MILD:
-        case NATURE_QUIET:
-        case NATURE_RASH:
-            return 1;
-        case NATURE_ADAMANT:
-        case NATURE_IMPISH:
-        case NATURE_JOLLY:
-        case NATURE_CAREFUL:
-            return 2;
-        
-        default:
-            return 0;
-        }
-    case STAT_SPDEF:
-        switch (nature)
-        {
-        case NATURE_CALM:
-        case NATURE_GENTLE:
-        case NATURE_SASSY:
-        case NATURE_CAREFUL:
-            return 1;
-        case NATURE_NAUGHTY:
-        case NATURE_LAX:
-        case NATURE_NAIVE:
-        case NATURE_RASH:
-            return 2;
-        
-        default:
-            return 0;
-        }
-    case STAT_SPEED:
-        switch (nature)
-        {
-        case NATURE_TIMID:
-        case NATURE_HASTY:
-        case NATURE_JOLLY:
-        case NATURE_NAIVE:
-            return 1;
-        case NATURE_BRAVE:
-        case NATURE_RELAXED:
-        case NATURE_QUIET:
-        case NATURE_SASSY:
-            return 2;
-        
-        default:
-            return 0;
-        }
-    case STAT_HP:
-    default:
-        return 0;
-    }
+    if (stat < STAT_ATK || stat > STAT_SPDEF)
+        return STAT_NEUTRAL;
+
+    return sNatureStatTable_v2[nature][stat - 1];
 }
 
-/**
- * Acimut
- * 2022-02
- * Este código es el encargado de calcular el poder y tipo
- * del movimiento poder oculto.
- * 
- * La operación |= 0xC0 es para que el valor no se reconozca como
- * cero en algunas funciones, donde se usa & 0x3F para obtener el
- * valor original, los primeros 6 bits.
-*/
-
-
-/*
-static void atkC1_hiddenpowercalc(void)
-{
-    s32 powerBits, typeBits;
-
-    powerBits = ((gBattleMons[gBattlerAttacker].hpIV & 2) >> 1)
-              | ((gBattleMons[gBattlerAttacker].attackIV & 2) << 0)
-              | ((gBattleMons[gBattlerAttacker].defenseIV & 2) << 1)
-              | ((gBattleMons[gBattlerAttacker].speedIV & 2) << 2)
-              | ((gBattleMons[gBattlerAttacker].spAttackIV & 2) << 3)
-              | ((gBattleMons[gBattlerAttacker].spDefenseIV & 2) << 4);
-    typeBits  = ((gBattleMons[gBattlerAttacker].hpIV & 1) << 0)
-              | ((gBattleMons[gBattlerAttacker].attackIV & 1) << 1)
-              | ((gBattleMons[gBattlerAttacker].defenseIV & 1) << 2)
-              | ((gBattleMons[gBattlerAttacker].speedIV & 1) << 3)
-              | ((gBattleMons[gBattlerAttacker].spAttackIV & 1) << 4)
-              | ((gBattleMons[gBattlerAttacker].spDefenseIV & 1) << 5);
-    gDynamicBasePower = (40 * powerBits) / 63 + 30;
-    gBattleStruct->dynamicMoveType = (15 * typeBits) / 63 + 1;
-    if (gBattleStruct->dynamicMoveType >= TYPE_MYSTERY)
-        ++gBattleStruct->dynamicMoveType;
-    gBattleStruct->dynamicMoveType |= 0xC0;
-    ++gBattlescriptCurrInstr;
-}
-*/
 #ifdef FIRERED
 //08134840 l 0000036c Task_InputHandler_Info
 
