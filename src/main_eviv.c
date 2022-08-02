@@ -462,7 +462,6 @@ static void Task_EvIvInit(u8 taskId)
         CopyToBgTilemapBuffer(1, gBgEvIvTilemap, 0, 0);
         break;
     case 4:
-        SetGpuReg(REG_OFFSET_BG1HOFS, 0);
         FillWindowPixelBuffer(WIN_TOP_BOX, 0);
         AddTextPrinterParameterized3(WIN_TOP_BOX, 2, 0x10, 2, gWhiteTextColor, 0, gText_Tittle);
         AddTextPrinterParameterized3(WIN_TOP_BOX, 0, 0xA0, 1, gWhiteTextColor, 0, gText_Buttons);
@@ -1224,7 +1223,7 @@ static void PrintWindow_HiddenPower(u8 isEgg)
 */
 u8 GetDigitsDec(u32 num)
 {
-    if (num > 10)
+    if (num >= 10)
         return 1 + GetDigitsDec(num/10);
     else
         return 1;
