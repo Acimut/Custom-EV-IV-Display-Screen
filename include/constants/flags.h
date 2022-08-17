@@ -1362,10 +1362,11 @@
 #define FLAG_BADGE08_GET                                            (SYS_FLAGS + 0x27)
 #define NUM_BADGES                                                  (1 + FLAG_BADGE08_GET - FLAG_BADGE01_GET)
 
-#define FLAG_SYS_POKEMON_GET                                        (SYS_FLAGS + 0x28)
 #ifdef EMERALD
+#define FLAG_SYS_POKEMON_GET                                        (SYS_FLAGS + 0x60)//emerald
 #define FLAG_SYS_POKEDEX_GET                                        (SYS_FLAGS + 0x61)//emerald
 #else
+#define FLAG_SYS_POKEMON_GET                                        (SYS_FLAGS + 0x28)//fire red
 #define FLAG_SYS_POKEDEX_GET                                        (SYS_FLAGS + 0x29)//fire red
 #endif
 #define FLAG_0x82A                                                  (SYS_FLAGS + 0x2A)
