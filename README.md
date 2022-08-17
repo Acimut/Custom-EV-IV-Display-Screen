@@ -51,3 +51,11 @@ Características:
 
 - Archivos dentro de la carpeta include fueron tomados de pokefirered.
 
+
+***Vídeos:***
+
+https://user-images.githubusercontent.com/79547805/185257288-5ea5b0d2-9ef9-4ad0-819b-3ffd7ff50a42.mp4
+
+
+https://user-images.githubusercontent.com/79547805/185257722-04085199-f72b-49b4-b8e5-2d93db43a7b2.mp4
+
