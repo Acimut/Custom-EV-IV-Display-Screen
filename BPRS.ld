@@ -11,10 +11,13 @@ strcmp = 0x081e56b0|1;
 strcpy = 0x081e570c|1;
 memmove = 0x081e55FC|1;
 
-gEvIv = 0x0203FFF0;
+gEvIv = 0x03007490;
 
 DestroySpriteAndFreeResources = 0x08007770|1;
 stdpal_get = 0x081501f8|1;
+ListMenuLoadStdPalAt = 0x08107EE0|1;
+BlitMoveInfoIcon = 0x08107F10|1;
+CopyWindowToVram = 0x08003E8C|1;
 
 PlaySE = 0x08072304|1;
 GetNature = 0x08042D88|1;
@@ -97,3 +100,39 @@ GetMonSpritePalStructFromOtIdPersonality = 0x0804406C|1;
 IndexOfSpritePaletteTag = 0x08008954|1;
 PreservePaletteInWeather = 0x0807b0bc|1;
 CreateMonPicSprite_HandleDeoxys = 0x0810c378|1;
+
+/*summary screen*/
+sMonSummaryScreen     = 0x0203b140;/*EWRAM*/
+sLastViewedMonIndex   = 0x0203b16c;/*EWRAM*/
+
+GetBoxMonData       = 0x0803FC30|1;
+BoxMonToMon         = 0x0803E660|1;
+PokeSum_RemoveWindows    = 0x081385DC|1;
+ConvertIntToHexStringN   = 0x08008E84|1;
+
+PokeSum_TryPlayMonCry = 0x0813B94C|1;
+Task_PokeSum_SwitchDisplayedPokemon = 0x0813B5B8|1;
+IsPageFlipInput = 0x0813496C|1;
+Task_PokeSum_FlipPages = 0x08134D74|1;
+PokeSum_SeekToNextMon = 0x0813B2E8|1;
+Task_FlipPages_FromInfo = 0x0813504C|1;
+Task_DestroyResourcesOnExit = 0x0813802C|1;
+MenuHelpers_CallLinkSomething = 0x080BF9C4|1;
+LinkRecvQueueLengthMoreThan2 = 0x0800B1DC|1;
+FuncIsActiveTask = 0x08077688|1;
+HideBg = 0x080019CC|1;
+    Overworld_LinkRecvQueueLengthMoreThan2 = 0x08058338|1;
+CB2_SetUpPSS = 0x08135DFC|1;
+BufferSelectedMonData = 0x08138D54|1;
+PokeSum_DestroySprites = 0x0813B158|1;
+
+PokeSum_PrintPageName = 0x08136F6C|1;
+PokeSum_PrintControlsString = 0x08136FB8|1;
+PrintMonLevelNickOnWindow2 = 0x08137018|1;
+
+VarGet      = 0x0806E5A0|1;
+VarSet      = 0x0806E5BC|1;
+FlagSet     = 0x0806E6B8|1;
+FlagClear   = 0x0806E6E0|1;
+FlagGet     = 0x0806E708|1;
+

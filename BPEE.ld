@@ -103,9 +103,9 @@ PreservePaletteInWeather = 0x080ac3f8|1;
 CreateMonPicSprite_HandleDeoxys = 0x0818d7d8|1;
 
 /*summary screen*/
-sMonSummaryScreen = 0x0203cf1c;/*EWRAM*/
+sMonSummaryScreen   = 0x0203cf1c;/*EWRAM*/
 gLastViewedMonIndex = 0x0203cf20;/*EWRAM*/
-gMonSpritesGfxPtr = 0x020244d4;/*EWRAM*/
+gMonSpritesGfxPtr   = 0x020244d4;/*EWRAM*/
 
 /*func*/
 CB2_InitSummaryScreen = 0x081bfae4|1;

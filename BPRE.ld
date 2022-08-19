@@ -12,12 +12,6 @@ strcpy = 0x081e5f88|1;
 memmove = 0x081e8e60|1;
 
 gEvIv = 0x03007490;
-/*SS_backup = 0x030074A0;
-
-0x03007480 = end IWRAM
-gEvIv = 0x0203FFF0;
-SS_backup = 0x0203FFC0;
-*/
 
 DestroySpriteAndFreeResources = 0x08007804|1;
 stdpal_get = 0x08150408|1;
