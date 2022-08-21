@@ -15,10 +15,10 @@ strcpy = 0x082f0c70|1;
 gEvIv = 0x030078b0;
 
 DestroySpriteAndFreeResources = 0x08007620|1;
-GetTextWindowPalette = 0x08098c2c|1;
-    ListMenuLoadStdPalAt = 0x0819a2bc|1;
-    BlitMoveInfoIcon = 0x0819a2f8|1;/*BlitMenuInfoIcon*/
-    CopyWindowToVram = 0x08003658|1;
+GetTextWindowPalette    = 0x08098c2c|1;
+ListMenuLoadStdPalAt    = 0x08199ec0|1;
+BlitMoveInfoIcon        = 0x08199efc|1;/*BlitMenuInfoIcon*/
+CopyWindowToVram        = 0x08003658|1;
 
 PlaySE = 0x080a37b8|1;
 GetNature = 0x0806d070|1;
@@ -108,37 +108,37 @@ gLastViewedMonIndex = 0x0203cf20;/*EWRAM*/
 gMonSpritesGfxPtr   = 0x020244d4;/*EWRAM*/
 
     /*func*/
-    CB2_InitSummaryScreen = 0x081bfae4|1;
-    SummaryScreen_SetAnimDelayTaskId = 0x081c488c|1;
-    CreateMonSpritesGfxManager = 0x0806f2ac|1;
+CB2_InitSummaryScreen               = 0x081bf704|1;
+SummaryScreen_SetAnimDelayTaskId    = 0x081c44ac|1;
+CreateMonSpritesGfxManager          = 0x0806f2a8|1;
 
-    MenuHelpers_ShouldWaitForLinkRecv = 0x081221ec|1;
-    StopCryAndClearCrySongs = 0x080a369c|1;
-    DestroyMonSpritesGfxManager = 0x0806f47c|1;
-    SummaryScreen_DestroyAnimDelayTask = 0x081c4898|1;
+MenuHelpers_ShouldWaitForLinkRecv   = 0x08121E04|1;
+StopCryAndClearCrySongs             = 0x080a36b0|1;
+DestroyMonSpritesGfxManager         = 0x0806f478|1;
+SummaryScreen_DestroyAnimDelayTask  = 0x081c44b8|1;
 
-    GetLRKeysPressed = 0x081220d0|1;
-    ChangeSummaryPokemon = 0x081c0604|1;
-    ChangePage = 0x081c0a8c|1;
-    StopPokemonAnimations = 0x081c48f0|1;
-    BeginCloseSummaryScreen = 0x081c044c|1;
-    SwitchToMoveSelection = 0x081c0e48|1;
+GetLRKeysPressed        = 0x08121ce8|1;
+ChangeSummaryPokemon    = 0x081c0224|1;
+ChangePage              = 0x081c06ac|1;
+StopPokemonAnimations   = 0x081c4510|1;
+BeginCloseSummaryScreen = 0x081c006c|1;
+SwitchToMoveSelection   = 0x081c0a68|1;
 
-    GetStringRightAlignXOffset = 0x081db368|1;
-    PrintAOrBButtonIcon = 0x081c2838|1;
-    PrintTextOnWindow = 0x081c25a4|1;
-    InBattleFactory = 0x081a6bf4|1;
-    InSlateportBattleTent = 0x081b9e94|1;
-    RemoveWindowByIndex = 0x081c2d68|1;
+GetStringRightAlignXOffset  = 0x081dafc8|1;
+PrintAOrBButtonIcon         = 0x081c2458|1;
+PrintTextOnWindow           = 0x081c21c4|1;
+InBattleFactory             = 0x081a67f8|1;
+InSlateportBattleTent       = 0x081b9ab4|1;
+RemoveWindowByIndex         = 0x081c2988|1;
 
-    ClearWindowTilemap = 0x080038a4|1;
-    ScheduleBgCopyTilemapToVram = 0x081999bc|1;
+ClearWindowTilemap              = 0x080038a4|1;
+ScheduleBgCopyTilemapToVram     = 0x081995c0|1;
 
-    GetBoxMonData = 0x0806a674|1;
-    BoxMonToMon = 0x08069004|1;
+GetBoxMonData   = 0x0806a674|1;
+BoxMonToMon     = 0x08069004|1;
 
-    VarGet = 0x0809d694|1;
-    VarSet = 0x0809d6b0|1;
-    FlagSet = 0x0809d740|1;
-    FlagClear = 0x0809d768|1;
-    FlagGet = 0x0809d790|1;
+VarGet      = 0x0809d6a8|1;
+VarSet      = 0x0809d6c4|1;
+FlagSet     = 0x0809d754|1;
+FlagClear   = 0x0809d77c|1;
+FlagGet     = 0x0809d7a4|1;
