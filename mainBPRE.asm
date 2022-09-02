@@ -3,9 +3,15 @@
 .open "BPRE.gba","build/rom_BPRE.gba", 0x08000000
 //---------------------------------------------------
 
-//08137d28 l 00000100 PokeSum_PrintPageHeaderText
-.org 0x08137D44 //0x08137D8C -> 8C 7D 13 08
-    .word   PokeSum_PrintPageHeaderText_hook
+//0x08137D8C
+.org 0x08137d9c
+    .word PokeSum_PrintPageHeaderText_new|1
+
+.org 0x08137D8E
+    bl      bx_r0_pokesum
+    b       0x08137e16
+bx_r0_pokesum:
+    bx      r0
 
 
 //08134840 l 0000036c Task_InputHandler_Info
@@ -24,15 +30,5 @@ bx_r3_Task_InputHandler_Info:
 .align 4
 .org insertinto
 .importobj "build/linked.o"
-
-.align 4
-PokeSum_PrintPageHeaderText_hook:
-    ldr     r3, = PokeSum_PrintPageHeaderText_new|1
-    bl      bx_r3_PokeSum_PrintPageHeaderText
-    pop     {r0}
-    bx      r0
-bx_r3_PokeSum_PrintPageHeaderText:
-    bx      r3
-.pool
 
 .close
