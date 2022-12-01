@@ -31,6 +31,14 @@
 
 #define ESP //comment this to use the english text
 
+//spanish translation of following comment
+//comment this if Hidden Power's Base Power is not fixed
+#define HIDDEN_POWER_STATIC
+
+//spanish translation of following comment
+// Change this to the base power of Hidden Power if it's fixed to any number other than 60.
+#define HIDDEN_POWER_BASE_POWER 60
+
 // 1 = ACTIVADO, 0 = DESACTIVADO. Activa o desactiva el salto de sprite
 // 1 = ON, 0 = OFF.  Activates or deactivates the sprite jump
 #define SPRITE_JUMP             1
@@ -1161,6 +1169,9 @@ static void PrintWindow2(u16 species, u8 isEgg, u8 friendship)
 
 static u8 GetPower_HiddenPower(void)
 {
+#ifdef HIDDEN_POWER_STATIC
+	return HIDDEN_POWER_BASE_POWER;
+#else
     s32 powerBits;
 
     powerBits = ((gStats_iv[STAT_HP] & 2) >> 1)
@@ -1171,6 +1182,7 @@ static u8 GetPower_HiddenPower(void)
               | ((gStats_iv[STAT_SPDEF] & 2) << 4);
 
     return (40 * powerBits) / 63 + 30;
+#endif
 }
 
 static u8 GetType_HiddenPower(void)
