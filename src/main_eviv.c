@@ -277,7 +277,7 @@ const u8 gText_Speed[]  = _("SPEED");
 
 const u8 gText_Your[]   = _("Your ");
 const u8 gText_Is[]     = _(" is ");
-const u8 gText_Happy[]  = _("Happiniess: ");
+const u8 gText_Happy[]  = _("Happiness: ");
 const u8 gText_HiddenPower[] = _("Hidden power");
 const u8 gText_Power[]  = _("Power: ");
 
