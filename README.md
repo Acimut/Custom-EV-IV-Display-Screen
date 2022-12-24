@@ -26,8 +26,8 @@ En esta versión, `EV-IV Display Screen` es llamado desde la `summary screen`, h
 
 ### **Requisitos de compilación:**
 + Recomendado compilar con WSL, Cygwin o Msys2.
-+ DevkitARM (r54 o superior) y ARMIPS (v0.11.0) son necesarios.
-+ Es necesario tener `preproc.exe` y `gbagfx.exe` dentro alguna ruta de la variable PATH.
++ DevkitARM (r54 o superior) y [ARMIPS (v0.11.0)](https://github.com/Kingcom/armips/releases/download/v0.11.0/armips-v0.11.0-windows-x86.7z) son necesarios.
++ Es necesario tener `preproc.exe` y `gbagfx.exe` dentro alguna ruta de la variable PATH. [x86](https://www.mediafire.com/file/v1w09jxv9e0f5df/gba-tools_x86.rar/file) [x64](https://www.mediafire.com/file/sdnyh09nbggye1r/gba-tools.rar/file)
 ***
 
 ### **Instrucciones de compilación:**
