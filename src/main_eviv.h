@@ -9,12 +9,24 @@
 #include "quest_log.h"
 #endif
 
+// ------------------------------------------------------------------ 
+//                           FIRE RED/ROJOFUEGO     EMERALD/ESMERALDA
+// FLAG_SYS_POKEMON_GET      0x828                  0x860
+// FLAG_SYS_POKEDEX_GET      0x829                  0x861
+// [ESP] ------------------------------------------------------------ 
+// Cambiar FLAG_SYS_POKEMON_GET por la flag que quieras usar.
+// ejemplo: FLAG_EV_IV  0x200
+// [ENG] ------------------------------------------------------------
+// Change FLAG_SYS_POKEMON_GET to the flag you want to use.
+// example: FLAG_EV_IV  0x200
+#define FLAG_EV_IV FLAG_SYS_POKEMON_GET
+
 extern void CB2_ShowEvIv_PlayerParty(void);
 extern void Show_EvIv(struct Pokemon * party, u8 cursorPos, u8 lastIdx, MainCallback savedCallback, bool8 isBoxMon, bool8 return_summary_screen);
 
 #ifdef EMERALD
 //EMERALD
-extern u16 *GetTextWindowPalette(u8 id);//emerald   //text_window.h
+
 extern void CB2_ReturnToFieldFadeFromBlack(void);//emerald  //overworld.h
 
 struct PokemonSummaryScreenData

@@ -14,7 +14,7 @@ memmove = 0x081e55FC|1;
 gEvIv = 0x03007490;
 
 DestroySpriteAndFreeResources = 0x08007770|1;
-stdpal_get = 0x081501f8|1;
+GetTextWindowPalette = 0x081501f8|1;
 ListMenuLoadStdPalAt = 0x08107EE0|1;
 BlitMoveInfoIcon = 0x08107F10|1;
 CopyWindowToVram = 0x08003E8C|1;
@@ -89,7 +89,8 @@ gStringVar2 = 0x02021cf0;
 gStringVar3 = 0x02021d04;
 gStringVar4 = 0x02021d18;
 
-PlayCry7 = 0x08071F5C|1;
+PlayCry_Normal = 0x08071E28|1;
+PlayCry_Script = 0x08071F5C|1;
 IsCryPlaying = 0x0807224C|1;
 CreateMonSprite_FieldMove = 0x08083A0C|1;/*static u8*/
 FreeResourcesAndDestroySprite = 0x08083A94|1;

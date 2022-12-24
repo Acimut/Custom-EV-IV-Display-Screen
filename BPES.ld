@@ -90,7 +90,7 @@ gStringVar2 = 0x02021dc4;/*EWRAM*/
 gStringVar3 = 0x02021ec4;/*EWRAM*/
 gStringVar4 = 0x02021fc4;/*EWRAM*/
 
-PlayCry1 = 0x080a3288|1;
+PlayCry_Normal = 0x080a3288|1;
 IsCryPlaying = 0x080a3700|1;
 CreateMonSprite_FieldMove = 0x080b5ffc|1;/*unused*/
 FreeResourcesAndDestroySprite = 0x080b6084|1;

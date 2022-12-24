@@ -29,35 +29,37 @@
 
 #include "main_eviv.h"
 
-#define ESP //comment this to use the english text
+// LANGUAGE_SPANISH o 7 para usar los textos en español
+// LANGUAGE_ENGLISH or 2 to use the english text
+#define EV_IV_TEXT              LANGUAGE_SPANISH
 
-//spanish translation of following comment
-//comment this if Hidden Power's Base Power is not fixed
-#define HIDDEN_POWER_STATIC
+// Cambiar a TRUE si la potencia base de Poder Oculto es fija.
+// Set TRUE if Hidden Power's Base Power is fixed
+#define HIDDEN_POWER_STATIC     FALSE
 
-//spanish translation of following comment
+// Cambie esto a la potencia base de Poder Oculto si está fijo en cualquier número que no sea 60.
 // Change this to the base power of Hidden Power if it's fixed to any number other than 60.
 #define HIDDEN_POWER_BASE_POWER 60
 
-// 1 = ACTIVADO, 0 = DESACTIVADO. Activa o desactiva el salto de sprite
-// 1 = ON, 0 = OFF.  Activates or deactivates the sprite jump
-#define SPRITE_JUMP             1
+// TRUE = ACTIVADO,     FALSE = DESACTIVADO.    Activa o desactiva el salto de sprite
+// TRUE = ON,           FALSE = OFF.            Activates or deactivates the sprite jump
+#define SPRITE_JUMP             TRUE
 
-// 1 = DE DERECHA A IZQUIERDA, 0 = EN EL CENTRO -1 = DE IZQUIERDA A DERECHA.
-// 1 = FROM RIGHT TO LEFT, 0 = IN THE CENTER -1 = FROM LEFT TO RIGHT.
+// 1 = DE DERECHA A IZQUIERDA,  0 = EN EL CENTRO,       -1 = DE IZQUIERDA A DERECHA.
+// 1 = FROM RIGHT TO LEFT,      0 = IN THE CENTER,      -1 = FROM LEFT TO RIGHT.
 #define SPRITE_JUMP_DIRECTION   1
 
-// 1 = A LA DERECHA, 0 = A LA IZQUIERDA.
-// 1 = RIGHT, 0 = LEFT.
+// 1 = A LA DERECHA,    0 = A LA IZQUIERDA.
+// 1 = RIGHT,           0 = LEFT.
 #define SPRITE_VIEW_DIRECTION   0
 
 
-//coordenada x del sprite pokémon, se mide en tiles de x8 pixeles
-//x coordinate of the pokémon sprite, measured in tiles of x8 pixels
+//coordenada x del sprite pokémon, se mide en tiles de 8 pixeles
+//x coordinate of the pokémon sprite, measured in tiles of 8 pixels
 #define PICMON_X    19
 
-//coordenada y del sprite pokémon, se mide en tiles de x8 pixeles
-//y coordinate of the pokémon sprite, measured in tiles of x8 pixels
+//coordenada y del sprite pokémon, se mide en tiles de 8 pixeles
+//y coordinate of the pokémon sprite, measured in tiles of 8 pixels
 #define PICMON_Y     5
 
 static void Task_EvIvInit(u8);
@@ -70,12 +72,12 @@ static void ShowSprite(struct Pokemon *mon);
 static void EvIvPrintText(struct Pokemon *mon);
 static void ShowPokemonPic2(u16 species, u32 otId, u32 personality, u8 x, u8 y);
 static void Task_ScriptShowMonPic(u8 taskId);
-void HidePokemonPic2(u8 taskId);
+static void HidePokemonPic2(u8 taskId);
 
 static void PrintStat(u8 nature, u8 stat);
-u8 GetDigitsDec(u32 num);
-u8 GetDigitsHex(u32 num);
-static u8 GetColorByNature(u8 nature, u8 stat);
+static u8 GetDigitsDec(u32 num);
+static u8 GetDigitsHex(u32 num);
+static u8 GetColorByNature(u8 nature, u8 statIndex);
 
 const u32 gBgEvIvGfx[] = INCBIN_U32("graphics/bgEvIv.4bpp.lz");
 const u32 gBgEvIvTilemap[] = INCBIN_U32("graphics/bgEvIv.bin.lz");
@@ -207,12 +209,6 @@ static const struct WindowTemplate windows_templates[] =
     DUMMY_WIN_TEMPLATE
 };
 
-enum statColor
-{
-    STAT_NEUTRAL,
-    STAT_UP,
-    STAT_DOWN
-};
 
 //                                     fondo                    fuente                  sombra
 //                                     highlight                font                    shadow
@@ -224,34 +220,34 @@ static const u8 gWhiteTextColor[3]  = {TEXT_COLOR_TRANSPARENT,  TEXT_COLOR_WHITE
 
 static const u8 *const gTextColorByNature[] = 
 {
-    [STAT_NEUTRAL] = gBlackTextColor,
-    [STAT_UP]      = gRedTextColor,
-    [STAT_DOWN]    = gBlueTextColor
+    [STAT_DECREASE + 1] = gBlueTextColor,
+    [STAT_NEUTRAL + 1]  = gBlackTextColor,
+    [STAT_INCREASE + 1] = gRedTextColor,
 };
 
-const u8 gText_Slash[]      = _("/");
+const u8 gText_eviv_Slash[] = _("/");
 const u8 gText_CensorEgg[]  = _("{CLEAR_TO 12}?{CLEAR_TO 42}?{CLEAR_TO 66}?");
 
 const u8 gText_BsEvIv[] = _("BS{CLEAR_TO 30}EV{CLEAR_TO 54}IV");
 
-const u8 gText_Total[]  = _("TOTAL:");
+const u8 gText_eviv_Total[] = _("TOTAL:");
 const u8 gText_Percent[] = _("% ");
 const u8 gText_PokeSum_EvIv[] = _("EV-IV");
-const u8 gText_Tittle[] = _("POKéMON EV-IV");
+const u8 gText_eviv_Tittle[] = _("POKéMON EV-IV");
 
-#ifdef ESP
-const u8 gText_Buttons[] = _("{DPAD_UPDOWN}SEL. {A_BUTTON}{B_BUTTON}SALIR");
+#if EV_IV_TEXT == LANGUAGE_SPANISH
+const u8 gText_eviv_Buttons[] = _("{DPAD_UPDOWN}SEL. {A_BUTTON}{B_BUTTON}SALIR");
 const u8 gText_PokeSum_PageName_PokemonSkills[] = _("HABIL. POKéMON");
 const u8 gText_PokeSum_Controls_Page[] = _("{DPAD_LEFTRIGHT}PÁG.");
 const u8 gText_PokeSum_Controls_Page_EvIv[] = _("{DPAD_LEFTRIGHT}PÁG. {A_BUTTON}EV-IV");
 const u8 gText_PokeSum_NoData[] = _("No data");
 const u8 gText_Cancel2[] = _("CANCEL");
-const u8 gText_Hp[]     = _("PS");
-const u8 gText_Atq[]    = _("ATAQUE");
-const u8 gText_Def[]    = _("DEFENSA");
-const u8 gText_SpAtk[]  = _("ATQ.ESP.");
-const u8 gText_SpDef[]  = _("DEF.ESP.");
-const u8 gText_Speed[]  = _("VELOCID.");
+const u8 gText_eviv_Hp[]     = _("PS");
+const u8 gText_eviv_Atk[]    = _("ATAQUE");
+const u8 gText_eviv_Def[]    = _("DEFENSA");
+const u8 gText_eviv_SpAtk[]  = _("ATQ.ESP.");
+const u8 gText_eviv_SpDef[]  = _("DEF.ESP.");
+const u8 gText_eviv_Speed[]  = _("VELOCID.");
 
 const u8 gText_Your[]   = _("Tu ");
 const u8 gText_Is[]     = _(" es ");
@@ -260,20 +256,20 @@ const u8 gText_HiddenPower[] = _("Poder oculto");
 const u8 gText_Power[]  = _("Potencia: ");
 
 const u8 gText_Steps_to_hatching[]  = _("Pasos para\neclosionar: ");
-#else
-// ENG
-const u8 gText_Buttons[] = _("{DPAD_UPDOWN}SEL. {A_BUTTON}{B_BUTTON}EXIT");
+
+#elif EV_IV_TEXT == LANGUAGE_ENGLISH
+const u8 gText_eviv_Buttons[] = _("{DPAD_UPDOWN}SEL. {A_BUTTON}{B_BUTTON}EXIT");
 const u8 gText_PokeSum_PageName_PokemonSkills[] = _("POKéMON SKILLS");
 const u8 gText_PokeSum_Controls_Page[] = _("{DPAD_LEFTRIGHT}PAGE");
 const u8 gText_PokeSum_Controls_Page_EvIv[] = _("{DPAD_LEFTRIGHT}PAGE {A_BUTTON}EV-IV");
 const u8 gText_PokeSum_NoData[] = _("No data");
 const u8 gText_Cancel2[] = _("CANCEL");
-const u8 gText_Hp[]     = _("HP");
-const u8 gText_Atq[]    = _("ATTACK");
-const u8 gText_Def[]    = _("DEFENSE");
-const u8 gText_SpAtk[]  = _("SP.ATK.");
-const u8 gText_SpDef[]  = _("SP.DEF.");
-const u8 gText_Speed[]  = _("SPEED");
+const u8 gText_eviv_Hp[]     = _("HP");
+const u8 gText_eviv_Atk[]    = _("ATTACK");
+const u8 gText_eviv_Def[]    = _("DEFENSE");
+const u8 gText_eviv_SpAtk[]  = _("SP.ATK.");
+const u8 gText_eviv_SpDef[]  = _("SP.DEF.");
+const u8 gText_eviv_Speed[]  = _("SPEED");
 
 const u8 gText_Your[]   = _("Your ");
 const u8 gText_Is[]     = _(" is ");
@@ -293,9 +289,9 @@ struct EvIv
     bool8 return_summary_screen;
 
     u8 spriteTaskId;
-    u8 cursorPos;               //CALLBACK SUMMARY SCREEN
-    u8 lastIdx;                 //CALLBACK SUMMARY SCREEN
-    bool8 isBoxMon;             //CALLBACK SUMMARY SCREEN
+    u8 cursorPos;
+    u8 lastIdx;
+    bool8 isBoxMon;
  
     u8 stats_ev[NUM_STATS];
     u8 stats_iv[NUM_STATS];
@@ -310,12 +306,11 @@ struct EvIv
     {
         struct Pokemon * mons;
         struct BoxPokemon * boxMons;
-    } monList;                  //CALLBACK SUMMARY SCREEN
+    } monList;
 
-    MainCallback savedCallback; //CALLBACK SUMMARY SCREEN
+    MainCallback savedCallback;
     u16 tilemapBuffer[0x400];
-}; //sizeof 2200u = 0x898   2184u = 0x888
-
+};
 
 extern struct EvIv *gEvIv;
 
@@ -382,7 +377,7 @@ void CB2_ShowEvIv_SummaryScreen(void)
                 sMonSummaryScreen->savedCallback,
                 sMonSummaryScreen->isBoxMon,
                 TRUE);
-#else
+#else//EMERALD
         Show_EvIv(sMonSummaryScreen->monList.mons,
                 sMonSummaryScreen->curMonIndex,//gLastViewedMonIndex,
                 sMonSummaryScreen->maxMonIndex,
@@ -407,10 +402,8 @@ void CB2_ShowEvIv_PlayerParty(void)
     else
         lastIdx = gPlayerPartyCount - 1;
 #ifdef FIRERED
-//FIRERED
     Show_EvIv(gPlayerParty, 0, lastIdx, CB2_ReturnToFieldFromDiploma, FALSE, FALSE);
-#else
-//EMERALD
+#else//EMERALD
     Show_EvIv(gPlayerParty, 0, lastIdx, CB2_ReturnToFieldFadeFromBlack, FALSE, FALSE);
 #endif
 }
@@ -471,8 +464,8 @@ static void Task_EvIvInit(u8 taskId)
         break;
     case 4:
         FillWindowPixelBuffer(WIN_TOP_BOX, 0);
-        AddTextPrinterParameterized3(WIN_TOP_BOX, 2, 0x10, 2, gWhiteTextColor, 0, gText_Tittle);
-        AddTextPrinterParameterized3(WIN_TOP_BOX, 0, 0xA0, 1, gWhiteTextColor, 0, gText_Buttons);
+        AddTextPrinterParameterized3(WIN_TOP_BOX, 2, 0x10, 2, gWhiteTextColor, 0, gText_eviv_Tittle);
+        AddTextPrinterParameterized3(WIN_TOP_BOX, 0, 0xA0, 1, gWhiteTextColor, 0, gText_eviv_Buttons);
         break;
     case 5:
         PutWindowTilemap(WIN_TOP_BOX);
@@ -526,7 +519,6 @@ static void Task_WaitForExit(u8 taskId)
                             SS_cursorPos = 0;
                         else
                             SS_cursorPos++;
-
                     }
                 }
                 BufferMonData(&gCurrentMon);
@@ -561,10 +553,8 @@ static void Task_WaitForExit(u8 taskId)
         if (JOY_NEW(A_BUTTON) || JOY_NEW(B_BUTTON))
         {
 #ifdef FIRERED
-//FIRERED
             PlaySE(SE_CARD_FLIP);
-#else
-//EMERALD
+#else//EMERALD
             PlaySE(SE_RG_CARD_FLIP);
 #endif
             BeginNormalPaletteFade(0xFFFFFFFF, 0, 0, 16, RGB_BLACK);
@@ -584,59 +574,8 @@ extern void CB2_SetUpPSS(void);
 //08138b8c l 00000060 BufferSelectedMonData
 extern void BufferSelectedMonData(struct Pokemon * mon);
 
-//emerald -------------------------------------------
-
-struct MonSpritesGfx
-{
-    void* firstDecompressed; // ptr to the decompressed sprite of the first pokemon
-    union {
-        void* ptr[4];
-        u8* byte[4];
-    } sprites;
-    struct SpriteTemplate templates[4];
-    struct SpriteFrameImage frameImages[4][4];
-    u8 unusedArr[0x80];
-    u8 *barFontGfx;
-    void *unusedPtr;
-    u16 *buffer;
-};
-
-struct MonSpritesGfxManager
-{
-    u32 numSprites:4;
-    u32 numSprites2:4; // Never read
-    u32 numFrames:8;
-    u32 active:8;
-    u32 dataSize:4;
-    u32 mode:4; // MON_SPR_GFX_MODE_*
-    void *spriteBuffer;
-    u8 **spritePointers;
-    struct SpriteTemplate *templates;
-    struct SpriteFrameImage *frameImages;
-};
-
-enum {
-    MON_SPR_GFX_MODE_NORMAL,
-    MON_SPR_GFX_MODE_BATTLE,
-    MON_SPR_GFX_MODE_FULL_PARTY,
-};
-
-enum {
-    MON_SPR_GFX_MANAGER_A,
-    MON_SPR_GFX_MANAGER_B, // Nothing ever sets up this manager.
-    MON_SPR_GFX_MANAGERS_COUNT
-};
-
 
 extern void CB2_InitSummaryScreen(void);
-extern void SummaryScreen_SetAnimDelayTaskId(u8 taskId);
-extern struct MonSpritesGfxManager *CreateMonSpritesGfxManager(u8 managerId, u8 mode);
-
-//EWRAM_DATA 
-extern struct MonSpritesGfx *gMonSpritesGfxPtr;
-
-#define TAIL_SENTINEL 0xFF
-#define TASK_NONE TAIL_SENTINEL
 
 static void Task_EvIvReturn(u8 taskId)
 {
@@ -682,17 +621,12 @@ static void Task_EvIvReturn(u8 taskId)
     {
         SetMainCallback2(CB2_ReturnToFieldFromDiploma);
     }
-#else
+#else//EMERALD
     {
         sMonSummaryScreen->curMonIndex = SS_cursorPos;
         sMonSummaryScreen->minPageIndex = 0;
         sMonSummaryScreen->maxPageIndex = PSS_PAGE_COUNT - 1;
         sMonSummaryScreen->currPageIndex = sMonSummaryScreen->minPageIndex;
-
-        //SummaryScreen_SetAnimDelayTaskId(TASK_NONE);
-
-        //if (gMonSpritesGfxPtr == NULL)
-        //    CreateMonSpritesGfxManager(MON_SPR_GFX_MANAGER_A, MON_SPR_GFX_MODE_NORMAL);
 
         SetMainCallback2(CB2_InitSummaryScreen);
     }
@@ -792,13 +726,7 @@ static u8 EvIvLoadGfx(void)
         return 0;
     case 3:
         LoadPalette(gBgEvIvPal, 0, 0x20);
-#ifdef FIRERED
-//FIRERED
-        LoadPalette(stdpal_get(0), 0xf0, 0x20);
-#else
-//EMERALD
         LoadPalette(GetTextWindowPalette(0), 0xf0, 0x20);
-#endif
         ListMenuLoadStdPalAt(0xE0, 1);
         break;
     default:
@@ -820,21 +748,20 @@ static void ShowSprite(struct Pokemon *mon)
     if (!isEgg)
     {
         ShowPokemonPic2(species, otId, personality, PICMON_X, PICMON_Y);
-#ifdef FIRERED
-//FIRERED
-        PlayCry7(species, 0);
-#else
-//EMERALD
-        PlayCry1(species, 0);
-#endif
+        PlayCry_Normal(species, 0);
     }else
         ShowPokemonPic2(SPECIES_EGG, 0, 0x8000, PICMON_X, PICMON_Y);
 }
 
+#define tState               data[0]
+#define tSpecie              data[1]
+#define tSpriteId            data[2]
+#define tTimer               data[3]
+
 void HidePokemonPic2(u8 taskId)
 {
     struct Task * task = &gTasks[taskId];
-    task->data[0] = 2;
+    task->tState = 2;
 }
 
 static u8 CreateMonSprite_Field(u16 species, u32 otId, u32 personality, s16 x, s16 y, u8 subpriority)
@@ -861,15 +788,15 @@ static void ShowPokemonPic2(u16 species, u32 otId, u32 personality, u8 x, u8 y)
     //Adjust the pokémon sprite 2 pixels to the left
     gSprites[spriteId].x -= 2;
 
-#if SPRITE_JUMP == 1
+#if SPRITE_JUMP
     gSprites[spriteId].y -= 32;
     gSprites[spriteId].x += 48 * SPRITE_JUMP_DIRECTION;
 #endif
 
-    gTasks[gSpriteTaskId].data[0] = 0;
-    gTasks[gSpriteTaskId].data[1] = species;
-    gTasks[gSpriteTaskId].data[2] = spriteId;
-    gTasks[gSpriteTaskId].data[3] = 0;
+    gTasks[gSpriteTaskId].tState = 0;
+    gTasks[gSpriteTaskId].tSpecie = species;
+    gTasks[gSpriteTaskId].tSpriteId = spriteId;
+    gTasks[gSpriteTaskId].tTimer = 0;
     gSprites[spriteId].callback = SpriteCallbackDummy;
     gSprites[spriteId].oam.priority = 0;
 }
@@ -878,54 +805,54 @@ static void Task_ScriptShowMonPic(u8 taskId)
 {
     struct Task * task = &gTasks[taskId];
 
-    switch (task->data[0])
+    switch (task->tState)
     {
     case 0:
-        task->data[3] = 0;
-        task->data[0]++;
+        task->tTimer = 0;
+        task->tState++;
         break;
     case 1:
 
-#if SPRITE_JUMP == 1
+#if SPRITE_JUMP
         u8 tmp_var;
-        if (task->data[3] < 48)
+        if (task->tTimer < 48)
         {
-            if (task->data[3] < 10)
+            if (task->tTimer < 10)
                 tmp_var = 0;
-            else if (task->data[3] < 18)                
+            else if (task->tTimer < 18)                
                 tmp_var = 1;
-            else if (task->data[3] < 24)
+            else if (task->tTimer < 24)
                 tmp_var = 2;
-            else if (task->data[3] < 28)
+            else if (task->tTimer < 28)
                 tmp_var = 3;
-            else if (task->data[3] < 30)
+            else if (task->tTimer < 30)
                 tmp_var = -3;
-            else if (task->data[3] < 32)
+            else if (task->tTimer < 32)
                 tmp_var = -2;
-            else if (task->data[3] < 36)
+            else if (task->tTimer < 36)
                 tmp_var = -1;
-            else if (task->data[3] < 40)
+            else if (task->tTimer < 40)
                 tmp_var = 0;
-            else if (task->data[3] < 44)
+            else if (task->tTimer < 44)
                 tmp_var = 1;
-            else if (task->data[3] < 46)
+            else if (task->tTimer < 46)
                 tmp_var = 2;
             else
                 tmp_var = 3;
 
-            gSprites[task->data[2]].y += tmp_var;
-            gSprites[task->data[2]].x -= SPRITE_JUMP_DIRECTION;
+            gSprites[task->tSpriteId].y += tmp_var;
+            gSprites[task->tSpriteId].x -= SPRITE_JUMP_DIRECTION;
         }
         else
-            task->data[0] = 4;
+            task->tState = 4;
 
-        task->data[3]++;
+        task->tTimer++;
 #endif
 
         break;
     case 2:
-        FreeResourcesAndDestroySprite(&gSprites[task->data[2]], task->data[2]);
-        task->data[0]++;
+        FreeResourcesAndDestroySprite(&gSprites[task->tSpriteId], task->tSpriteId);
+        task->tState++;
         break;
     case 3:
         DestroyTask(taskId);
@@ -933,6 +860,10 @@ static void Task_ScriptShowMonPic(u8 taskId)
     }
 }
 
+#undef tState
+#undef tSpecie
+#undef tSpriteId
+#undef tTimer
 
 /*
 
@@ -1047,7 +978,7 @@ static void PrintWindow0(struct Pokemon *mon)
 
     temp = SS_cursorPos + 1;
     ConvertIntToDecimalStringN(gStringVar4, temp, STR_CONV_MODE_LEFT_ALIGN, GetDigitsDec(temp));
-    StringAppend(gStringVar4, gText_Slash);
+    StringAppend(gStringVar4, gText_eviv_Slash);
     temp = SS_lastIdx + 1;
     ConvertIntToDecimalStringN(gStringVar1, temp, STR_CONV_MODE_LEFT_ALIGN, GetDigitsDec(temp));
     StringAppend(gStringVar4, gStringVar1);
@@ -1061,12 +992,12 @@ static void PrintWindow0(struct Pokemon *mon)
 
 static void PrintWindow1(u8 nature, u8 isEgg)
 {
-    AddTextPrinterParameterized3(WIN_STATS, 2, HP_X, HP_Y,    gTextColorByNature[GetColorByNature(nature, STAT_HP)],    0, gText_Hp);
-    AddTextPrinterParameterized3(WIN_STATS, 2, HP_X, ATK_Y,   gTextColorByNature[GetColorByNature(nature, STAT_ATK)],   0, gText_Atq);
-    AddTextPrinterParameterized3(WIN_STATS, 2, HP_X, DEF_Y,   gTextColorByNature[GetColorByNature(nature, STAT_DEF)],   0, gText_Def);
-    AddTextPrinterParameterized3(WIN_STATS, 2, HP_X, SPATK_Y, gTextColorByNature[GetColorByNature(nature, STAT_SPATK)], 0, gText_SpAtk);
-    AddTextPrinterParameterized3(WIN_STATS, 2, HP_X, SPDEF_Y, gTextColorByNature[GetColorByNature(nature, STAT_SPDEF)], 0, gText_SpDef);
-    AddTextPrinterParameterized3(WIN_STATS, 2, HP_X, SPEED_Y, gTextColorByNature[GetColorByNature(nature, STAT_SPEED)], 0, gText_Speed);
+    AddTextPrinterParameterized3(WIN_STATS, 2, HP_X, HP_Y,    gTextColorByNature[GetColorByNature(nature, STAT_HP)],    0, gText_eviv_Hp);
+    AddTextPrinterParameterized3(WIN_STATS, 2, HP_X, ATK_Y,   gTextColorByNature[GetColorByNature(nature, STAT_ATK)],   0, gText_eviv_Atk);
+    AddTextPrinterParameterized3(WIN_STATS, 2, HP_X, DEF_Y,   gTextColorByNature[GetColorByNature(nature, STAT_DEF)],   0, gText_eviv_Def);
+    AddTextPrinterParameterized3(WIN_STATS, 2, HP_X, SPATK_Y, gTextColorByNature[GetColorByNature(nature, STAT_SPATK)], 0, gText_eviv_SpAtk);
+    AddTextPrinterParameterized3(WIN_STATS, 2, HP_X, SPDEF_Y, gTextColorByNature[GetColorByNature(nature, STAT_SPDEF)], 0, gText_eviv_SpDef);
+    AddTextPrinterParameterized3(WIN_STATS, 2, HP_X, SPEED_Y, gTextColorByNature[GetColorByNature(nature, STAT_SPEED)], 0, gText_eviv_Speed);
 
     if (!isEgg)
     {
@@ -1137,7 +1068,7 @@ static void PrintWindow2(u16 species, u8 isEgg, u8 friendship)
 
     if(!isEgg)
     {
-        AddTextPrinterParameterized3(WIN_BOTTOM_BOX, 2, 12, 4, gBlackTextColor, 0, gText_Total);
+        AddTextPrinterParameterized3(WIN_BOTTOM_BOX, 2, 12, 4, gBlackTextColor, 0, gText_eviv_Total);
 
         ConvertIntToDecimalStringN(gStringVar1, gTotalStatsBS, STR_CONV_MODE_RIGHT_ALIGN, 3);
         ConvertIntToDecimalStringN(gStringVar2, gTotalStatsEV, STR_CONV_MODE_RIGHT_ALIGN, 3);
@@ -1169,7 +1100,7 @@ static void PrintWindow2(u16 species, u8 isEgg, u8 friendship)
 
 static u8 GetPower_HiddenPower(void)
 {
-#ifdef HIDDEN_POWER_STATIC
+#if HIDDEN_POWER_STATIC
 	return HIDDEN_POWER_BASE_POWER;
 #else
     s32 powerBits;
@@ -1233,20 +1164,38 @@ static void PrintWindow_HiddenPower(u8 isEgg)
  * 
  * Returns the number of digits in a number
 */
-u8 GetDigitsDec(u32 num)
+static u8 GetDigitsDec(u32 num)
 {
-    if (num >= 10)
-        return 1 + GetDigitsDec(num/10);
-    else
+    u8 digits = 1;
+    while (num >= 10)
+    {
+        digits++;
+        num = num / 10;
+    }
+    return digits;
+    /*
+    if (num < 10)
         return 1;
+    else
+        return 1 + GetDigitsDec(num/10);
+    */
 }
 
-u8 GetDigitsHex(u32 num)
+static u8 GetDigitsHex(u32 num)
 {
+    u8 digits = 1;
+    while (num >= 0x10)
+    {
+        digits++;
+        num = num / 0x10;
+    }
+    return digits;
+    /*
     if (num < 0x10)
         return 1;
     else
         return 1 + GetDigitsHex(num/0x10);
+    */
 }
 
 
@@ -1255,7 +1204,7 @@ u8 GetDigitsHex(u32 num)
  * 
  * Returns the number of digits in a signed int
 */
-u8 GetDigitsDec_S(s32 num)
+u8 GetDigitsDec_Signed(s32 num)
 {
     if (num < 0)
         num = num * (-1);
@@ -1263,42 +1212,50 @@ u8 GetDigitsDec_S(s32 num)
     return GetDigitsDec(num);
 }
 
-static const s8 sNatureStatTable_v2[][5] =
+u8 GetDigitsHex_Signed(s32 num)
 {
-    //                      Atk             Def             Spd             Sp.Atk          Sp.Def
-    [NATURE_HARDY]   = {    STAT_NEUTRAL,   STAT_NEUTRAL,   STAT_NEUTRAL,   STAT_NEUTRAL,   STAT_NEUTRAL},
-    [NATURE_LONELY]  = {    STAT_UP,        STAT_DOWN,      STAT_NEUTRAL,   STAT_NEUTRAL,   STAT_NEUTRAL},
-    [NATURE_BRAVE]   = {    STAT_UP,        STAT_NEUTRAL,   STAT_DOWN,      STAT_NEUTRAL,   STAT_NEUTRAL},
-    [NATURE_ADAMANT] = {    STAT_UP,        STAT_NEUTRAL,   STAT_NEUTRAL,   STAT_DOWN,      STAT_NEUTRAL},
-    [NATURE_NAUGHTY] = {    STAT_UP,        STAT_NEUTRAL,   STAT_NEUTRAL,   STAT_NEUTRAL,   STAT_DOWN},
-    [NATURE_BOLD]    = {    STAT_DOWN,      STAT_UP,        STAT_NEUTRAL,   STAT_NEUTRAL,   STAT_NEUTRAL},
-    [NATURE_DOCILE]  = {    STAT_NEUTRAL,   STAT_NEUTRAL,   STAT_NEUTRAL,   STAT_NEUTRAL,   STAT_NEUTRAL},
-    [NATURE_RELAXED] = {    STAT_NEUTRAL,   STAT_UP,        STAT_DOWN,      STAT_NEUTRAL,   STAT_NEUTRAL},
-    [NATURE_IMPISH]  = {    STAT_NEUTRAL,   STAT_UP,        STAT_NEUTRAL,   STAT_DOWN,      STAT_NEUTRAL},
-    [NATURE_LAX]     = {    STAT_NEUTRAL,   STAT_UP,        STAT_NEUTRAL,   STAT_NEUTRAL,   STAT_DOWN},
-    [NATURE_TIMID]   = {    STAT_DOWN,      STAT_NEUTRAL,   STAT_UP,        STAT_NEUTRAL,   STAT_NEUTRAL},
-    [NATURE_HASTY]   = {    STAT_NEUTRAL,   STAT_DOWN,      STAT_UP,        STAT_NEUTRAL,   STAT_NEUTRAL},
-    [NATURE_SERIOUS] = {    STAT_NEUTRAL,   STAT_NEUTRAL,   STAT_NEUTRAL,   STAT_NEUTRAL,   STAT_NEUTRAL},
-    [NATURE_JOLLY]   = {    STAT_NEUTRAL,   STAT_NEUTRAL,   STAT_UP,        STAT_DOWN,      STAT_NEUTRAL},
-    [NATURE_NAIVE]   = {    STAT_NEUTRAL,   STAT_NEUTRAL,   STAT_UP,        STAT_NEUTRAL,   STAT_DOWN},
-    [NATURE_MODEST]  = {    STAT_DOWN,      STAT_NEUTRAL,   STAT_NEUTRAL,   STAT_UP,        STAT_NEUTRAL},
-    [NATURE_MILD]    = {    STAT_NEUTRAL,   STAT_DOWN,      STAT_NEUTRAL,   STAT_UP,        STAT_NEUTRAL},
-    [NATURE_QUIET]   = {    STAT_NEUTRAL,   STAT_NEUTRAL,   STAT_DOWN,      STAT_UP,        STAT_NEUTRAL},
-    [NATURE_BASHFUL] = {    STAT_NEUTRAL,   STAT_NEUTRAL,   STAT_NEUTRAL,   STAT_NEUTRAL,   STAT_NEUTRAL},
-    [NATURE_RASH]    = {    STAT_NEUTRAL,   STAT_NEUTRAL,   STAT_NEUTRAL,   STAT_UP,        STAT_DOWN},
-    [NATURE_CALM]    = {    STAT_DOWN,      STAT_NEUTRAL,   STAT_NEUTRAL,   STAT_NEUTRAL,   STAT_UP},
-    [NATURE_GENTLE]  = {    STAT_NEUTRAL,   STAT_DOWN,      STAT_NEUTRAL,   STAT_NEUTRAL,   STAT_UP},
-    [NATURE_SASSY]   = {    STAT_NEUTRAL,   STAT_NEUTRAL,   STAT_DOWN,      STAT_NEUTRAL,   STAT_UP},
-    [NATURE_CAREFUL] = {    STAT_NEUTRAL,   STAT_NEUTRAL,   STAT_NEUTRAL,   STAT_DOWN,      STAT_UP},
-    [NATURE_QUIRKY]  = {    STAT_NEUTRAL,   STAT_NEUTRAL,   STAT_NEUTRAL,   STAT_NEUTRAL,   STAT_NEUTRAL},
+    if (num < 0)
+        num = num * (-1);
+    
+    return GetDigitsHex(num);
+}
+
+static const s8 gNatureStatTable_copy[NUM_NATURES][NUM_NATURE_STATS] =
+{
+                    //  Atk             Def             Spd             Sp.Atk          Sp.Def
+    [NATURE_HARDY]   = {STAT_NEUTRAL,   STAT_NEUTRAL,   STAT_NEUTRAL,   STAT_NEUTRAL,   STAT_NEUTRAL},
+    [NATURE_LONELY]  = {STAT_INCREASE,  STAT_DECREASE,  STAT_NEUTRAL,   STAT_NEUTRAL,   STAT_NEUTRAL},
+    [NATURE_BRAVE]   = {STAT_INCREASE,  STAT_NEUTRAL,   STAT_DECREASE,  STAT_NEUTRAL,   STAT_NEUTRAL},
+    [NATURE_ADAMANT] = {STAT_INCREASE,  STAT_NEUTRAL,   STAT_NEUTRAL,   STAT_DECREASE,  STAT_NEUTRAL},
+    [NATURE_NAUGHTY] = {STAT_INCREASE,  STAT_NEUTRAL,   STAT_NEUTRAL,   STAT_NEUTRAL,   STAT_DECREASE},
+    [NATURE_BOLD]    = {STAT_DECREASE,  STAT_INCREASE,  STAT_NEUTRAL,   STAT_NEUTRAL,   STAT_NEUTRAL},
+    [NATURE_DOCILE]  = {STAT_NEUTRAL,   STAT_NEUTRAL,   STAT_NEUTRAL,   STAT_NEUTRAL,   STAT_NEUTRAL},
+    [NATURE_RELAXED] = {STAT_NEUTRAL,   STAT_INCREASE,  STAT_DECREASE,  STAT_NEUTRAL,   STAT_NEUTRAL},
+    [NATURE_IMPISH]  = {STAT_NEUTRAL,   STAT_INCREASE,  STAT_NEUTRAL,   STAT_DECREASE,  STAT_NEUTRAL},
+    [NATURE_LAX]     = {STAT_NEUTRAL,   STAT_INCREASE,  STAT_NEUTRAL,   STAT_NEUTRAL,   STAT_DECREASE},
+    [NATURE_TIMID]   = {STAT_DECREASE,  STAT_NEUTRAL,   STAT_INCREASE,  STAT_NEUTRAL,   STAT_NEUTRAL},
+    [NATURE_HASTY]   = {STAT_NEUTRAL,   STAT_DECREASE,  STAT_INCREASE,  STAT_NEUTRAL,   STAT_NEUTRAL},
+    [NATURE_SERIOUS] = {STAT_NEUTRAL,   STAT_NEUTRAL,   STAT_NEUTRAL,   STAT_NEUTRAL,   STAT_NEUTRAL},
+    [NATURE_JOLLY]   = {STAT_NEUTRAL,   STAT_NEUTRAL,   STAT_INCREASE,  STAT_DECREASE,  STAT_NEUTRAL},
+    [NATURE_NAIVE]   = {STAT_NEUTRAL,   STAT_NEUTRAL,   STAT_INCREASE,  STAT_NEUTRAL,   STAT_DECREASE},
+    [NATURE_MODEST]  = {STAT_DECREASE,  STAT_NEUTRAL,   STAT_NEUTRAL,   STAT_INCREASE,  STAT_NEUTRAL},
+    [NATURE_MILD]    = {STAT_NEUTRAL,   STAT_DECREASE,  STAT_NEUTRAL,   STAT_INCREASE,  STAT_NEUTRAL},
+    [NATURE_QUIET]   = {STAT_NEUTRAL,   STAT_NEUTRAL,   STAT_DECREASE,  STAT_INCREASE,  STAT_NEUTRAL},
+    [NATURE_BASHFUL] = {STAT_NEUTRAL,   STAT_NEUTRAL,   STAT_NEUTRAL,   STAT_NEUTRAL,   STAT_NEUTRAL},
+    [NATURE_RASH]    = {STAT_NEUTRAL,   STAT_NEUTRAL,   STAT_NEUTRAL,   STAT_INCREASE,  STAT_DECREASE},
+    [NATURE_CALM]    = {STAT_DECREASE,  STAT_NEUTRAL,   STAT_NEUTRAL,   STAT_NEUTRAL,   STAT_INCREASE},
+    [NATURE_GENTLE]  = {STAT_NEUTRAL,   STAT_DECREASE,  STAT_NEUTRAL,   STAT_NEUTRAL,   STAT_INCREASE},
+    [NATURE_SASSY]   = {STAT_NEUTRAL,   STAT_NEUTRAL,   STAT_DECREASE,  STAT_NEUTRAL,   STAT_INCREASE},
+    [NATURE_CAREFUL] = {STAT_NEUTRAL,   STAT_NEUTRAL,   STAT_NEUTRAL,   STAT_DECREASE,  STAT_INCREASE},
+    [NATURE_QUIRKY]  = {STAT_NEUTRAL,   STAT_NEUTRAL,   STAT_NEUTRAL,   STAT_NEUTRAL,   STAT_NEUTRAL},
 };
 
-static u8 GetColorByNature(u8 nature, u8 stat)
+static u8 GetColorByNature(u8 nature, u8 statIndex)
 {
-    if (stat < STAT_ATK || stat > STAT_SPDEF)
-        return STAT_NEUTRAL;
+    if (statIndex < STAT_ATK || statIndex > STAT_SPDEF)
+        return STAT_NEUTRAL + 1;
 
-    return sNatureStatTable_v2[nature][stat - 1];
+    return gNatureStatTable_copy[nature][statIndex - 1] + 1;
 }
 
 #ifdef FIRERED
@@ -1477,16 +1434,13 @@ void PokeSum_PrintPageHeaderText_new(void)
         PokeSum_PrintControlsString(gText_PokeSum_Controls_Page);
     PrintMonLevelNickOnWindow2(gText_PokeSum_NoData);
 }
-#else
+#else//EMERALD
 
 #define PALETTES_BG      0x0000FFFF
 #define PALETTES_OBJECTS 0xFFFF0000
 #define PALETTES_ALL     (PALETTES_BG | PALETTES_OBJECTS)
 
 extern bool8 MenuHelpers_ShouldWaitForLinkRecv(void);
-extern void StopCryAndClearCrySongs(void);
-extern void DestroyMonSpritesGfxManager(u8 managerId);
-extern void SummaryScreen_DestroyAnimDelayTask(void);
 
 static void CloseSummaryScreen_AndCallEvIv(u8 taskId)
 {
@@ -1494,14 +1448,6 @@ static void CloseSummaryScreen_AndCallEvIv(u8 taskId)
     {
         FreeAllWindowBuffers();
         SetMainCallback2(CB2_ShowEvIv_SummaryScreen);
-    //gLastViewedMonIndex = sMonSummaryScreen->curMonIndex;
-        //SummaryScreen_DestroyAnimDelayTask();
-        //ResetSpriteData();
-        //FreeAllSpritePalettes();
-        //StopCryAndClearCrySongs();
-    //m4aMPlayVolumeControl(&gMPlayInfo_BGM, TRACKS_ALL, 0x100);
-        //if (gMonSpritesGfxPtr == NULL)
-        //    DestroyMonSpritesGfxManager(MON_SPR_GFX_MANAGER_A);//revisar esto luego.
         DestroyTask(taskId);
     }
 }
@@ -1550,7 +1496,7 @@ void Task_HandleInput(u8 taskId)
                     SwitchToMoveSelection(taskId);
                 }
             }
-            else if (FlagGet(FLAG_EV_IV))//EV-IV
+            else if (FlagGet(FLAG_EV_IV))
             {
                 //StopPokemonAnimations();
                 PlaySE(SE_RG_CARD_OPEN);

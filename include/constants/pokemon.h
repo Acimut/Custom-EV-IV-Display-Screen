@@ -159,6 +159,7 @@
 #define NATURE_SASSY 22
 #define NATURE_CAREFUL 23
 #define NATURE_QUIRKY 24
+#define NUM_NATURES 25
 
 // Pokemon Stats    //enum
 #define STAT_HP 0
@@ -167,11 +168,17 @@
 #define STAT_SPEED 3
 #define STAT_SPATK 4
 #define STAT_SPDEF 5
+#define NUM_STATS 6
+
 #define STAT_ACC 6 // only in battles
 #define STAT_EVASION 7 // only in battles
 
-#define NUM_STATS 6
-#define NUM_BATTLE_STATS 8
+#define NUM_NATURE_STATS (NUM_STATS - 1) // excludes HP
+#define NUM_BATTLE_STATS (NUM_STATS + 2) // includes Accuracy and Evasion
+
+#define STAT_DECREASE   -1
+#define STAT_NEUTRAL     0
+#define STAT_INCREASE   +1
 
 // Shiny odds
 #define SHINY_ODDS 8 // Actual probability is SHINY_ODDS/65536

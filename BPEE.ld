@@ -90,7 +90,7 @@ gStringVar2 = 0x02021dc4;
 gStringVar3 = 0x02021ec4;
 gStringVar4 = 0x02021fc4;
 
-PlayCry1 = 0x080a3274|1;
+PlayCry_Normal = 0x080a3274|1;
 IsCryPlaying = 0x080a36ec|1;
 CreateMonSprite_FieldMove = 0x080b5fe8|1;/*static u8*/
 FreeResourcesAndDestroySprite = 0x080b6070|1;

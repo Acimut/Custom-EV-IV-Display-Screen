@@ -2,29 +2,23 @@
 #define GUARD_GLOBAL_H
 
 // ev-iv
-#if defined(BPRE)
-#define FIRERED
-#endif
-#if defined(BPRS)
-#define FIRERED
+#if BPRE || BPRS
+    #define FIRERED
 #endif
 
 #ifndef FIRERED
-#define FIRERED
+    #define FIRERED
 #endif
 
-#if defined(BPEE)
-#define EMERALD
-#undef FIRERED
+#if BPEE || BPES
+    #define EMERALD
+    #undef FIRERED
 #endif
-#if defined(BPES)
-#define EMERALD
-#undef FIRERED
-#endif
+
 #ifdef EMERALD
-#define SE_RG_CARD_FLIP             249 // SE_RG_CARD1
-#define SE_RG_CARD_FLIPPING         250 // SE_RG_CARD2
-#define SE_RG_CARD_OPEN             251 // SE_RG_CARD3
+    #define SE_RG_CARD_FLIP             249
+    #define SE_RG_CARD_FLIPPING         250
+    #define SE_RG_CARD_OPEN             251
 #endif
 
 //#include "config.h"
