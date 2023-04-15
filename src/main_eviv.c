@@ -95,7 +95,7 @@ enum
 
 extern const struct BaseStats *gBaseStatsPtr;
 
-static const struct BgTemplate bg_Templates[] = {
+static const struct BgTemplate sBg_Templates[] = {
     {
         .bg = 0,
         .charBaseIndex = 0,
@@ -144,7 +144,7 @@ static const struct BgTemplate bg_Templates[] = {
 #define WINDOW5_HEIGTH  2
 #define WINDOW5_BASEBLOCK (WINDOW4_WIDTH * WINDOW4_HEIGTH) + WINDOW4_BASEBLOCK
 
-static const struct WindowTemplate windows_templates[] =
+static const struct WindowTemplate sWindows_templates[] =
 {
     [WIN_POKEMON_NAME] = 
     {
@@ -212,17 +212,17 @@ static const struct WindowTemplate windows_templates[] =
 
 //                                     fondo                    fuente                  sombra
 //                                     highlight                font                    shadow
-static const u8 gBlackTextColor[3]  = {TEXT_COLOR_TRANSPARENT,  TEXT_COLOR_DARK_GRAY,   TEXT_COLOR_LIGHT_GRAY};
-static const u8 gBlueTextColor[3]   = {TEXT_COLOR_TRANSPARENT,  TEXT_COLOR_BLUE,        TEXT_COLOR_LIGHT_GRAY};
-static const u8 gRedTextColor[3]    = {TEXT_COLOR_TRANSPARENT,  TEXT_COLOR_RED,         TEXT_COLOR_LIGHT_GRAY};
-static const u8 gGrayTextColor[3]   = {TEXT_COLOR_TRANSPARENT,  TEXT_COLOR_LIGHT_GRAY,  TEXT_COLOR_DARK_GRAY};
-static const u8 gWhiteTextColor[3]  = {TEXT_COLOR_TRANSPARENT,  TEXT_COLOR_WHITE,       TEXT_COLOR_TRANSPARENT};
+static const u8 sBlackTextColor[3]  = {TEXT_COLOR_TRANSPARENT,  TEXT_COLOR_DARK_GRAY,   TEXT_COLOR_LIGHT_GRAY};
+static const u8 sBlueTextColor[3]   = {TEXT_COLOR_TRANSPARENT,  TEXT_COLOR_BLUE,        TEXT_COLOR_LIGHT_GRAY};
+static const u8 sRedTextColor[3]    = {TEXT_COLOR_TRANSPARENT,  TEXT_COLOR_RED,         TEXT_COLOR_LIGHT_GRAY};
+static const u8 sGrayTextColor[3]   = {TEXT_COLOR_TRANSPARENT,  TEXT_COLOR_LIGHT_GRAY,  TEXT_COLOR_DARK_GRAY};
+static const u8 sWhiteTextColor[3]  = {TEXT_COLOR_TRANSPARENT,  TEXT_COLOR_WHITE,       TEXT_COLOR_TRANSPARENT};
 
-static const u8 *const gTextColorByNature[] = 
+static const u8 *const sTextColorByNature[] = 
 {
-    [STAT_DECREASE + 1] = gBlueTextColor,
-    [STAT_NEUTRAL + 1]  = gBlackTextColor,
-    [STAT_INCREASE + 1] = gRedTextColor,
+    [STAT_DECREASE + 1] = sBlueTextColor,
+    [STAT_NEUTRAL + 1]  = sBlackTextColor,
+    [STAT_INCREASE + 1] = sRedTextColor,
 };
 
 const u8 gText_eviv_Slash[] = _("/");
@@ -281,7 +281,7 @@ const u8 gText_Steps_to_hatching[]  = _("Steps to\nhatch: ");
 #endif
 
 
-struct EvIv
+struct EvIvDisplayScreen
 {
     u8 state;
     u8 gfxStep;
@@ -312,27 +312,8 @@ struct EvIv
     u16 tilemapBuffer[0x400];
 };
 
-extern struct EvIv *gEvIv;
+extern struct EvIvDisplayScreen *gEvIv;
 
-#define gState              gEvIv->state            //Task_WaitForExit  | función que maneja los botones
-#define gGfxStep            gEvIv->gfxStep          //EvIvLoadGfx       | carga gráficos y paletas
-#define gCallbackStep       gEvIv->callbackStep     //Task_EvIvInit     | función inicializadora
-#define gReturn             gEvIv->return_summary_screen
-#define gSpriteTaskId       gEvIv->spriteTaskId
-#define gStats_ev           gEvIv->stats_ev
-#define gStats_iv           gEvIv->stats_iv
-#define gStats_bs           gEvIv->stats_bs
-#define gTotalStatsEV       gEvIv->totalStatsEV
-#define gTotalStatsIV       gEvIv->totalStatsIV
-#define gTotalStatsBS       gEvIv->totalStatsBS
-
-//CALLBACK SUMMARY SCREEN
-#define SS_party            gEvIv->monList          //Puntero al arreglo de pokémon.
-#define SS_cursorPos        gEvIv->cursorPos        //Número del pokémon actual.
-#define SS_lastIdx          gEvIv->lastIdx          //Cantidad de pokémon.
-#define SS_callback         gEvIv->savedCallback    //Func. de retorno.
-#define gIsBoxMon           gEvIv->isBoxMon
-#define gCurrentMon         gEvIv->currentMon       //buffer del pokémon actual
 
 
 static void EvIvBgInit(void)
@@ -418,18 +399,18 @@ void Show_EvIv(struct Pokemon * party, u8 cursorPos, u8 lastIdx, MainCallback sa
         return;
     }
     
-    gState = 0;
-    gGfxStep = 0;
-    gCallbackStep = 0;
+    gEvIv->state = 0;
+    gEvIv->gfxStep = 0;
+    gEvIv->callbackStep = 0;
     
-    SS_party.mons = party;
-    SS_cursorPos = cursorPos;
-    SS_lastIdx = lastIdx;
-    SS_callback = savedCallback;
-    gIsBoxMon = isboxMon;
-    gReturn = return_summary_screen;
+    gEvIv->monList.mons = party;
+    gEvIv->cursorPos = cursorPos;
+    gEvIv->lastIdx = lastIdx;
+    gEvIv->savedCallback = savedCallback;
+    gEvIv->isBoxMon = isboxMon;
+    gEvIv->return_summary_screen = return_summary_screen;
 
-    BufferMonData(&gCurrentMon);
+    BufferMonData(&gEvIv->currentMon);
 
     EvIvBgInit();
     CreateTask(Task_EvIvInit, 80);
@@ -445,7 +426,7 @@ static void VCBC_EvIvOam(void)
 
 static void Task_EvIvInit(u8 taskId)
 {
-    switch (gCallbackStep)
+    switch (gEvIv->callbackStep)
     {
     case 0:
         SetVBlankCallback(NULL);
@@ -464,13 +445,13 @@ static void Task_EvIvInit(u8 taskId)
         break;
     case 4:
         FillWindowPixelBuffer(WIN_TOP_BOX, 0);
-        AddTextPrinterParameterized3(WIN_TOP_BOX, 2, 0x10, 2, gWhiteTextColor, 0, gText_eviv_Tittle);
-        AddTextPrinterParameterized3(WIN_TOP_BOX, 0, 0xA0, 1, gWhiteTextColor, 0, gText_eviv_Buttons);
+        AddTextPrinterParameterized3(WIN_TOP_BOX, 2, 0x10, 2, sWhiteTextColor, 0, gText_eviv_Tittle);
+        AddTextPrinterParameterized3(WIN_TOP_BOX, 0, 0xA0, 1, sWhiteTextColor, 0, gText_eviv_Buttons);
         break;
     case 5:
         PutWindowTilemap(WIN_TOP_BOX);
-        ShowSprite(&gCurrentMon);
-        EvIvPrintText(&gCurrentMon);
+        ShowSprite(&gEvIv->currentMon);
+        EvIvPrintText(&gEvIv->currentMon);
         break;
     case 6:
         CopyBgTilemapBufferToVram(0);
@@ -489,64 +470,64 @@ static void Task_EvIvInit(u8 taskId)
         }
         gTasks[taskId].func = Task_WaitForExit;
     }
-    gCallbackStep++;
+    gEvIv->callbackStep++;
 }
 
 static void Task_WaitForExit(u8 taskId)
 {
-    switch (gState)
+    switch (gEvIv->state)
     {
     case 0:
-        gState++;
+        gEvIv->state++;
         break;
     case 1:
-        if (SS_lastIdx)
+        if (gEvIv->lastIdx)
         {
             if (JOY_REPT(DPAD_DOWN))
             {
-                if (SS_cursorPos == (SS_lastIdx))
-                    SS_cursorPos = 0;
+                if (gEvIv->cursorPos == (gEvIv->lastIdx))
+                    gEvIv->cursorPos = 0;
                 else
-                    SS_cursorPos++;
+                    gEvIv->cursorPos++;
 
                 //si se trata de la caja de pokémon...
-                if (gIsBoxMon)
+                if (gEvIv->isBoxMon)
                 {
                     //bucle usado en las cajas, donde hay pokémon vacíos.
-                    while (GetBoxMonData(&SS_party.boxMons[SS_cursorPos], MON_DATA_SPECIES, NULL) == SPECIES_NONE)
+                    while (GetBoxMonData(&gEvIv->monList.boxMons[gEvIv->cursorPos], MON_DATA_SPECIES, NULL) == SPECIES_NONE)
                     {
-                        if (SS_cursorPos == (SS_lastIdx))
-                            SS_cursorPos = 0;
+                        if (gEvIv->cursorPos == (gEvIv->lastIdx))
+                            gEvIv->cursorPos = 0;
                         else
-                            SS_cursorPos++;
+                            gEvIv->cursorPos++;
                     }
                 }
-                BufferMonData(&gCurrentMon);
-                HidePokemonPic2(gSpriteTaskId);
-                EvIvPrintText(&gCurrentMon);
-                ShowSprite(&gCurrentMon);
+                BufferMonData(&gEvIv->currentMon);
+                HidePokemonPic2(gEvIv->spriteTaskId);
+                EvIvPrintText(&gEvIv->currentMon);
+                ShowSprite(&gEvIv->currentMon);
             }
             else if (JOY_REPT(DPAD_UP))
             {
-                if (SS_cursorPos == 0)
-                    SS_cursorPos = (SS_lastIdx);
+                if (gEvIv->cursorPos == 0)
+                    gEvIv->cursorPos = (gEvIv->lastIdx);
                 else
-                    SS_cursorPos--;
+                    gEvIv->cursorPos--;
     
-                if (gIsBoxMon)
+                if (gEvIv->isBoxMon)
                 {
-                    while (GetBoxMonData(&SS_party.boxMons[SS_cursorPos], MON_DATA_SPECIES, NULL) == SPECIES_NONE)
+                    while (GetBoxMonData(&gEvIv->monList.boxMons[gEvIv->cursorPos], MON_DATA_SPECIES, NULL) == SPECIES_NONE)
                     {
-                        if (SS_cursorPos == 0)
-                            SS_cursorPos = (SS_lastIdx);
+                        if (gEvIv->cursorPos == 0)
+                            gEvIv->cursorPos = (gEvIv->lastIdx);
                         else
-                            SS_cursorPos--;
+                            gEvIv->cursorPos--;
                     }
                 }
-                BufferMonData(&gCurrentMon);
-                HidePokemonPic2(gSpriteTaskId);
-                EvIvPrintText(&gCurrentMon);
-                ShowSprite(&gCurrentMon);
+                BufferMonData(&gEvIv->currentMon);
+                HidePokemonPic2(gEvIv->spriteTaskId);
+                EvIvPrintText(&gEvIv->currentMon);
+                ShowSprite(&gEvIv->currentMon);
             }
         }
 
@@ -558,7 +539,7 @@ static void Task_WaitForExit(u8 taskId)
             PlaySE(SE_RG_CARD_FLIP);
 #endif
             BeginNormalPaletteFade(0xFFFFFFFF, 0, 0, 16, RGB_BLACK);
-            gState++;
+            gEvIv->state++;
         }
         break;
     case 2:
@@ -579,19 +560,19 @@ extern void CB2_InitSummaryScreen(void);
 
 static void Task_EvIvReturn(u8 taskId)
 {
-    bool8 return_summary_screen = gReturn;
+    bool8 return_summary_screen = gEvIv->return_summary_screen;
 
     if (gPaletteFade.active)
         return;
 
-    HidePokemonPic2(gSpriteTaskId);
+    HidePokemonPic2(gEvIv->spriteTaskId);
     FreeAllWindowBuffers();
     DestroyTask(taskId);
     
     if (return_summary_screen)
 #ifdef FIRERED
     {
-        sLastViewedMonIndex = SS_cursorPos;
+        sLastViewedMonIndex = gEvIv->cursorPos;
 
         sMonSummaryScreen->curPageIndex = PSS_PAGE_INFO;
 
@@ -623,7 +604,7 @@ static void Task_EvIvReturn(u8 taskId)
     }
 #else//EMERALD
     {
-        sMonSummaryScreen->curMonIndex = SS_cursorPos;
+        sMonSummaryScreen->curMonIndex = gEvIv->cursorPos;
         sMonSummaryScreen->minPageIndex = 0;
         sMonSummaryScreen->maxPageIndex = PSS_PAGE_COUNT - 1;
         sMonSummaryScreen->currPageIndex = sMonSummaryScreen->minPageIndex;
@@ -640,15 +621,15 @@ static void Task_EvIvReturn(u8 taskId)
 
 static void BufferMonData(struct Pokemon * mon)
 {
-    if (!gIsBoxMon)
+    if (!gEvIv->isBoxMon)
     {
-        struct Pokemon * partyMons = SS_party.mons;
-        *mon = partyMons[SS_cursorPos];
+        struct Pokemon * partyMons = gEvIv->monList.mons;
+        *mon = partyMons[gEvIv->cursorPos];
     }
     else
     {
-        struct BoxPokemon * boxMons = SS_party.boxMons;
-        BoxMonToMon(&boxMons[SS_cursorPos], mon);
+        struct BoxPokemon * boxMons = gEvIv->monList.boxMons;
+        BoxMonToMon(&boxMons[gEvIv->cursorPos], mon);
     }
 }
 
@@ -696,9 +677,9 @@ static void EvIvVblankHandler(void)
 {
     ResetGpu();
     ResetBgsAndClearDma3BusyFlags(0);
-    InitBgsFromTemplates(0, bg_Templates, 2);
+    InitBgsFromTemplates(0, sBg_Templates, 2);
     ResetBGPos();
-    InitWindows(windows_templates);
+    InitWindows(sWindows_templates);
     DeactivateAllTextPrinters();
     SetGpuReg(REG_OFFSET_DISPCNT, DISPCNT_OBJ_1D_MAP | DISPCNT_OBJ_ON);
     SetBgTilemapBuffer(1, gEvIv->tilemapBuffer);
@@ -710,7 +691,7 @@ static void EvIvVblankHandler(void)
 
 static u8 EvIvLoadGfx(void)
 {
-    switch (gGfxStep)
+    switch (gEvIv->gfxStep)
     {
     case 0:
         ResetTempTileDataBuffers();
@@ -732,7 +713,7 @@ static u8 EvIvLoadGfx(void)
     default:
         return 1;
     }
-    gGfxStep++;
+    gEvIv->gfxStep++;
     return 0;
 }
 
@@ -780,7 +761,7 @@ static void ShowPokemonPic2(u16 species, u32 otId, u32 personality, u8 x, u8 y)
     u8 spriteId;
 
     spriteId = CreateMonSprite_Field(species, otId, personality, 8 * x + 40, 8 * y + 40, FALSE);
-    gSpriteTaskId = CreateTask(Task_ScriptShowMonPic, 80);
+    gEvIv->spriteTaskId = CreateTask(Task_ScriptShowMonPic, 80);
 
     gSprites[spriteId].hFlip = SPRITE_VIEW_DIRECTION;
 
@@ -793,10 +774,10 @@ static void ShowPokemonPic2(u16 species, u32 otId, u32 personality, u8 x, u8 y)
     gSprites[spriteId].x += 48 * SPRITE_JUMP_DIRECTION;
 #endif
 
-    gTasks[gSpriteTaskId].tState = 0;
-    gTasks[gSpriteTaskId].tSpecie = species;
-    gTasks[gSpriteTaskId].tSpriteId = spriteId;
-    gTasks[gSpriteTaskId].tTimer = 0;
+    gTasks[gEvIv->spriteTaskId].tState = 0;
+    gTasks[gEvIv->spriteTaskId].tSpecie = species;
+    gTasks[gEvIv->spriteTaskId].tSpriteId = spriteId;
+    gTasks[gEvIv->spriteTaskId].tTimer = 0;
     gSprites[spriteId].callback = SpriteCallbackDummy;
     gSprites[spriteId].oam.priority = 0;
 }
@@ -907,50 +888,50 @@ static void EvIvPrintText(struct Pokemon *mon)
 
     //reinicia los totales.
     //reset the totals.
-    gTotalStatsEV = 0;
-    gTotalStatsIV = 0;
-    gTotalStatsBS = 0;
+    gEvIv->totalStatsEV = 0;
+    gEvIv->totalStatsIV = 0;
+    gEvIv->totalStatsBS = 0;
 
     //obtiene las estadísticas del pokémon
     //get pokémon stats
 
     //STAT_HP
-    gStats_bs[STAT_HP] = gBaseStatsPtr[species].baseHP;
-    gStats_ev[STAT_HP] = GetMonData(mon,MON_DATA_HP_EV,NULL);
-    gStats_iv[STAT_HP] = GetMonData(mon,MON_DATA_HP_IV,NULL);
+    gEvIv->stats_bs[STAT_HP] = gBaseStatsPtr[species].baseHP;
+    gEvIv->stats_ev[STAT_HP] = GetMonData(mon,MON_DATA_HP_EV,NULL);
+    gEvIv->stats_iv[STAT_HP] = GetMonData(mon,MON_DATA_HP_IV,NULL);
 
     //STAT_ATK
-    gStats_bs[STAT_ATK] = gBaseStatsPtr[species].baseAttack;
-    gStats_ev[STAT_ATK] = GetMonData(mon,MON_DATA_ATK_EV,NULL);
-    gStats_iv[STAT_ATK] = GetMonData(mon,MON_DATA_ATK_IV,NULL);
+    gEvIv->stats_bs[STAT_ATK] = gBaseStatsPtr[species].baseAttack;
+    gEvIv->stats_ev[STAT_ATK] = GetMonData(mon,MON_DATA_ATK_EV,NULL);
+    gEvIv->stats_iv[STAT_ATK] = GetMonData(mon,MON_DATA_ATK_IV,NULL);
 
     //STAT_DEF
-    gStats_bs[STAT_DEF] = gBaseStatsPtr[species].baseDefense;
-    gStats_ev[STAT_DEF] = GetMonData(mon,MON_DATA_DEF_EV,NULL);
-    gStats_iv[STAT_DEF] = GetMonData(mon,MON_DATA_DEF_IV,NULL);
+    gEvIv->stats_bs[STAT_DEF] = gBaseStatsPtr[species].baseDefense;
+    gEvIv->stats_ev[STAT_DEF] = GetMonData(mon,MON_DATA_DEF_EV,NULL);
+    gEvIv->stats_iv[STAT_DEF] = GetMonData(mon,MON_DATA_DEF_IV,NULL);
 
     //STAT_SPATK
-    gStats_bs[STAT_SPATK] = gBaseStatsPtr[species].baseSpAttack;
-    gStats_ev[STAT_SPATK] = GetMonData(mon,MON_DATA_SPATK_EV,NULL);
-    gStats_iv[STAT_SPATK] = GetMonData(mon,MON_DATA_SPATK_IV,NULL);
+    gEvIv->stats_bs[STAT_SPATK] = gBaseStatsPtr[species].baseSpAttack;
+    gEvIv->stats_ev[STAT_SPATK] = GetMonData(mon,MON_DATA_SPATK_EV,NULL);
+    gEvIv->stats_iv[STAT_SPATK] = GetMonData(mon,MON_DATA_SPATK_IV,NULL);
     
     //STAT_SPDEF
-    gStats_bs[STAT_SPDEF] = gBaseStatsPtr[species].baseSpDefense;
-    gStats_ev[STAT_SPDEF] = GetMonData(mon,MON_DATA_SPDEF_EV,NULL);
-    gStats_iv[STAT_SPDEF] = GetMonData(mon,MON_DATA_SPDEF_IV,NULL);
+    gEvIv->stats_bs[STAT_SPDEF] = gBaseStatsPtr[species].baseSpDefense;
+    gEvIv->stats_ev[STAT_SPDEF] = GetMonData(mon,MON_DATA_SPDEF_EV,NULL);
+    gEvIv->stats_iv[STAT_SPDEF] = GetMonData(mon,MON_DATA_SPDEF_IV,NULL);
     
     //STAT_SPEED
-    gStats_bs[STAT_SPEED] = gBaseStatsPtr[species].baseSpeed;
-    gStats_ev[STAT_SPEED] = GetMonData(mon,MON_DATA_SPEED_EV,NULL);
-    gStats_iv[STAT_SPEED] = GetMonData(mon,MON_DATA_SPEED_IV,NULL);
+    gEvIv->stats_bs[STAT_SPEED] = gBaseStatsPtr[species].baseSpeed;
+    gEvIv->stats_ev[STAT_SPEED] = GetMonData(mon,MON_DATA_SPEED_EV,NULL);
+    gEvIv->stats_iv[STAT_SPEED] = GetMonData(mon,MON_DATA_SPEED_IV,NULL);
 
     //realiza la suma de los totales
     //performs the sum of the totals
     for (int i = 0; i < NUM_STATS; i++)
     {
-        gTotalStatsEV += gStats_ev[i];
-        gTotalStatsIV += gStats_iv[i];
-        gTotalStatsBS += gStats_bs[i];
+        gEvIv->totalStatsEV += gEvIv->stats_ev[i];
+        gEvIv->totalStatsIV += gEvIv->stats_iv[i];
+        gEvIv->totalStatsBS += gEvIv->stats_bs[i];
     }
 
     FillWindowPixelBuffer(WIN_POKEMON_NAME, 0);
@@ -976,28 +957,28 @@ static void PrintWindow0(struct Pokemon *mon)
 {
     u8 temp = 0;
 
-    temp = SS_cursorPos + 1;
+    temp = gEvIv->cursorPos + 1;
     ConvertIntToDecimalStringN(gStringVar4, temp, STR_CONV_MODE_LEFT_ALIGN, GetDigitsDec(temp));
     StringAppend(gStringVar4, gText_eviv_Slash);
-    temp = SS_lastIdx + 1;
+    temp = gEvIv->lastIdx + 1;
     ConvertIntToDecimalStringN(gStringVar1, temp, STR_CONV_MODE_LEFT_ALIGN, GetDigitsDec(temp));
     StringAppend(gStringVar4, gStringVar1);
-    AddTextPrinterParameterized3(WIN_POKEMON_NAME, 2, 2, 2, gGrayTextColor, 0, gStringVar4);
+    AddTextPrinterParameterized3(WIN_POKEMON_NAME, 2, 2, 2, sGrayTextColor, 0, gStringVar4);
 
-    AddTextPrinterParameterized3(WIN_POKEMON_NAME, 2, 0x3C, 2, gGrayTextColor, 0, gText_BsEvIv);
+    AddTextPrinterParameterized3(WIN_POKEMON_NAME, 2, 0x3C, 2, sGrayTextColor, 0, gText_BsEvIv);
 
     GetMonNickname(mon, gStringVar4);
-    AddTextPrinterParameterized3(WIN_POKEMON_NAME, 2, 0x90, 2, gGrayTextColor, 0, gStringVar4);
+    AddTextPrinterParameterized3(WIN_POKEMON_NAME, 2, 0x90, 2, sGrayTextColor, 0, gStringVar4);
 }
 
 static void PrintWindow1(u8 nature, u8 isEgg)
 {
-    AddTextPrinterParameterized3(WIN_STATS, 2, HP_X, HP_Y,    gTextColorByNature[GetColorByNature(nature, STAT_HP)],    0, gText_eviv_Hp);
-    AddTextPrinterParameterized3(WIN_STATS, 2, HP_X, ATK_Y,   gTextColorByNature[GetColorByNature(nature, STAT_ATK)],   0, gText_eviv_Atk);
-    AddTextPrinterParameterized3(WIN_STATS, 2, HP_X, DEF_Y,   gTextColorByNature[GetColorByNature(nature, STAT_DEF)],   0, gText_eviv_Def);
-    AddTextPrinterParameterized3(WIN_STATS, 2, HP_X, SPATK_Y, gTextColorByNature[GetColorByNature(nature, STAT_SPATK)], 0, gText_eviv_SpAtk);
-    AddTextPrinterParameterized3(WIN_STATS, 2, HP_X, SPDEF_Y, gTextColorByNature[GetColorByNature(nature, STAT_SPDEF)], 0, gText_eviv_SpDef);
-    AddTextPrinterParameterized3(WIN_STATS, 2, HP_X, SPEED_Y, gTextColorByNature[GetColorByNature(nature, STAT_SPEED)], 0, gText_eviv_Speed);
+    AddTextPrinterParameterized3(WIN_STATS, 2, HP_X, HP_Y,    sTextColorByNature[GetColorByNature(nature, STAT_HP)],    0, gText_eviv_Hp);
+    AddTextPrinterParameterized3(WIN_STATS, 2, HP_X, ATK_Y,   sTextColorByNature[GetColorByNature(nature, STAT_ATK)],   0, gText_eviv_Atk);
+    AddTextPrinterParameterized3(WIN_STATS, 2, HP_X, DEF_Y,   sTextColorByNature[GetColorByNature(nature, STAT_DEF)],   0, gText_eviv_Def);
+    AddTextPrinterParameterized3(WIN_STATS, 2, HP_X, SPATK_Y, sTextColorByNature[GetColorByNature(nature, STAT_SPATK)], 0, gText_eviv_SpAtk);
+    AddTextPrinterParameterized3(WIN_STATS, 2, HP_X, SPDEF_Y, sTextColorByNature[GetColorByNature(nature, STAT_SPDEF)], 0, gText_eviv_SpDef);
+    AddTextPrinterParameterized3(WIN_STATS, 2, HP_X, SPEED_Y, sTextColorByNature[GetColorByNature(nature, STAT_SPEED)], 0, gText_eviv_Speed);
 
     if (!isEgg)
     {
@@ -1008,12 +989,12 @@ static void PrintWindow1(u8 nature, u8 isEgg)
         PrintStat(nature, STAT_SPDEF);
         PrintStat(nature, STAT_SPEED);
     }else{
-        AddTextPrinterParameterized3(WIN_STATS, 2, BS_X, HP_Y,    gBlackTextColor, 0, gText_CensorEgg);
-        AddTextPrinterParameterized3(WIN_STATS, 2, BS_X, ATK_Y,   gBlackTextColor, 0, gText_CensorEgg);
-        AddTextPrinterParameterized3(WIN_STATS, 2, BS_X, DEF_Y,   gBlackTextColor, 0, gText_CensorEgg);
-        AddTextPrinterParameterized3(WIN_STATS, 2, BS_X, SPATK_Y, gBlackTextColor, 0, gText_CensorEgg);
-        AddTextPrinterParameterized3(WIN_STATS, 2, BS_X, SPDEF_Y, gBlackTextColor, 0, gText_CensorEgg);
-        AddTextPrinterParameterized3(WIN_STATS, 2, BS_X, SPEED_Y, gBlackTextColor, 0, gText_CensorEgg);
+        AddTextPrinterParameterized3(WIN_STATS, 2, BS_X, HP_Y,    sBlackTextColor, 0, gText_CensorEgg);
+        AddTextPrinterParameterized3(WIN_STATS, 2, BS_X, ATK_Y,   sBlackTextColor, 0, gText_CensorEgg);
+        AddTextPrinterParameterized3(WIN_STATS, 2, BS_X, DEF_Y,   sBlackTextColor, 0, gText_CensorEgg);
+        AddTextPrinterParameterized3(WIN_STATS, 2, BS_X, SPATK_Y, sBlackTextColor, 0, gText_CensorEgg);
+        AddTextPrinterParameterized3(WIN_STATS, 2, BS_X, SPDEF_Y, sBlackTextColor, 0, gText_CensorEgg);
+        AddTextPrinterParameterized3(WIN_STATS, 2, BS_X, SPEED_Y, sBlackTextColor, 0, gText_CensorEgg);
     }
 }
 
@@ -1021,41 +1002,41 @@ static void PrintStat(u8 nature, u8 stat)
 {
     u8 color = GetColorByNature(nature, stat);
 
-    ConvertIntToDecimalStringN(gStringVar1, gStats_bs[stat], STR_CONV_MODE_RIGHT_ALIGN, 3);
-    ConvertIntToDecimalStringN(gStringVar2, gStats_ev[stat], STR_CONV_MODE_RIGHT_ALIGN, 3);
-    ConvertIntToDecimalStringN(gStringVar3, gStats_iv[stat], STR_CONV_MODE_RIGHT_ALIGN, 2);
+    ConvertIntToDecimalStringN(gStringVar1, gEvIv->stats_bs[stat], STR_CONV_MODE_RIGHT_ALIGN, 3);
+    ConvertIntToDecimalStringN(gStringVar2, gEvIv->stats_ev[stat], STR_CONV_MODE_RIGHT_ALIGN, 3);
+    ConvertIntToDecimalStringN(gStringVar3, gEvIv->stats_iv[stat], STR_CONV_MODE_RIGHT_ALIGN, 2);
 
     switch (stat)
     {
     case STAT_HP:
-        AddTextPrinterParameterized3(WIN_STATS, 2, BS_X, HP_Y, gTextColorByNature[color], 0, gStringVar1);
-        AddTextPrinterParameterized3(WIN_STATS, 2, EV_X, HP_Y, gTextColorByNature[color], 0, gStringVar2);
-        AddTextPrinterParameterized3(WIN_STATS, 2, IV_X, HP_Y, gTextColorByNature[color], 0, gStringVar3);
+        AddTextPrinterParameterized3(WIN_STATS, 2, BS_X, HP_Y, sTextColorByNature[color], 0, gStringVar1);
+        AddTextPrinterParameterized3(WIN_STATS, 2, EV_X, HP_Y, sTextColorByNature[color], 0, gStringVar2);
+        AddTextPrinterParameterized3(WIN_STATS, 2, IV_X, HP_Y, sTextColorByNature[color], 0, gStringVar3);
         break;
     case STAT_ATK:
-        AddTextPrinterParameterized3(WIN_STATS, 2, BS_X, ATK_Y, gTextColorByNature[color], 0, gStringVar1);
-        AddTextPrinterParameterized3(WIN_STATS, 2, EV_X, ATK_Y, gTextColorByNature[color], 0, gStringVar2);
-        AddTextPrinterParameterized3(WIN_STATS, 2, IV_X, ATK_Y, gTextColorByNature[color], 0, gStringVar3);
+        AddTextPrinterParameterized3(WIN_STATS, 2, BS_X, ATK_Y, sTextColorByNature[color], 0, gStringVar1);
+        AddTextPrinterParameterized3(WIN_STATS, 2, EV_X, ATK_Y, sTextColorByNature[color], 0, gStringVar2);
+        AddTextPrinterParameterized3(WIN_STATS, 2, IV_X, ATK_Y, sTextColorByNature[color], 0, gStringVar3);
         break;
     case STAT_DEF:
-        AddTextPrinterParameterized3(WIN_STATS, 2, BS_X, DEF_Y, gTextColorByNature[color], 0, gStringVar1);
-        AddTextPrinterParameterized3(WIN_STATS, 2, EV_X, DEF_Y, gTextColorByNature[color], 0, gStringVar2);
-        AddTextPrinterParameterized3(WIN_STATS, 2, IV_X, DEF_Y, gTextColorByNature[color], 0, gStringVar3);
+        AddTextPrinterParameterized3(WIN_STATS, 2, BS_X, DEF_Y, sTextColorByNature[color], 0, gStringVar1);
+        AddTextPrinterParameterized3(WIN_STATS, 2, EV_X, DEF_Y, sTextColorByNature[color], 0, gStringVar2);
+        AddTextPrinterParameterized3(WIN_STATS, 2, IV_X, DEF_Y, sTextColorByNature[color], 0, gStringVar3);
         break;
     case STAT_SPATK:
-        AddTextPrinterParameterized3(WIN_STATS, 2, BS_X, SPATK_Y, gTextColorByNature[color], 0, gStringVar1);
-        AddTextPrinterParameterized3(WIN_STATS, 2, EV_X, SPATK_Y, gTextColorByNature[color], 0, gStringVar2);
-        AddTextPrinterParameterized3(WIN_STATS, 2, IV_X, SPATK_Y, gTextColorByNature[color], 0, gStringVar3);
+        AddTextPrinterParameterized3(WIN_STATS, 2, BS_X, SPATK_Y, sTextColorByNature[color], 0, gStringVar1);
+        AddTextPrinterParameterized3(WIN_STATS, 2, EV_X, SPATK_Y, sTextColorByNature[color], 0, gStringVar2);
+        AddTextPrinterParameterized3(WIN_STATS, 2, IV_X, SPATK_Y, sTextColorByNature[color], 0, gStringVar3);
         break;
     case STAT_SPDEF:
-        AddTextPrinterParameterized3(WIN_STATS, 2, BS_X, SPDEF_Y, gTextColorByNature[color], 0, gStringVar1);
-        AddTextPrinterParameterized3(WIN_STATS, 2, EV_X, SPDEF_Y, gTextColorByNature[color], 0, gStringVar2);
-        AddTextPrinterParameterized3(WIN_STATS, 2, IV_X, SPDEF_Y, gTextColorByNature[color], 0, gStringVar3);
+        AddTextPrinterParameterized3(WIN_STATS, 2, BS_X, SPDEF_Y, sTextColorByNature[color], 0, gStringVar1);
+        AddTextPrinterParameterized3(WIN_STATS, 2, EV_X, SPDEF_Y, sTextColorByNature[color], 0, gStringVar2);
+        AddTextPrinterParameterized3(WIN_STATS, 2, IV_X, SPDEF_Y, sTextColorByNature[color], 0, gStringVar3);
         break;
     case STAT_SPEED:
-        AddTextPrinterParameterized3(WIN_STATS, 2, BS_X, SPEED_Y, gTextColorByNature[color], 0, gStringVar1);
-        AddTextPrinterParameterized3(WIN_STATS, 2, EV_X, SPEED_Y, gTextColorByNature[color], 0, gStringVar2);
-        AddTextPrinterParameterized3(WIN_STATS, 2, IV_X, SPEED_Y, gTextColorByNature[color], 0, gStringVar3);
+        AddTextPrinterParameterized3(WIN_STATS, 2, BS_X, SPEED_Y, sTextColorByNature[color], 0, gStringVar1);
+        AddTextPrinterParameterized3(WIN_STATS, 2, EV_X, SPEED_Y, sTextColorByNature[color], 0, gStringVar2);
+        AddTextPrinterParameterized3(WIN_STATS, 2, IV_X, SPEED_Y, sTextColorByNature[color], 0, gStringVar3);
         break;
     default:
         break;
@@ -1068,14 +1049,14 @@ static void PrintWindow2(u16 species, u8 isEgg, u8 friendship)
 
     if(!isEgg)
     {
-        AddTextPrinterParameterized3(WIN_BOTTOM_BOX, 2, 12, 4, gBlackTextColor, 0, gText_eviv_Total);
+        AddTextPrinterParameterized3(WIN_BOTTOM_BOX, 2, 12, 4, sBlackTextColor, 0, gText_eviv_Total);
 
-        ConvertIntToDecimalStringN(gStringVar1, gTotalStatsBS, STR_CONV_MODE_RIGHT_ALIGN, 3);
-        ConvertIntToDecimalStringN(gStringVar2, gTotalStatsEV, STR_CONV_MODE_RIGHT_ALIGN, 3);
-        ConvertIntToDecimalStringN(gStringVar3, gTotalStatsIV, STR_CONV_MODE_RIGHT_ALIGN, 3);
-        AddTextPrinterParameterized3(WIN_BOTTOM_BOX, 2, BS_X, 4, gBlackTextColor, 0, gStringVar1);
-        AddTextPrinterParameterized3(WIN_BOTTOM_BOX, 2, EV_X, 4, gBlackTextColor, 0, gStringVar2);
-        AddTextPrinterParameterized3(WIN_BOTTOM_BOX, 2, IV_X -6, 4, gBlackTextColor, 0, gStringVar3);
+        ConvertIntToDecimalStringN(gStringVar1, gEvIv->totalStatsBS, STR_CONV_MODE_RIGHT_ALIGN, 3);
+        ConvertIntToDecimalStringN(gStringVar2, gEvIv->totalStatsEV, STR_CONV_MODE_RIGHT_ALIGN, 3);
+        ConvertIntToDecimalStringN(gStringVar3, gEvIv->totalStatsIV, STR_CONV_MODE_RIGHT_ALIGN, 3);
+        AddTextPrinterParameterized3(WIN_BOTTOM_BOX, 2, BS_X, 4, sBlackTextColor, 0, gStringVar1);
+        AddTextPrinterParameterized3(WIN_BOTTOM_BOX, 2, EV_X, 4, sBlackTextColor, 0, gStringVar2);
+        AddTextPrinterParameterized3(WIN_BOTTOM_BOX, 2, IV_X -6, 4, sBlackTextColor, 0, gStringVar3);
 
         StringCopy(gStringVar4, gText_Happy);
         
@@ -1084,7 +1065,7 @@ static void PrintWindow2(u16 species, u8 isEgg, u8 friendship)
         StringAppend(gStringVar4, gStringVar2);
         
         StringAppend(gStringVar4, gText_Percent);
-        AddTextPrinterParameterized3(WIN_BOTTOM_BOX, 2, 14, 18, gBlackTextColor, 0, gStringVar4);
+        AddTextPrinterParameterized3(WIN_BOTTOM_BOX, 2, 14, 18, sBlackTextColor, 0, gStringVar4);
         
     }else
     {
@@ -1094,7 +1075,7 @@ static void PrintWindow2(u16 species, u8 isEgg, u8 friendship)
         StringCopy(gStringVar4, gText_Steps_to_hatching);
         ConvertIntToDecimalStringN(gStringVar2, temp, STR_CONV_MODE_LEFT_ALIGN, GetDigitsDec(temp));
         StringAppend(gStringVar4, gStringVar2);
-        AddTextPrinterParameterized3(WIN_BOTTOM_BOX, 2, 14, 4, gBlackTextColor, 0, gStringVar4);
+        AddTextPrinterParameterized3(WIN_BOTTOM_BOX, 2, 14, 4, sBlackTextColor, 0, gStringVar4);
     }
 }
 
@@ -1105,12 +1086,12 @@ static u8 GetPower_HiddenPower(void)
 #else
     s32 powerBits;
 
-    powerBits = ((gStats_iv[STAT_HP] & 2) >> 1)
-              | ((gStats_iv[STAT_ATK] & 2) << 0)
-              | ((gStats_iv[STAT_DEF] & 2) << 1)
-              | ((gStats_iv[STAT_SPEED] & 2) << 2)
-              | ((gStats_iv[STAT_SPATK] & 2) << 3)
-              | ((gStats_iv[STAT_SPDEF] & 2) << 4);
+    powerBits = ((gEvIv->stats_iv[STAT_HP] & 2) >> 1)
+              | ((gEvIv->stats_iv[STAT_ATK] & 2) << 0)
+              | ((gEvIv->stats_iv[STAT_DEF] & 2) << 1)
+              | ((gEvIv->stats_iv[STAT_SPEED] & 2) << 2)
+              | ((gEvIv->stats_iv[STAT_SPATK] & 2) << 3)
+              | ((gEvIv->stats_iv[STAT_SPDEF] & 2) << 4);
 
     return (40 * powerBits) / 63 + 30;
 #endif
@@ -1121,12 +1102,12 @@ static u8 GetType_HiddenPower(void)
     u8 type;
     s32 typeBits;
 
-    typeBits  = ((gStats_iv[STAT_HP] & 1) << 0)
-              | ((gStats_iv[STAT_ATK] & 1) << 1)
-              | ((gStats_iv[STAT_DEF] & 1) << 2)
-              | ((gStats_iv[STAT_SPEED] & 1) << 3)
-              | ((gStats_iv[STAT_SPATK] & 1) << 4)
-              | ((gStats_iv[STAT_SPDEF] & 1) << 5);
+    typeBits  = ((gEvIv->stats_iv[STAT_HP] & 1) << 0)
+              | ((gEvIv->stats_iv[STAT_ATK] & 1) << 1)
+              | ((gEvIv->stats_iv[STAT_DEF] & 1) << 2)
+              | ((gEvIv->stats_iv[STAT_SPEED] & 1) << 3)
+              | ((gEvIv->stats_iv[STAT_SPATK] & 1) << 4)
+              | ((gEvIv->stats_iv[STAT_SPDEF] & 1) << 5);
 
     type = (15 * typeBits) / 63 + 1;
 
@@ -1145,18 +1126,18 @@ static void PrintWindow_HiddenPower(u8 isEgg)
 
     StringCopy(gStringVar4, gText_HiddenPower);
 
-    AddTextPrinterParameterized3(WIN_HIDDEN_POWER, 0, 4, 3, gWhiteTextColor, 0, gStringVar4);
+    AddTextPrinterParameterized3(WIN_HIDDEN_POWER, 0, 4, 3, sWhiteTextColor, 0, gStringVar4);
 
     if (!isEgg)
     {
         ConvertIntToDecimalStringN(gStringVar1, power, STR_CONV_MODE_LEFT_ALIGN, GetDigitsDec(power));
         StringCopy(gStringVar4, gText_Power);
         StringAppend(gStringVar4, gStringVar1);
-        AddTextPrinterParameterized3(WIN_HIDDEN_POWER, 0, 16, 16, gWhiteTextColor, 0, gStringVar4);
+        AddTextPrinterParameterized3(WIN_HIDDEN_POWER, 0, 16, 16, sWhiteTextColor, 0, gStringVar4);
         BlitMoveInfoIcon(WIN_TYPE, type + 1, 2, 4);
     }
     else
-        AddTextPrinterParameterized3(WIN_HIDDEN_POWER, 0, 32, 16, gWhiteTextColor, 0, gText_q);
+        AddTextPrinterParameterized3(WIN_HIDDEN_POWER, 0, 32, 16, sWhiteTextColor, 0, gText_q);
 }
 
 /**
@@ -1220,7 +1201,7 @@ u8 GetDigitsHex_Signed(s32 num)
     return GetDigitsHex(num);
 }
 
-static const s8 gNatureStatTable_copy[NUM_NATURES][NUM_NATURE_STATS] =
+const s8 gNatureStatTable_copy[NUM_NATURES][NUM_NATURE_STATS] =
 {
                     //  Atk             Def             Spd             Sp.Atk          Sp.Def
     [NATURE_HARDY]   = {STAT_NEUTRAL,   STAT_NEUTRAL,   STAT_NEUTRAL,   STAT_NEUTRAL,   STAT_NEUTRAL},
