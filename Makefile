@@ -25,7 +25,7 @@ export ASFLAGS := -mthumb
 # -DFLAG_EV_IV=$(FLAG_EV_IV) -> #define FLAG_EV_IV = 0x829
 # -D$(ROM_CODE)              -> #define BPRE
 export INCLUDES := -I $(SRC) -I . -I include -D$(ROM_CODE)
-export WARNINGFLAGS :=	-Wall -Wno-discarded-array-qualifiers \
+export WARNINGFLAGS := -Wall -Wno-discarded-array-qualifiers \
 	-Wno-int-conversion
 export CFLAGS := -g -O2 $(WARNINGFLAGS) -mthumb -std=gnu17 $(INCLUDES) -mcpu=arm7tdmi \
 	-march=armv4t -mno-thumb-interwork -fno-inline -fno-builtin -mlong-calls -DROM_$(ROM_CODE) \
@@ -71,7 +71,16 @@ all: clean graphics rom
 
 rom: main$(ROM_CODE).asm $(BINARY)
 	@echo "\nCreating ROM"
-	$(ARMIPS) main$(ROM_CODE).asm -definelabel insertinto $(OFFSET) -sym offsets_$(ROM_CODE).txt
+ifeq ($(ROM_CODE),CFRU)
+	$(ARMIPS) main$(ROM_CODE).asm \
+	-definelabel insertinto $(OFFSET) \
+	-definelabel CompressedMonToMon $(COMPRESSED_MON_TO_MON_PTR) \
+	-sym2 offsets_$(ROM_CODE).txt
+else
+	$(ARMIPS) main$(ROM_CODE).asm \
+	-definelabel insertinto $(OFFSET) \
+	-sym2 offsets_$(ROM_CODE).txt
+endif
 
 clean:
 	rm -rf $(BINARY)
@@ -114,7 +123,8 @@ bintolz: $(GBA_BIN_LZ)
 
 graphics: pngto4bpp gba4bpptolz pngtopal paltogbapal bintolz
 
-firered:              	; @$(MAKE) ROM_CODE=BPRE
-rojofuego:           	; @$(MAKE) ROM_CODE=BPRS
-emerald:              	; @$(MAKE) ROM_CODE=BPEE
-esmeralda:              ; @$(MAKE) ROM_CODE=BPES
+firered:    ; @$(MAKE) ROM_CODE=BPRE
+rojofuego:  ; @$(MAKE) ROM_CODE=BPRS
+emerald:    ; @$(MAKE) ROM_CODE=BPEE
+esmeralda:  ; @$(MAKE) ROM_CODE=BPES
+cfru:       ; @$(MAKE) ROM_CODE=CFRU

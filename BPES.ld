@@ -137,6 +137,9 @@ ScheduleBgCopyTilemapToVram     = 0x081995c0|1;
 GetBoxMonData   = 0x0806a674|1;
 BoxMonToMon     = 0x08069004|1;
 
+SeekToNextMonInBox  = 0x080D1DA0|1;
+IsMultiBattle       = 0x081B0E70|1;
+
 VarGet      = 0x0809d6a8|1;
 VarSet      = 0x0809d6c4|1;
 FlagSet     = 0x0809d754|1;

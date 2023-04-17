@@ -2,7 +2,7 @@
 #define GUARD_GLOBAL_H
 
 // ev-iv
-#if BPRE || BPRS
+#if BPRE || BPRS || CFRU
     #define FIRERED
 #endif
 
@@ -12,10 +12,12 @@
 
 #if BPEE || BPES
     #define EMERALD
-    #undef FIRERED
 #endif
 
 #ifdef EMERALD
+    #undef FIRERED
+    #undef CFRU
+
     #define SE_RG_CARD_FLIP             249
     #define SE_RG_CARD_FLIPPING         250
     #define SE_RG_CARD_OPEN             251

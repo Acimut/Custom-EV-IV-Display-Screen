@@ -9,20 +9,72 @@
 #include "quest_log.h"
 #endif
 
-// ------------------------------------------------------------------ 
-//                           FIRE RED/ROJOFUEGO     EMERALD/ESMERALDA
-// FLAG_SYS_POKEMON_GET      0x828                  0x860
-// FLAG_SYS_POKEDEX_GET      0x829                  0x861
-// [ESP] ------------------------------------------------------------ 
-// Cambiar FLAG_SYS_POKEMON_GET por la flag que quieras usar.
-// ejemplo: FLAG_EV_IV  0x200
-// [ENG] ------------------------------------------------------------
-// Change FLAG_SYS_POKEMON_GET to the flag you want to use.
-// example: FLAG_EV_IV  0x200
-#define FLAG_EV_IV FLAG_SYS_POKEMON_GET
+//Dirección en que se mueve el cursor del ev-iv. No modificar
+//Direction in which the ev-iv cursor moves. Do not change
+#define DIR_DOWN        0
+#define DIR_UP          2
+#define ALLOW_EGGS      1
+#define DIR_DOWN_2      (DIR_DOWN|ALLOW_EGGS)
+#define DIR_UP_2        (DIR_UP|ALLOW_EGGS)
 
 extern void CB2_ShowEvIv_PlayerParty(void);
 extern void Show_EvIv(struct Pokemon * party, u8 cursorPos, u8 lastIdx, MainCallback savedCallback, bool8 isBoxMon, bool8 return_summary_screen);
+
+/**
+ * 2023-04-16
+ * ACIMUT:
+ * Agregado soporte para CFRU
+ * Added support for CFRU
+*/
+#if CFRU
+#define SIZEOF_COMPRESSED_MON 58
+
+//fake struct CompressedPokemon
+struct CompressedPokemon
+{
+    u8 compMon[SIZEOF_COMPRESSED_MON];
+};
+
+extern void CompressedMonToMon(struct CompressedPokemon* compMon, struct Pokemon* dst);
+#endif
+
+
+
+struct EvIvDisplayScreen
+{
+    u8 state;
+    u8 gfxStep;
+    u8 callbackStep;
+    bool8 return_summary_screen;
+
+    u8 spriteTaskId;
+    u8 cursorPos;
+    u8 lastIdx;
+    bool8 isBoxMon;
+ 
+    u8 stats_ev[NUM_STATS];
+    u8 stats_iv[NUM_STATS];
+    u8 stats_bs[NUM_STATS];
+    u16 totalStatsEV;
+    u16 totalStatsIV;
+    u16 totalStatsBS;
+
+    struct Pokemon currentMon;
+
+    union
+    {
+        struct Pokemon * mons;
+        struct BoxPokemon * boxMons;
+#if CFRU
+        struct CompressedPokemon * compMon;
+#endif
+    } monList;
+
+    MainCallback savedCallback;
+    u16 tilemapBuffer[0x400];
+};
+
+extern struct EvIvDisplayScreen *gEvIv;
 
 #ifdef EMERALD
 //EMERALD
@@ -261,3 +313,4 @@ extern u8 sLastViewedMonIndex;
 //static 
 extern void PokeSum_RemoveWindows(u8 curPageIndex);
 
+extern s16 SeekToNextMonInBox(struct BoxPokemon * boxMons, u8 curIndex, u8 maxIndex, u8 flags);

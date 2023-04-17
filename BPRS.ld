@@ -131,6 +131,11 @@ PokeSum_PrintPageName = 0x08136F6C|1;
 PokeSum_PrintControlsString = 0x08136FB8|1;
 PrintMonLevelNickOnWindow2 = 0x08137018|1;
 
+SeekToNextMonInBox          = 0x0808BFC0|1;
+IsMultiBattle               = 0x0811FB80|1;
+IsUpdateLinkStateCBActive   = 0x08056520|1;
+gReceivedRemoteLinkPlayers  = 0x03003EB4;/*IWRAM*/
+
 VarGet      = 0x0806E5A0|1;
 VarSet      = 0x0806E5BC|1;
 FlagSet     = 0x0806E6B8|1;

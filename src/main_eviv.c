@@ -62,12 +62,28 @@
 //y coordinate of the pokémon sprite, measured in tiles of 8 pixels
 #define PICMON_Y     5
 
+// ------------------------------------------------------------------ 
+//                           FIRE RED/ROJOFUEGO     EMERALD/ESMERALDA
+// FLAG_SYS_POKEMON_GET      0x828                  0x860
+// FLAG_SYS_POKEDEX_GET      0x829                  0x861
+//
+// [ESP] ------------------------------------------------------------ 
+// Cambiar FLAG_SYS_POKEMON_GET por la flag que quieras usar.
+// ejemplo: FLAG_EV_IV  0x200
+//
+//  [ENG] ------------------------------------------------------------ 
+// Change FLAG_SYS_POKEMON_GET to the flag you want to use.
+// example: FLAG_EV_IV  0x200
+#define FLAG_EV_IV FLAG_SYS_POKEMON_GET
+
+
 static void Task_EvIvInit(u8);
 static u8 EvIvLoadGfx(void);
 static void EvIvVblankHandler(void);
 static void Task_WaitForExit(u8);
 static void Task_EvIvReturn(u8);
 static void BufferMonData(struct Pokemon * mon);
+static s8 AdvanceMultiBattleMonIndex(s8 direction);
 static void ShowSprite(struct Pokemon *mon);
 static void EvIvPrintText(struct Pokemon *mon);
 static void ShowPokemonPic2(u16 species, u32 otId, u32 personality, u8 x, u8 y);
@@ -281,41 +297,6 @@ const u8 gText_Steps_to_hatching[]  = _("Steps to\nhatch: ");
 #endif
 
 
-struct EvIvDisplayScreen
-{
-    u8 state;
-    u8 gfxStep;
-    u8 callbackStep;
-    bool8 return_summary_screen;
-
-    u8 spriteTaskId;
-    u8 cursorPos;
-    u8 lastIdx;
-    bool8 isBoxMon;
- 
-    u8 stats_ev[NUM_STATS];
-    u8 stats_iv[NUM_STATS];
-    u8 stats_bs[NUM_STATS];
-    u16 totalStatsEV;
-    u16 totalStatsIV;
-    u16 totalStatsBS;
-
-    struct Pokemon currentMon;
-
-    union
-    {
-        struct Pokemon * mons;
-        struct BoxPokemon * boxMons;
-    } monList;
-
-    MainCallback savedCallback;
-    u16 tilemapBuffer[0x400];
-};
-
-extern struct EvIvDisplayScreen *gEvIv;
-
-
-
 static void EvIvBgInit(void)
 {
     ResetSpriteData();
@@ -446,7 +427,7 @@ static void Task_EvIvInit(u8 taskId)
     case 4:
         FillWindowPixelBuffer(WIN_TOP_BOX, 0);
         AddTextPrinterParameterized3(WIN_TOP_BOX, 2, 0x10, 2, sWhiteTextColor, 0, gText_eviv_Tittle);
-        AddTextPrinterParameterized3(WIN_TOP_BOX, 0, 0xA0, 1, sWhiteTextColor, 0, gText_eviv_Buttons);
+        AddTextPrinterParameterized3(WIN_TOP_BOX, 0, 0x98, 1, sWhiteTextColor, 0, gText_eviv_Buttons);
         break;
     case 5:
         PutWindowTilemap(WIN_TOP_BOX);
@@ -475,6 +456,7 @@ static void Task_EvIvInit(u8 taskId)
 
 static void Task_WaitForExit(u8 taskId)
 {
+    s8 monId = -1;
     switch (gEvIv->state)
     {
     case 0:
@@ -485,23 +467,36 @@ static void Task_WaitForExit(u8 taskId)
         {
             if (JOY_REPT(DPAD_DOWN))
             {
-                if (gEvIv->cursorPos == (gEvIv->lastIdx))
-                    gEvIv->cursorPos = 0;
-                else
-                    gEvIv->cursorPos++;
-
-                //si se trata de la caja de pokémon...
                 if (gEvIv->isBoxMon)
                 {
-                    //bucle usado en las cajas, donde hay pokémon vacíos.
-                    while (GetBoxMonData(&gEvIv->monList.boxMons[gEvIv->cursorPos], MON_DATA_SPECIES, NULL) == SPECIES_NONE)
-                    {
-                        if (gEvIv->cursorPos == (gEvIv->lastIdx))
-                            gEvIv->cursorPos = 0;
-                        else
-                            gEvIv->cursorPos++;
-                    }
+                    monId =  SeekToNextMonInBox(gEvIv->monList.boxMons, gEvIv->cursorPos, gEvIv->lastIdx, DIR_DOWN_2);
+                    if (monId == -1)//si llega al final, revise el primer elemento.
+                        monId = SeekToNextMonInBox(gEvIv->monList.boxMons, 1, gEvIv->lastIdx, DIR_UP_2);
+                    if (monId == -1)//si el primer elemento no tiene boxmon, revise desde el segundo en adelante.
+                        monId = SeekToNextMonInBox(gEvIv->monList.boxMons, 0, gEvIv->lastIdx, DIR_DOWN_2);
+                    gEvIv->cursorPos = monId;
                 }
+            #ifdef FIRERED
+                else if (IsUpdateLinkStateCBActive() == FALSE
+                    && gReceivedRemoteLinkPlayers == 1
+                    && IsMultiBattle() == TRUE)
+            #else //EMERALD
+                else if (IsMultiBattle() == TRUE)
+            #endif
+                {
+                    monId = AdvanceMultiBattleMonIndex(+1);
+                    //if (monId != -1)
+                    //    gEvIv->cursorPos = monId;
+                    gEvIv->cursorPos = monId;
+                }
+                else
+                {
+                    if (gEvIv->cursorPos == gEvIv->lastIdx)
+                        gEvIv->cursorPos = 0;
+                    else
+                        gEvIv->cursorPos++;
+                }
+
                 BufferMonData(&gEvIv->currentMon);
                 HidePokemonPic2(gEvIv->spriteTaskId);
                 EvIvPrintText(&gEvIv->currentMon);
@@ -509,21 +504,34 @@ static void Task_WaitForExit(u8 taskId)
             }
             else if (JOY_REPT(DPAD_UP))
             {
-                if (gEvIv->cursorPos == 0)
-                    gEvIv->cursorPos = (gEvIv->lastIdx);
-                else
-                    gEvIv->cursorPos--;
-    
                 if (gEvIv->isBoxMon)
                 {
-                    while (GetBoxMonData(&gEvIv->monList.boxMons[gEvIv->cursorPos], MON_DATA_SPECIES, NULL) == SPECIES_NONE)
-                    {
-                        if (gEvIv->cursorPos == 0)
-                            gEvIv->cursorPos = (gEvIv->lastIdx);
-                        else
-                            gEvIv->cursorPos--;
-                    }
+                    monId =  SeekToNextMonInBox(gEvIv->monList.boxMons, gEvIv->cursorPos, gEvIv->lastIdx, DIR_UP_2);
+                    if (monId == -1)//si llega al inicio, revise el último elemento.
+                        monId = SeekToNextMonInBox(gEvIv->monList.boxMons, gEvIv->lastIdx -1, gEvIv->lastIdx, DIR_DOWN_2);
+                    if (monId == -1)//si el último elemento no tiene boxMon, revise desde el penúltimo hacia atrás
+                        monId = SeekToNextMonInBox(gEvIv->monList.boxMons, gEvIv->lastIdx, gEvIv->lastIdx, DIR_UP_2);
+                    gEvIv->cursorPos = monId;
                 }
+            #ifdef FIRERED
+                else if (IsUpdateLinkStateCBActive() == FALSE
+                    && gReceivedRemoteLinkPlayers == 1
+                    && IsMultiBattle() == TRUE)
+            #else //EMERALD
+                else if (IsMultiBattle() == TRUE)
+            #endif
+                {
+                    monId = AdvanceMultiBattleMonIndex(-1);
+                    gEvIv->cursorPos = monId;
+                }
+                else
+                {
+                    if (gEvIv->cursorPos == 0)
+                        gEvIv->cursorPos = gEvIv->lastIdx;
+                    else
+                        gEvIv->cursorPos--;
+                }
+
                 BufferMonData(&gEvIv->currentMon);
                 HidePokemonPic2(gEvIv->spriteTaskId);
                 EvIvPrintText(&gEvIv->currentMon);
@@ -628,8 +636,54 @@ static void BufferMonData(struct Pokemon * mon)
     }
     else
     {
+#if CFRU == FALSE
         struct BoxPokemon * boxMons = gEvIv->monList.boxMons;
         BoxMonToMon(&boxMons[gEvIv->cursorPos], mon);
+#else //CFRU
+        struct CompressedPokemon * compMon = gEvIv->monList.compMon;
+        CompressedMonToMon(&compMon[gEvIv->cursorPos], mon);
+#endif
+    }
+}
+
+//EMERALD: sMultiBattleOrder
+static const u8 sMultiBattlePartyOrder[]    = {0, 2, 3, 1, 4, 5};
+
+static bool8 IsValidToViewInMulti(struct Pokemon *mon)
+{
+    if (GetMonData(mon, MON_DATA_SPECIES) == SPECIES_NONE)
+        return FALSE;
+    //if (gEvIv->cursorPos != 0 || !GetMonData(mon, MON_DATA_IS_EGG))
+        return TRUE;
+    //return FALSE;
+}
+
+static s8 AdvanceMultiBattleMonIndex(s8 direction)
+{
+    struct Pokemon *mons = gEvIv->monList.mons;
+    s8 index, foundPartyIdx = 0;
+    u8 i;
+
+    for (i = 0; i < PARTY_SIZE; i++)
+    {
+        if (sMultiBattlePartyOrder[i] == gEvIv->cursorPos)
+        {
+            foundPartyIdx = i;
+            break;
+        }
+    }
+
+    while (TRUE)
+    {
+        foundPartyIdx += direction;
+        if (foundPartyIdx < 0)
+            foundPartyIdx = (PARTY_SIZE - 1);
+        if (foundPartyIdx >= PARTY_SIZE)
+            foundPartyIdx = 0;
+
+        index = sMultiBattlePartyOrder[foundPartyIdx];
+        if (IsValidToViewInMulti(&mons[index]) == TRUE)
+            return index;
     }
 }
 

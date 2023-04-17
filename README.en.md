@@ -12,6 +12,7 @@ In this version, `EV-IV Display Screen` is called from the `summary screen`, mak
 
 ### **Features:**
 + Compatible whit Pokémon Fire Red (BPRE 1.0), Rojo Fuego (BPRS), Emerald (BPEE) and Esmeralda(BPES).
++ [New!] Compatible whit Complete Fire Red Upgrade (CFRU).
 + You can change the background by replacing the default one, the injection will insert it automatically.
 + You can change the coordinates of the pokemon sprite, as well as its texts.
 + IVs stat text changes color according to nature.
@@ -51,6 +52,15 @@ In this version, `EV-IV Display Screen` is called from the `summary screen`, mak
       + switch to BPRS to compile using Rojo Fuego
       + switch to BPEE to compile using Emerald
       + switch to BPEE to compile using Esmeralda
+      + switch to CFRU to compile using CFRU
+
+
++ ***If CFRU is used:***
+   + In the config.mk file, find the following line
+
+      `COMPRESSED_MON_TO_MON_PTR ?= 0x08985AC5`
+
+   + go to your CFRU's offsets.ini file, look for the CompressedMonToMon +1 offset, and put it in place of `08985AC5` in the config.mk file
 
 + ***Paste*** a copy of your rom in the root folder of the project, change the name of the rom to the corresponding code:
 
@@ -58,12 +68,13 @@ In this version, `EV-IV Display Screen` is called from the `summary screen`, mak
       ROJO FUEGO:       BPRS.gba
       EMERALD:          BPEE.gba
       ESMERALDA:        BPES.gba
+      CFRU:             CFRU.gba
 
 + ***Compile*** by running `make` with your terminal, and a rom with the injection will appear in a folder called `build`.
 ***
 
 ### **other configurations:**
-+ It is possible to enable/disable the ev-iv display screen using a `FLAG_EV_IV` flag that is set from `src/main_eviv.h`. This flag is set by default to `FLAG_SYS_POKEMON_GET` for when we receive the first pokemon, but it can be changed for other purposes.
++ In a script you can enable/disable the ev-iv display screen using a `FLAG_EV_IV` flag which is defined in `src/main_eviv.c`. This flag is set by default to `FLAG_SYS_POKEMON_GET` for when we receive the first pokemon, but it can be changed for other purposes.
 
 In the `src/main_eviv.c` file are the following preprocessor directive definitions, which we'll use to make some quick changes to the code before compiling:
 + ***EV_IV_TEXT:*** Change to
@@ -79,8 +90,8 @@ In the `src/main_eviv.c` file are the following preprocessor directive definitio
     + `0` so that the jump is in the center.
     + `-1` to jump from left to right.
 + ***SPRITE_VIEW_DIRECTION:*** Defines the direction the pokémon sprite faces. Switch to
-    + `1` to make it face to the right (default).
-    + `0` to face left.
+    + `0` to make it face to the left (default).
+    + `1` to make it face to the right.
 + ***PICMON_X:*** x coordinate of the pokémon sprite on screen, measured in 8 pixel tiles.
 + ***PICMON_Y:*** y coordinate of the pokémon sprite on the screen, measured in 8 pixel tiles.
 
