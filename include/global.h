@@ -151,6 +151,7 @@ struct Time
     /*0x02*/ s8 hours;
     /*0x03*/ s8 minutes;
     /*0x04*/ s8 seconds;
+    /*0x05*/ s8 filler[3];//SaveBlock2 fix
 };
 
 #define DEX_FLAGS_NO ((POKEMON_SLOTS_NUMBER / 8) + ((POKEMON_SLOTS_NUMBER % 8) ? 1 : 0))
@@ -645,6 +646,7 @@ struct FameCheckerSaveData
     /*3a54*/ u16 pickState:2;
     u16 flavorTextFlags:12;
     u16 unk_0_E:2;
+    u16 filler;//SaveBlock1 fix
 };
 
 #define NUM_EASY_CHAT_EXTRA_PHRASES 33

@@ -81,6 +81,7 @@ static void Task_EvIvInit(u8);
 static u8 EvIvLoadGfx(void);
 static void EvIvVblankHandler(void);
 static void Task_WaitForExit(u8);
+static void UpdateCurrentMon(void);
 static void Task_EvIvReturn(u8);
 static void BufferMonData(struct Pokemon * mon);
 static s8 AdvanceMultiBattleMonIndex(s8 direction);
@@ -457,6 +458,8 @@ static void Task_EvIvInit(u8 taskId)
 static void Task_WaitForExit(u8 taskId)
 {
     s8 monId = -1;
+    bool8 update_mon = TRUE;
+
     switch (gEvIv->state)
     {
     case 0:
@@ -474,7 +477,10 @@ static void Task_WaitForExit(u8 taskId)
                         monId = SeekToNextMonInBox(gEvIv->monList.boxMons, 1, gEvIv->lastIdx, DIR_UP_2);
                     if (monId == -1)//si el primer elemento no tiene boxmon, revise desde el segundo en adelante.
                         monId = SeekToNextMonInBox(gEvIv->monList.boxMons, 0, gEvIv->lastIdx, DIR_DOWN_2);
-                    gEvIv->cursorPos = monId;
+                    if (gEvIv->cursorPos == monId)
+                        update_mon = FALSE;
+                    else
+                        gEvIv->cursorPos = monId;
                 }
             #ifdef FIRERED
                 else if (IsUpdateLinkStateCBActive() == FALSE
@@ -484,10 +490,7 @@ static void Task_WaitForExit(u8 taskId)
                 else if (IsMultiBattle() == TRUE)
             #endif
                 {
-                    monId = AdvanceMultiBattleMonIndex(+1);
-                    //if (monId != -1)
-                    //    gEvIv->cursorPos = monId;
-                    gEvIv->cursorPos = monId;
+                    gEvIv->cursorPos = AdvanceMultiBattleMonIndex(+1);
                 }
                 else
                 {
@@ -497,10 +500,8 @@ static void Task_WaitForExit(u8 taskId)
                         gEvIv->cursorPos++;
                 }
 
-                BufferMonData(&gEvIv->currentMon);
-                HidePokemonPic2(gEvIv->spriteTaskId);
-                EvIvPrintText(&gEvIv->currentMon);
-                ShowSprite(&gEvIv->currentMon);
+                if (update_mon)
+                    UpdateCurrentMon();
             }
             else if (JOY_REPT(DPAD_UP))
             {
@@ -511,7 +512,10 @@ static void Task_WaitForExit(u8 taskId)
                         monId = SeekToNextMonInBox(gEvIv->monList.boxMons, gEvIv->lastIdx -1, gEvIv->lastIdx, DIR_DOWN_2);
                     if (monId == -1)//si el último elemento no tiene boxMon, revise desde el penúltimo hacia atrás
                         monId = SeekToNextMonInBox(gEvIv->monList.boxMons, gEvIv->lastIdx, gEvIv->lastIdx, DIR_UP_2);
-                    gEvIv->cursorPos = monId;
+                    if (gEvIv->cursorPos == monId)
+                        update_mon = FALSE;
+                    else
+                        gEvIv->cursorPos = monId;
                 }
             #ifdef FIRERED
                 else if (IsUpdateLinkStateCBActive() == FALSE
@@ -521,8 +525,7 @@ static void Task_WaitForExit(u8 taskId)
                 else if (IsMultiBattle() == TRUE)
             #endif
                 {
-                    monId = AdvanceMultiBattleMonIndex(-1);
-                    gEvIv->cursorPos = monId;
+                    gEvIv->cursorPos = AdvanceMultiBattleMonIndex(-1);
                 }
                 else
                 {
@@ -532,10 +535,8 @@ static void Task_WaitForExit(u8 taskId)
                         gEvIv->cursorPos--;
                 }
 
-                BufferMonData(&gEvIv->currentMon);
-                HidePokemonPic2(gEvIv->spriteTaskId);
-                EvIvPrintText(&gEvIv->currentMon);
-                ShowSprite(&gEvIv->currentMon);
+                if (update_mon)
+                    UpdateCurrentMon();
             }
         }
 
@@ -557,6 +558,13 @@ static void Task_WaitForExit(u8 taskId)
     }
 }
 
+static void UpdateCurrentMon(void)
+{
+    BufferMonData(&gEvIv->currentMon);
+    HidePokemonPic2(gEvIv->spriteTaskId);
+    EvIvPrintText(&gEvIv->currentMon);
+    ShowSprite(&gEvIv->currentMon);
+}
 
 //08135c34 l 000002ec CB2_SetUpPSS
 extern void CB2_SetUpPSS(void);
@@ -577,8 +585,8 @@ static void Task_EvIvReturn(u8 taskId)
     FreeAllWindowBuffers();
     DestroyTask(taskId);
     
-    if (return_summary_screen)
 #ifdef FIRERED
+    if (return_summary_screen)
     {
         sLastViewedMonIndex = gEvIv->cursorPos;
 
@@ -611,6 +619,7 @@ static void Task_EvIvReturn(u8 taskId)
         SetMainCallback2(CB2_ReturnToFieldFromDiploma);
     }
 #else//EMERALD
+    if (return_summary_screen)
     {
         sMonSummaryScreen->curMonIndex = gEvIv->cursorPos;
         sMonSummaryScreen->minPageIndex = 0;
@@ -836,6 +845,22 @@ static void ShowPokemonPic2(u16 species, u32 otId, u32 personality, u8 x, u8 y)
     gSprites[spriteId].oam.priority = 0;
 }
 
+static const s8 delta_jump[] =
+{
+    [ 0 ...  9] =  0, // < 10
+    [10 ... 17] =  1, // < 18
+    [18 ... 23] =  2, // < 24
+    [24 ... 27] =  3, // < 28
+    [28 ... 29] = -3, // < 30
+    [30 ... 31] = -2, // < 32
+    [32 ... 35] = -1, // < 36
+    [36 ... 39] =  0, // < 40
+    [40 ... 43] =  1, // < 44
+    [44 ... 45] =  2, // < 46
+    [46 ... 47] =  3, // < 48
+
+};
+
 static void Task_ScriptShowMonPic(u8 taskId)
 {
     struct Task * task = &gTasks[taskId];
@@ -849,33 +874,9 @@ static void Task_ScriptShowMonPic(u8 taskId)
     case 1:
 
 #if SPRITE_JUMP
-        u8 tmp_var;
         if (task->tTimer < 48)
         {
-            if (task->tTimer < 10)
-                tmp_var = 0;
-            else if (task->tTimer < 18)                
-                tmp_var = 1;
-            else if (task->tTimer < 24)
-                tmp_var = 2;
-            else if (task->tTimer < 28)
-                tmp_var = 3;
-            else if (task->tTimer < 30)
-                tmp_var = -3;
-            else if (task->tTimer < 32)
-                tmp_var = -2;
-            else if (task->tTimer < 36)
-                tmp_var = -1;
-            else if (task->tTimer < 40)
-                tmp_var = 0;
-            else if (task->tTimer < 44)
-                tmp_var = 1;
-            else if (task->tTimer < 46)
-                tmp_var = 2;
-            else
-                tmp_var = 3;
-
-            gSprites[task->tSpriteId].y += tmp_var;
+            gSprites[task->tSpriteId].y += delta_jump[task->tTimer];
             gSprites[task->tSpriteId].x -= SPRITE_JUMP_DIRECTION;
         }
         else
@@ -1009,15 +1010,24 @@ static void EvIvPrintText(struct Pokemon *mon)
 
 static void PrintWindow0(struct Pokemon *mon)
 {
-    u8 temp = 0;
+    u8 max_mon_count;
+    u8 current_mon = gEvIv->cursorPos + 1;
+    u8 x = 16;
 
-    temp = gEvIv->cursorPos + 1;
-    ConvertIntToDecimalStringN(gStringVar4, temp, STR_CONV_MODE_LEFT_ALIGN, GetDigitsDec(temp));
-    StringAppend(gStringVar4, gText_eviv_Slash);
-    temp = gEvIv->lastIdx + 1;
-    ConvertIntToDecimalStringN(gStringVar1, temp, STR_CONV_MODE_LEFT_ALIGN, GetDigitsDec(temp));
-    StringAppend(gStringVar4, gStringVar1);
-    AddTextPrinterParameterized3(WIN_POKEMON_NAME, 2, 2, 2, sGrayTextColor, 0, gStringVar4);
+    ConvertIntToDecimalStringN(gStringVar4, current_mon, STR_CONV_MODE_LEFT_ALIGN, GetDigitsDec(current_mon));
+    if (!IsMultiBattle())
+    {
+        StringAppend(gStringVar4, gText_eviv_Slash);
+        max_mon_count = gEvIv->lastIdx + 1;
+        ConvertIntToDecimalStringN(gStringVar1, max_mon_count, STR_CONV_MODE_LEFT_ALIGN, GetDigitsDec(max_mon_count));
+        StringAppend(gStringVar4, gStringVar1);
+
+        if(gEvIv->isBoxMon)
+            x = 4;
+        else
+            x = 10;
+    }
+    AddTextPrinterParameterized3(WIN_POKEMON_NAME, 2, x, 2, sGrayTextColor, 0, gStringVar4);
 
     AddTextPrinterParameterized3(WIN_POKEMON_NAME, 2, 0x3C, 2, sGrayTextColor, 0, gText_BsEvIv);
 
@@ -1054,7 +1064,7 @@ static void PrintWindow1(u8 nature, u8 isEgg)
 
 static void PrintStat(u8 nature, u8 stat)
 {
-    u8 color = GetColorByNature(nature, stat);
+    u8 color_idx = GetColorByNature(nature, stat);
 
     ConvertIntToDecimalStringN(gStringVar1, gEvIv->stats_bs[stat], STR_CONV_MODE_RIGHT_ALIGN, 3);
     ConvertIntToDecimalStringN(gStringVar2, gEvIv->stats_ev[stat], STR_CONV_MODE_RIGHT_ALIGN, 3);
@@ -1063,34 +1073,34 @@ static void PrintStat(u8 nature, u8 stat)
     switch (stat)
     {
     case STAT_HP:
-        AddTextPrinterParameterized3(WIN_STATS, 2, BS_X, HP_Y, sTextColorByNature[color], 0, gStringVar1);
-        AddTextPrinterParameterized3(WIN_STATS, 2, EV_X, HP_Y, sTextColorByNature[color], 0, gStringVar2);
-        AddTextPrinterParameterized3(WIN_STATS, 2, IV_X, HP_Y, sTextColorByNature[color], 0, gStringVar3);
+        AddTextPrinterParameterized3(WIN_STATS, 2, BS_X, HP_Y, sTextColorByNature[color_idx], 0, gStringVar1);
+        AddTextPrinterParameterized3(WIN_STATS, 2, EV_X, HP_Y, sTextColorByNature[color_idx], 0, gStringVar2);
+        AddTextPrinterParameterized3(WIN_STATS, 2, IV_X, HP_Y, sTextColorByNature[color_idx], 0, gStringVar3);
         break;
     case STAT_ATK:
-        AddTextPrinterParameterized3(WIN_STATS, 2, BS_X, ATK_Y, sTextColorByNature[color], 0, gStringVar1);
-        AddTextPrinterParameterized3(WIN_STATS, 2, EV_X, ATK_Y, sTextColorByNature[color], 0, gStringVar2);
-        AddTextPrinterParameterized3(WIN_STATS, 2, IV_X, ATK_Y, sTextColorByNature[color], 0, gStringVar3);
+        AddTextPrinterParameterized3(WIN_STATS, 2, BS_X, ATK_Y, sTextColorByNature[color_idx], 0, gStringVar1);
+        AddTextPrinterParameterized3(WIN_STATS, 2, EV_X, ATK_Y, sTextColorByNature[color_idx], 0, gStringVar2);
+        AddTextPrinterParameterized3(WIN_STATS, 2, IV_X, ATK_Y, sTextColorByNature[color_idx], 0, gStringVar3);
         break;
     case STAT_DEF:
-        AddTextPrinterParameterized3(WIN_STATS, 2, BS_X, DEF_Y, sTextColorByNature[color], 0, gStringVar1);
-        AddTextPrinterParameterized3(WIN_STATS, 2, EV_X, DEF_Y, sTextColorByNature[color], 0, gStringVar2);
-        AddTextPrinterParameterized3(WIN_STATS, 2, IV_X, DEF_Y, sTextColorByNature[color], 0, gStringVar3);
+        AddTextPrinterParameterized3(WIN_STATS, 2, BS_X, DEF_Y, sTextColorByNature[color_idx], 0, gStringVar1);
+        AddTextPrinterParameterized3(WIN_STATS, 2, EV_X, DEF_Y, sTextColorByNature[color_idx], 0, gStringVar2);
+        AddTextPrinterParameterized3(WIN_STATS, 2, IV_X, DEF_Y, sTextColorByNature[color_idx], 0, gStringVar3);
         break;
     case STAT_SPATK:
-        AddTextPrinterParameterized3(WIN_STATS, 2, BS_X, SPATK_Y, sTextColorByNature[color], 0, gStringVar1);
-        AddTextPrinterParameterized3(WIN_STATS, 2, EV_X, SPATK_Y, sTextColorByNature[color], 0, gStringVar2);
-        AddTextPrinterParameterized3(WIN_STATS, 2, IV_X, SPATK_Y, sTextColorByNature[color], 0, gStringVar3);
+        AddTextPrinterParameterized3(WIN_STATS, 2, BS_X, SPATK_Y, sTextColorByNature[color_idx], 0, gStringVar1);
+        AddTextPrinterParameterized3(WIN_STATS, 2, EV_X, SPATK_Y, sTextColorByNature[color_idx], 0, gStringVar2);
+        AddTextPrinterParameterized3(WIN_STATS, 2, IV_X, SPATK_Y, sTextColorByNature[color_idx], 0, gStringVar3);
         break;
     case STAT_SPDEF:
-        AddTextPrinterParameterized3(WIN_STATS, 2, BS_X, SPDEF_Y, sTextColorByNature[color], 0, gStringVar1);
-        AddTextPrinterParameterized3(WIN_STATS, 2, EV_X, SPDEF_Y, sTextColorByNature[color], 0, gStringVar2);
-        AddTextPrinterParameterized3(WIN_STATS, 2, IV_X, SPDEF_Y, sTextColorByNature[color], 0, gStringVar3);
+        AddTextPrinterParameterized3(WIN_STATS, 2, BS_X, SPDEF_Y, sTextColorByNature[color_idx], 0, gStringVar1);
+        AddTextPrinterParameterized3(WIN_STATS, 2, EV_X, SPDEF_Y, sTextColorByNature[color_idx], 0, gStringVar2);
+        AddTextPrinterParameterized3(WIN_STATS, 2, IV_X, SPDEF_Y, sTextColorByNature[color_idx], 0, gStringVar3);
         break;
     case STAT_SPEED:
-        AddTextPrinterParameterized3(WIN_STATS, 2, BS_X, SPEED_Y, sTextColorByNature[color], 0, gStringVar1);
-        AddTextPrinterParameterized3(WIN_STATS, 2, EV_X, SPEED_Y, sTextColorByNature[color], 0, gStringVar2);
-        AddTextPrinterParameterized3(WIN_STATS, 2, IV_X, SPEED_Y, sTextColorByNature[color], 0, gStringVar3);
+        AddTextPrinterParameterized3(WIN_STATS, 2, BS_X, SPEED_Y, sTextColorByNature[color_idx], 0, gStringVar1);
+        AddTextPrinterParameterized3(WIN_STATS, 2, EV_X, SPEED_Y, sTextColorByNature[color_idx], 0, gStringVar2);
+        AddTextPrinterParameterized3(WIN_STATS, 2, IV_X, SPEED_Y, sTextColorByNature[color_idx], 0, gStringVar3);
         break;
     default:
         break;
@@ -1099,7 +1109,7 @@ static void PrintStat(u8 nature, u8 stat)
 
 static void PrintWindow2(u16 species, u8 isEgg, u8 friendship)
 {
-    u32 temp = 0;
+    u32 friendship_result = 0;
 
     if(!isEgg)
     {
@@ -1114,8 +1124,8 @@ static void PrintWindow2(u16 species, u8 isEgg, u8 friendship)
 
         StringCopy(gStringVar4, gText_Happy);
         
-        temp = (friendship * 100) / 0xFF;
-        ConvertIntToDecimalStringN(gStringVar2, temp, STR_CONV_MODE_LEFT_ALIGN, 3);
+        friendship_result = (friendship * 100) / 0xFF;
+        ConvertIntToDecimalStringN(gStringVar2, friendship_result, STR_CONV_MODE_LEFT_ALIGN, 3);
         StringAppend(gStringVar4, gStringVar2);
         
         StringAppend(gStringVar4, gText_Percent);
@@ -1123,11 +1133,11 @@ static void PrintWindow2(u16 species, u8 isEgg, u8 friendship)
         
     }else
     {
-        temp = ((friendship + 1) * 0x100) - (gSaveBlock1Ptr->daycare.stepCounter + 1);
+        friendship_result = ((friendship + 1) * 0x100) - (gSaveBlock1Ptr->daycare.stepCounter + 1);
         if (gSaveBlock1Ptr->daycare.stepCounter == 0xFF)
-            temp += 0x100;
+            friendship_result += 0x100;
         StringCopy(gStringVar4, gText_Steps_to_hatching);
-        ConvertIntToDecimalStringN(gStringVar2, temp, STR_CONV_MODE_LEFT_ALIGN, GetDigitsDec(temp));
+        ConvertIntToDecimalStringN(gStringVar2, friendship_result, STR_CONV_MODE_LEFT_ALIGN, GetDigitsDec(friendship_result));
         StringAppend(gStringVar4, gStringVar2);
         AddTextPrinterParameterized3(WIN_BOTTOM_BOX, 2, 14, 4, sBlackTextColor, 0, gStringVar4);
     }
